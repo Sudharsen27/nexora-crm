@@ -186,3 +186,39 @@ export interface ContactFilters {
   sort_by?: string;
   sort_order?: "asc" | "desc";
 }
+
+export interface ActivityCreator {
+  id: string;
+  full_name: string;
+  email: string;
+}
+
+export interface Activity {
+  id: string;
+  tenant_id: string;
+  entity_type: string;
+  entity_id: string;
+  activity_type: string;
+  description: string;
+  metadata: Record<string, unknown> | null;
+  created_by_id: string | null;
+  created_by: ActivityCreator | null;
+  created_at: string;
+}
+
+export interface ActivityListResponse {
+  items: Activity[];
+  total: number;
+  page: number;
+  page_size: number;
+  pages: number;
+}
+
+export interface ActivityFilters {
+  q?: string;
+  entity_type?: string;
+  entity_id?: string;
+  activity_type?: string;
+  page?: number;
+  page_size?: number;
+}

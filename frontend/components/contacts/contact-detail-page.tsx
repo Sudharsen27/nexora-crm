@@ -3,10 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ActivityFormDialog } from "@/components/activities/activity-form-dialog";
+import { ActivityTimeline } from "@/components/activities/activity-timeline";
 import { ContactFormDialog } from "@/components/contacts/contact-form-dialog";
+import { createActivity } from "@/lib/api/activities";
 import {
   deleteContact,
   formatContactName,
@@ -34,6 +37,8 @@ export function ContactDetailPage({ tenantSlug, contactId }: ContactDetailPagePr
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [activityFormOpen, setActivityFormOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   async function loadContact() {
     setLoading(true);
@@ -94,6 +99,12 @@ export function ContactDetailPage({ tenantSlug, contactId }: ContactDetailPagePr
           <p className="text-zinc-500">{contact.job_title ?? contact.company ?? "Contact"}</p>
         </div>
         <div className="flex gap-2">
+          {activeTab === "Activity" && (
+            <Button onClick={() => setActivityFormOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Log activity
+            </Button>
+          )}
           <Button variant="outline" onClick={() => setFormOpen(true)}>
             <Pencil className="h-4 w-4" />
             Edit
@@ -191,9 +202,14 @@ export function ContactDetailPage({ tenantSlug, contactId }: ContactDetailPagePr
               <CardTitle className="text-base">Recent activity</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-zinc-500">
-                Activity timeline will appear here once tasks and activities are implemented.
-              </p>
+              <ActivityTimeline
+                tenantSlug={tenantSlug}
+                entityType="contact"
+                entityId={contact.id}
+                compact
+                pageSize={5}
+                refreshKey={refreshKey}
+              />
             </CardContent>
           </Card>
         </div>
@@ -209,11 +225,33 @@ export function ContactDetailPage({ tenantSlug, contactId }: ContactDetailPagePr
 
       {activeTab === "Activity" && (
         <Card>
-          <CardContent className="py-8 text-center text-sm text-zinc-500">
-            Activity feed will be available in a future release.
+          <CardHeader>
+            <CardTitle className="text-base">Activity timeline</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ActivityTimeline
+              tenantSlug={tenantSlug}
+              entityType="contact"
+              entityId={contact.id}
+              showDelete
+              refreshKey={refreshKey}
+            />
           </CardContent>
         </Card>
       )}
+
+      <ActivityFormDialog
+        open={activityFormOpen}
+        tenantSlug={tenantSlug}
+        defaultEntityType="contact"
+        defaultEntityId={contact.id}
+        lockEntity
+        onClose={() => setActivityFormOpen(false)}
+        onSubmit={async (data) => {
+          await createActivity(tenantSlug, data);
+          setRefreshKey((k) => k + 1);
+        }}
+      />
 
       <ContactFormDialog
         open={formOpen}

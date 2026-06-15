@@ -1,0 +1,157 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  ACTIVITY_TYPE_ICONS,
+  deleteActivity,
+  formatRelativeTime,
+  getActivityTitle,
+  listActivities,
+  listContactActivities,
+  listDealActivities,
+  listLeadActivities,
+} from "@/lib/api/activities";
+import type { Activity, ActivityFilters } from "@/types/api";
+
+interface ActivityTimelineProps {
+  tenantSlug: string;
+  entityType?: "lead" | "contact" | "deal";
+  entityId?: string;
+  activities?: Activity[];
+  compact?: boolean;
+  pageSize?: number;
+  showDelete?: boolean;
+  refreshKey?: number;
+  onChanged?: () => void;
+}
+
+export function ActivityTimeline({
+  tenantSlug,
+  entityType,
+  entityId,
+  activities: externalActivities,
+  compact = false,
+  pageSize = 20,
+  showDelete = false,
+  refreshKey = 0,
+  onChanged,
+}: ActivityTimelineProps) {
+  const [activities, setActivities] = useState<Activity[]>(externalActivities ?? []);
+  const [loading, setLoading] = useState(!externalActivities);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadActivities = useCallback(async () => {
+    if (externalActivities) {
+      setActivities(externalActivities);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const filters: ActivityFilters = { page_size: pageSize };
+      let data;
+      if (entityType === "contact" && entityId) {
+        data = await listContactActivities(tenantSlug, entityId, filters);
+      } else if (entityType === "deal" && entityId) {
+        data = await listDealActivities(tenantSlug, entityId, filters);
+      } else if (entityType === "lead" && entityId) {
+        data = await listLeadActivities(tenantSlug, entityId, filters);
+      } else {
+        data = await listActivities(tenantSlug, filters);
+      }
+      setActivities(data.items);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load activities");
+    } finally {
+      setLoading(false);
+    }
+  }, [tenantSlug, entityType, entityId, pageSize, externalActivities]);
+
+  useEffect(() => {
+    void loadActivities();
+  }, [loadActivities, refreshKey]);
+
+  useEffect(() => {
+    if (externalActivities) {
+      setActivities(externalActivities);
+      setLoading(false);
+    }
+  }, [externalActivities]);
+
+  async function handleDelete(activity: Activity) {
+    if (!confirm("Delete this activity?")) return;
+    try {
+      await deleteActivity(tenantSlug, activity.id);
+      if (externalActivities) {
+        onChanged?.();
+      } else {
+        await loadActivities();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete activity");
+    }
+  }
+
+  if (loading) {
+    return <p className="text-sm text-zinc-500">Loading activities...</p>;
+  }
+
+  if (error) {
+    return <p className="text-sm text-red-600">{error}</p>;
+  }
+
+  if (activities.length === 0) {
+    return (
+      <p className="py-6 text-center text-sm text-zinc-500">
+        No activities yet. Log your first interaction.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-0">
+      {activities.map((activity, index) => (
+        <div key={activity.id} className="relative flex gap-4 pb-6">
+          {index < activities.length - 1 && (
+            <span className="absolute left-[19px] top-10 h-[calc(100%-2rem)] w-px bg-zinc-200 dark:bg-zinc-800" />
+          )}
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-lg dark:border-zinc-800 dark:bg-zinc-950">
+            {ACTIVITY_TYPE_ICONS[activity.activity_type] ?? "📌"}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="font-medium">{getActivityTitle(activity)}</p>
+                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                  {activity.description}
+                </p>
+                <p className="mt-2 text-xs text-zinc-500">
+                  {activity.created_by?.full_name ?? "Unknown user"} ·{" "}
+                  {formatRelativeTime(activity.created_at)}
+                </p>
+                {!compact && (
+                  <p className="mt-1 text-xs text-zinc-400">
+                    {activity.entity_type} · {activity.activity_type.replace("_", " ")}
+                  </p>
+                )}
+              </div>
+              {showDelete && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => void handleDelete(activity)}
+                  aria-label="Delete activity"
+                >
+                  <Trash2 className="h-4 w-4 text-red-600" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}

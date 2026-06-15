@@ -11,12 +11,13 @@ import { cn } from "@/lib/utils";
 
 interface KanbanColumnProps {
   column: DealStageColumn;
+  tenantSlug: string;
   onAdd: (stage: string) => void;
   onEdit: (deal: Deal) => void;
   onDelete: (deal: Deal) => void;
 }
 
-export function KanbanColumn({ column, onAdd, onEdit, onDelete }: KanbanColumnProps) {
+export function KanbanColumn({ column, tenantSlug, onAdd, onEdit, onDelete }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: `stage:${column.slug}`,
     data: { type: "column", stage: column.slug },
@@ -51,7 +52,13 @@ export function KanbanColumn({ column, onAdd, onEdit, onDelete }: KanbanColumnPr
       >
         <SortableContext items={column.deals.map((d) => d.id)} strategy={verticalListSortingStrategy}>
           {column.deals.map((deal) => (
-            <DealCard key={deal.id} deal={deal} onEdit={onEdit} onDelete={onDelete} />
+            <DealCard
+              key={deal.id}
+              deal={deal}
+              tenantSlug={tenantSlug}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
           ))}
         </SortableContext>
         {column.deals.length === 0 && (

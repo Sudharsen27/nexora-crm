@@ -21,6 +21,10 @@ export async function getDealBoard(slug: string): Promise<DealBoard> {
   return apiFetch<DealBoard>(`/tenants/${slug}/deals/board`);
 }
 
+export async function getDeal(slug: string, dealId: string): Promise<Deal> {
+  return apiFetch<Deal>(`/tenants/${slug}/deals/${dealId}`);
+}
+
 export async function createDeal(slug: string, data: DealInput): Promise<Deal> {
   return apiFetch<Deal>(`/tenants/${slug}/deals`, {
     method: "POST",

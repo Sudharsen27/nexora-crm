@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, Contact, Handshake, LogOut, Settings, Target, Users } from "lucide-react";
+import { Building2, Contact, Handshake, History, LogOut, Settings, Target, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logoutUser } from "@/lib/api/auth";
 import { clearTokens } from "@/lib/auth/tokens";
@@ -19,6 +19,7 @@ const navItems = [
   { href: "/leads", label: "Leads", icon: Target },
   { href: "/contacts", label: "Contacts", icon: Contact },
   { href: "/deals", label: "Deals", icon: Handshake },
+  { href: "/activities", label: "Activities", icon: History },
   { href: "/settings/team", label: "Team", icon: Users },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

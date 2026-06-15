@@ -167,6 +167,7 @@ export function DealsKanban({ tenantSlug }: DealsKanbanProps) {
             <KanbanColumn
               key={column.slug}
               column={column}
+              tenantSlug={tenantSlug}
               onAdd={openCreate}
               onEdit={openEdit}
               onDelete={handleDelete}

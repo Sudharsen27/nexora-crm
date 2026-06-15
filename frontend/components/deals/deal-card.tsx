@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { Pencil, Trash2 } from "lucide-react";
@@ -10,11 +11,12 @@ import { cn } from "@/lib/utils";
 
 interface DealCardProps {
   deal: Deal;
+  tenantSlug: string;
   onEdit: (deal: Deal) => void;
   onDelete: (deal: Deal) => void;
 }
 
-export function DealCard({ deal, onEdit, onDelete }: DealCardProps) {
+export function DealCard({ deal, tenantSlug, onEdit, onDelete }: DealCardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: deal.id,
     data: { type: "deal", deal },
@@ -40,7 +42,15 @@ export function DealCard({ deal, onEdit, onDelete }: DealCardProps) {
           {...listeners}
           {...attributes}
         >
-          <p className="font-medium leading-snug">{deal.title}</p>
+          <p className="font-medium leading-snug">
+            <Link
+              href={`/${tenantSlug}/deals/${deal.id}`}
+              className="hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {deal.title}
+            </Link>
+          </p>
           {deal.value && (
             <p className="mt-1 text-sm font-semibold text-green-700 dark:text-green-400">
               {formatCurrency(deal.value, deal.currency)}
