@@ -37,6 +37,7 @@ class Tenant(Base, TimestampMixin):
     leads: Mapped[list["Lead"]] = relationship(back_populates="tenant")
     deals: Mapped[list["Deal"]] = relationship(back_populates="tenant")
     contacts: Mapped[list["Contact"]] = relationship(back_populates="tenant")
+    activities: Mapped[list["Activity"]] = relationship(back_populates="tenant")
 
 
 class Role(Base):
@@ -126,3 +127,4 @@ class RefreshToken(Base):
 from app.models.lead import LEAD_SOURCES, LEAD_STATUSES, Lead  # noqa: E402, F401
 from app.models.deal import DEAL_STAGES, DEAL_STAGE_LABELS, Deal  # noqa: E402, F401
 from app.models.contact import CONTACT_SORT_FIELDS, Contact  # noqa: E402, F401
+from app.models.activity import ACTIVITY_TYPES, ENTITY_TYPES, Activity  # noqa: E402, F401
