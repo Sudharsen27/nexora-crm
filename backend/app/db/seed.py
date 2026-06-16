@@ -20,6 +20,9 @@ PERMISSIONS = [
     ("activity", "read", "activity:read"),
     ("activity", "write", "activity:write"),
     ("activity", "delete", "activity:delete"),
+    ("task", "read", "task:read"),
+    ("task", "write", "task:write"),
+    ("task", "delete", "task:delete"),
 ]
 
 ROLE_PERMISSIONS = {
@@ -45,6 +48,9 @@ ROLE_PERMISSIONS = {
         "activity:read",
         "activity:write",
         "activity:delete",
+        "task:read",
+        "task:write",
+        "task:delete",
     ],
     "member": [
         "tenant:read",
@@ -59,6 +65,8 @@ ROLE_PERMISSIONS = {
         "contact:write",
         "activity:read",
         "activity:write",
+        "task:read",
+        "task:write",
     ],
 }
 

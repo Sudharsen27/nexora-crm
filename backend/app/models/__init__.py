@@ -38,6 +38,7 @@ class Tenant(Base, TimestampMixin):
     deals: Mapped[list["Deal"]] = relationship(back_populates="tenant")
     contacts: Mapped[list["Contact"]] = relationship(back_populates="tenant")
     activities: Mapped[list["Activity"]] = relationship(back_populates="tenant")
+    tasks: Mapped[list["Task"]] = relationship(back_populates="tenant")
 
 
 class Role(Base):
@@ -128,3 +129,4 @@ from app.models.lead import LEAD_SOURCES, LEAD_STATUSES, Lead  # noqa: E402, F40
 from app.models.deal import DEAL_STAGES, DEAL_STAGE_LABELS, Deal  # noqa: E402, F401
 from app.models.contact import CONTACT_SORT_FIELDS, Contact  # noqa: E402, F401
 from app.models.activity import ACTIVITY_TYPES, ENTITY_TYPES, Activity  # noqa: E402, F401
+from app.models.task import KANBAN_STATUSES, TASK_PRIORITIES, TASK_STATUSES, Task  # noqa: E402, F401
