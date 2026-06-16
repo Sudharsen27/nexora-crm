@@ -117,13 +117,13 @@ export function ActivitiesPage({ tenantSlug }: ActivitiesPageProps) {
         </CardHeader>
         <CardContent>
           <form
-            className="flex flex-wrap gap-3"
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6"
             onSubmit={(e) => {
               e.preventDefault();
               updateParams({ q: searchInput.trim() || null, page: "1" });
             }}
           >
-            <div className="relative min-w-[220px] flex-1">
+            <div className="relative sm:col-span-2 xl:col-span-2">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
               <Input
                 className="pl-9"
@@ -133,7 +133,7 @@ export function ActivitiesPage({ tenantSlug }: ActivitiesPageProps) {
               />
             </div>
             <select
-              className="h-10 rounded-lg border border-zinc-200 bg-white px-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+              className="h-10 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
               value={activityType}
               onChange={(e) => updateParams({ activity_type: e.target.value || null, page: "1" })}
             >
@@ -145,7 +145,7 @@ export function ActivitiesPage({ tenantSlug }: ActivitiesPageProps) {
               ))}
             </select>
             <select
-              className="h-10 rounded-lg border border-zinc-200 bg-white px-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+              className="h-10 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
               value={entityType}
               onChange={(e) => updateParams({ entity_type: e.target.value || null, page: "1" })}
             >
@@ -193,7 +193,7 @@ export function ActivitiesPage({ tenantSlug }: ActivitiesPageProps) {
       </Card>
 
       {pages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <p className="text-sm text-zinc-500">
             Page {page} of {pages}
           </p>

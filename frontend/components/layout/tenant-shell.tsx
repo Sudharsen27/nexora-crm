@@ -2,8 +2,21 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, Contact, Handshake, History, LogOut, Settings, Target, Users } from "lucide-react";
+import {
+  FaAddressBook,
+  FaBell,
+  FaBuilding,
+  FaChartLine,
+  FaClockRotateLeft,
+  FaGear,
+  FaHandshake,
+  FaRightFromBracket,
+  FaSquareCheck,
+  FaUsers,
+} from "react-icons/fa6";
+import { LuMenu, LuSearch } from "react-icons/lu";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { logoutUser } from "@/lib/api/auth";
 import { clearTokens } from "@/lib/auth/tokens";
 import { cn } from "@/lib/utils";
@@ -15,19 +28,24 @@ interface TenantShellProps {
 }
 
 const navItems = [
-  { href: "", label: "Dashboard", icon: Building2 },
-  { href: "/leads", label: "Leads", icon: Target },
-  { href: "/contacts", label: "Contacts", icon: Contact },
-  { href: "/deals", label: "Deals", icon: Handshake },
-  { href: "/activities", label: "Activities", icon: History },
-  { href: "/settings/team", label: "Team", icon: Users },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "", label: "Dashboard", icon: FaBuilding },
+  { href: "/leads", label: "Leads", icon: FaChartLine },
+  { href: "/contacts", label: "Contacts", icon: FaAddressBook },
+  { href: "/deals", label: "Deals", icon: FaHandshake },
+  { href: "/activities", label: "Activities", icon: FaClockRotateLeft },
+  { href: "/tasks", label: "Tasks", icon: FaSquareCheck },
+  { href: "/settings/team", label: "Team", icon: FaUsers },
+  { href: "/settings", label: "Settings", icon: FaGear },
 ];
 
 export function TenantShell({ tenantSlug, tenantName, children }: TenantShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const base = `/${tenantSlug}`;
+  const currentSection = navItems.find((item) => {
+    const href = `${base}${item.href}`;
+    return pathname === href || (item.href && pathname.startsWith(href));
+  })?.label;
 
   async function handleLogout() {
     try {
@@ -39,13 +57,14 @@ export function TenantShell({ tenantSlug, tenantName, children }: TenantShellPro
   }
 
   return (
-    <div className="flex min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      <aside className="flex w-64 flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="border-b border-zinc-200 p-6 dark:border-zinc-800">
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Organization</p>
-          <h1 className="mt-1 text-lg font-semibold">{tenantName}</h1>
+    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-20 flex-col border-r border-white/10 bg-[var(--sidebar-bg)] lg:flex">
+        <div className="flex h-16 items-center justify-center border-b border-white/10">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary)] text-white shadow-lg shadow-[var(--primary)]/30">
+            <FaBuilding className="h-5 w-5" />
+          </span>
         </div>
-        <nav className="flex-1 space-y-1 p-4">
+        <nav className="flex-1 space-y-2 p-3">
           {navItems.map((item) => {
             const href = `${base}${item.href}`;
             const active = pathname === href || (item.href && pathname.startsWith(href));
@@ -54,27 +73,48 @@ export function TenantShell({ tenantSlug, tenantName, children }: TenantShellPro
               <Link
                 key={item.label}
                 href={href}
+                title={item.label}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  "flex h-11 items-center justify-center rounded-xl transition-all duration-200",
                   active
-                    ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-white"
-                    : "text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800/50",
+                    ? "bg-[var(--sidebar-active-bg)] text-[var(--sidebar-active)] shadow-lg shadow-[var(--primary)]/30"
+                    : "text-[var(--sidebar-fg)] hover:bg-white/10 hover:text-white",
                 )}
               >
                 <Icon className="h-4 w-4" />
-                {item.label}
               </Link>
             );
           })}
         </nav>
-        <div className="border-t border-zinc-200 p-4 dark:border-zinc-800">
-          <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
-            <LogOut className="h-4 w-4" />
-            Sign out
+        <div className="border-t border-white/10 p-3">
+          <Button variant="ghost" className="h-11 w-full justify-center text-[var(--sidebar-fg)] hover:bg-white/10 hover:text-white" onClick={handleLogout} title="Sign out">
+            <FaRightFromBracket className="h-4 w-4" />
           </Button>
         </div>
       </aside>
-      <main className="flex-1 p-8">{children}</main>
+      <div className="flex min-w-0 flex-1 flex-col lg:ml-20">
+        <header className="sticky top-0 z-20 border-b border-[var(--border)] bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+          <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center gap-3 px-4 sm:px-6">
+            <Button variant="ghost" size="sm" className="lg:hidden">
+              <LuMenu className="h-4 w-4" />
+            </Button>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{currentSection ?? "Workspace"}</p>
+              <p className="truncate text-xs text-[var(--muted-foreground)]">{tenantName}</p>
+            </div>
+            <div className="ml-auto hidden w-full max-w-sm items-center md:flex">
+              <div className="relative w-full">
+                <LuSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
+                <Input className="pl-9" placeholder="Search leads, contacts, deals..." />
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" className="hidden md:inline-flex">
+              <FaBell className="h-4 w-4" />
+            </Button>
+          </div>
+        </header>
+        <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 sm:px-6 sm:py-8">{children}</main>
+      </div>
     </div>
   );
 }

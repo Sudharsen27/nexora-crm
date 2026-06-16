@@ -71,8 +71,8 @@ export function ContactFormDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-lg rounded-xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-950">
-        <h2 className="text-lg font-semibold">{isEdit ? "Edit contact" : "New contact"}</h2>
+      <div className="w-full max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-xl">
+        <h2 className="text-lg font-semibold text-[var(--foreground)]">{isEdit ? "Edit contact" : "New contact"}</h2>
         <form
           className="mt-4 space-y-4"
           onSubmit={handleSubmit(async (data) => {
@@ -132,7 +132,7 @@ export function ContactFormDialog({
             <Label htmlFor="assigned_to_id">Assigned to</Label>
             <select
               id="assigned_to_id"
-              className="flex h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+              className="flex h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)]"
               {...register("assigned_to_id")}
             >
               <option value="">Unassigned</option>

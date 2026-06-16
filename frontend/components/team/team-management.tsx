@@ -91,7 +91,7 @@ export function TeamManagement({ tenantSlug }: TeamManagementProps) {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-semibold">Team management</h2>
-        <p className="text-zinc-500">Manage members and roles for your organization.</p>
+        <p className="text-[var(--muted-foreground)]">Manage members and roles for your organization.</p>
       </div>
 
       <Card>
@@ -100,17 +100,17 @@ export function TeamManagement({ tenantSlug }: TeamManagementProps) {
           <CardDescription>User must already have a Nexora account.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onAddMember)} className="flex flex-wrap items-end gap-4">
+          <form onSubmit={handleSubmit(onAddMember)} className="grid grid-cols-1 items-end gap-4 sm:grid-cols-6">
             <div className="min-w-[220px] flex-1 space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" placeholder="colleague@company.com" {...register("email")} />
               {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
             </div>
-            <div className="w-40 space-y-2">
+            <div className="w-40 space-y-2 sm:col-span-2">
               <Label htmlFor="role_id">Role</Label>
               <select
                 id="role_id"
-                className="flex h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+                className="flex h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
                 {...register("role_id")}
               >
                 {roles.map((role) => (
@@ -134,7 +134,7 @@ export function TeamManagement({ tenantSlug }: TeamManagementProps) {
         </CardHeader>
         <CardContent>
           {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
-          <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
+          <div className="divide-y divide-[var(--border)]">
             {members.map((member) => (
               <div key={member.id} className="flex items-center justify-between gap-4 py-4">
                 <div>
@@ -143,12 +143,12 @@ export function TeamManagement({ tenantSlug }: TeamManagementProps) {
                 </div>
                 <div className="flex items-center gap-3">
                   {member.role_slug === "owner" ? (
-                    <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium dark:bg-zinc-800">
+                    <span className="rounded-full bg-[var(--surface-muted)] px-3 py-1 text-xs font-medium">
                       Owner
                     </span>
                   ) : (
                     <select
-                      className="h-9 rounded-lg border border-zinc-200 bg-white px-2 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+                      className="h-9 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-2 text-sm"
                       value={member.role_id}
                       onChange={(e) => handleRoleChange(member.id, e.target.value)}
                     >

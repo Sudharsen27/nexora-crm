@@ -66,8 +66,8 @@ export function ActivityFormDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-lg rounded-xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-950">
-        <h2 className="text-lg font-semibold">Log activity</h2>
+      <div className="w-full max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-xl">
+        <h2 className="text-lg font-semibold text-[var(--foreground)]">Log activity</h2>
         <form
           className="mt-4 space-y-4"
           onSubmit={handleSubmit(async (data) => {
@@ -91,7 +91,7 @@ export function ActivityFormDialog({
                 <Label htmlFor="entity_type">Related to</Label>
                 <select
                   id="entity_type"
-                  className="flex h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+                  className="flex h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)]"
                   {...register("entity_type")}
                 >
                   <option value="lead">Lead</option>
@@ -104,7 +104,7 @@ export function ActivityFormDialog({
                 {entityOptions.length > 0 ? (
                   <select
                     id="entity_id"
-                    className="flex h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+                    className="flex h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)]"
                     {...register("entity_id")}
                   >
                     <option value="">Select...</option>
@@ -129,7 +129,7 @@ export function ActivityFormDialog({
             <Label htmlFor="activity_type">Activity type</Label>
             <select
               id="activity_type"
-              className="flex h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+              className="flex h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)]"
               {...register("activity_type")}
             >
               {ACTIVITY_TYPES.map((type) => (
@@ -144,7 +144,7 @@ export function ActivityFormDialog({
             <textarea
               id="description"
               rows={4}
-              className="flex w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+              className="flex w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)]"
               placeholder="Describe what happened..."
               {...register("description")}
             />

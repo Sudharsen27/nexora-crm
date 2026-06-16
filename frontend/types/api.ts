@@ -222,3 +222,83 @@ export interface ActivityFilters {
   page?: number;
   page_size?: number;
 }
+
+export interface TaskAssignee {
+  id: string;
+  full_name: string;
+  email: string;
+}
+
+export interface TaskCreator {
+  id: string;
+  full_name: string;
+  email: string;
+}
+
+export interface Task {
+  id: string;
+  tenant_id: string;
+  title: string;
+  description: string | null;
+  status: string;
+  priority: string;
+  due_date: string | null;
+  assigned_to_id: string | null;
+  assigned_to: TaskAssignee | null;
+  created_by_id: string | null;
+  created_by: TaskCreator | null;
+  entity_type: string | null;
+  entity_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaskListResponse {
+  items: Task[];
+  total: number;
+  page: number;
+  page_size: number;
+  pages: number;
+}
+
+export interface TaskStatusColumn {
+  slug: string;
+  label: string;
+  tasks: Task[];
+}
+
+export interface TaskBoard {
+  columns: TaskStatusColumn[];
+  total: number;
+}
+
+export interface TaskAssigneeSummary {
+  user_id: string;
+  full_name: string;
+  open_count: number;
+  overdue_count: number;
+}
+
+export interface TaskDashboardSummary {
+  my_open: number;
+  my_overdue: number;
+  my_due_today: number;
+  team_open: number;
+  team_overdue: number;
+  by_assignee: TaskAssigneeSummary[];
+}
+
+export interface TaskFilters {
+  q?: string;
+  status?: string;
+  priority?: string;
+  assigned_to_id?: string;
+  entity_type?: string;
+  entity_id?: string;
+  due_today?: boolean;
+  overdue?: boolean;
+  page?: number;
+  page_size?: number;
+  sort_by?: string;
+  sort_order?: "asc" | "desc";
+}

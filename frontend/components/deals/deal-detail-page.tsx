@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ActivityFormDialog } from "@/components/activities/activity-form-dialog";
 import { ActivityTimeline } from "@/components/activities/activity-timeline";
+import { EntityTasksPanel } from "@/components/tasks/entity-tasks-panel";
 import { createActivity } from "@/lib/api/activities";
 import { formatCurrency, getDeal } from "@/lib/api/deals";
 import type { Deal } from "@/types/api";
 import { cn } from "@/lib/utils";
 
-const TABS = ["Overview", "Activity"] as const;
+const TABS = ["Overview", "Activity", "Tasks"] as const;
 type Tab = (typeof TABS)[number];
 
 interface DealDetailPageProps {
@@ -174,6 +175,17 @@ export function DealDetailPage({ tenantSlug, dealId }: DealDetailPageProps) {
               showDelete
               refreshKey={refreshKey}
             />
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === "Tasks" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Tasks</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EntityTasksPanel tenantSlug={tenantSlug} entityType="deal" entityId={deal.id} />
           </CardContent>
         </Card>
       )}

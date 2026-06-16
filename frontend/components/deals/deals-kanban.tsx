@@ -138,7 +138,21 @@ export function DealsKanban({ tenantSlug }: DealsKanbanProps) {
   }
 
   if (loading && !board) {
-    return <p className="text-zinc-500">Loading pipeline...</p>;
+    return (
+      <div className="flex gap-4 overflow-x-auto pb-4">
+        {Array.from({ length: 4 }).map((_, idx) => (
+          <div key={idx} className="w-80 shrink-0 animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-3">
+            <div className="h-5 w-24 rounded bg-zinc-200" />
+            <div className="mt-2 h-4 w-20 rounded bg-zinc-200" />
+            <div className="mt-3 space-y-2">
+              {Array.from({ length: 3 }).map((_, j) => (
+                <div key={j} className="h-20 rounded-xl bg-zinc-200" />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   }
 
   return (

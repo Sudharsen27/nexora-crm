@@ -96,7 +96,13 @@ export function ActivityTimeline({
   }
 
   if (loading) {
-    return <p className="text-sm text-zinc-500">Loading activities...</p>;
+    return (
+      <div className="space-y-3 animate-pulse">
+        {Array.from({ length: 4 }).map((_, idx) => (
+          <div key={idx} className="h-20 rounded-xl bg-[var(--surface-muted)]" />
+        ))}
+      </div>
+    );
   }
 
   if (error) {
@@ -116,12 +122,12 @@ export function ActivityTimeline({
       {activities.map((activity, index) => (
         <div key={activity.id} className="relative flex gap-4 pb-6">
           {index < activities.length - 1 && (
-            <span className="absolute left-[19px] top-10 h-[calc(100%-2rem)] w-px bg-zinc-200 dark:bg-zinc-800" />
+            <span className="absolute left-[19px] top-10 h-[calc(100%-2rem)] w-px bg-[var(--border)]" />
           )}
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-lg dark:border-zinc-800 dark:bg-zinc-950">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-lg">
             {ACTIVITY_TYPE_ICONS[activity.activity_type] ?? "📌"}
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm">
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="font-medium">{getActivityTitle(activity)}</p>

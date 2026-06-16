@@ -31,8 +31,8 @@ export function DealCard({ deal, tenantSlug, onEdit, onDelete }: DealCardProps) 
       ref={setNodeRef}
       style={style}
       className={cn(
-        "rounded-lg border border-zinc-200 bg-white p-3 shadow-sm dark:border-zinc-700 dark:bg-zinc-900",
-        isDragging && "opacity-50 ring-2 ring-zinc-400",
+        "rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
+        isDragging && "opacity-50 ring-2 ring-[var(--primary)]/40",
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -45,7 +45,7 @@ export function DealCard({ deal, tenantSlug, onEdit, onDelete }: DealCardProps) 
           <p className="font-medium leading-snug">
             <Link
               href={`/${tenantSlug}/deals/${deal.id}`}
-              className="hover:underline"
+              className="transition-colors hover:text-[var(--primary)] hover:underline"
               onClick={(e) => e.stopPropagation()}
             >
               {deal.title}

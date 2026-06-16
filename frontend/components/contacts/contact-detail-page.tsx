@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ActivityFormDialog } from "@/components/activities/activity-form-dialog";
 import { ActivityTimeline } from "@/components/activities/activity-timeline";
 import { ContactFormDialog } from "@/components/contacts/contact-form-dialog";
+import { EntityTasksPanel } from "@/components/tasks/entity-tasks-panel";
 import { createActivity } from "@/lib/api/activities";
 import {
   deleteContact,
@@ -21,7 +22,7 @@ import { listMembers } from "@/lib/api/tenants";
 import type { Contact, Member } from "@/types/api";
 import { cn } from "@/lib/utils";
 
-const TABS = ["Overview", "Notes", "Activity"] as const;
+const TABS = ["Overview", "Notes", "Activity", "Tasks"] as const;
 type Tab = (typeof TABS)[number];
 
 interface ContactDetailPageProps {
@@ -236,6 +237,17 @@ export function ContactDetailPage({ tenantSlug, contactId }: ContactDetailPagePr
               showDelete
               refreshKey={refreshKey}
             />
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === "Tasks" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Tasks</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EntityTasksPanel tenantSlug={tenantSlug} entityType="contact" entityId={contact.id} />
           </CardContent>
         </Card>
       )}

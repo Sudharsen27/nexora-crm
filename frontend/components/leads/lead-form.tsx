@@ -125,7 +125,7 @@ export function LeadForm({ meta, members, initial, submitLabel, onSubmit, onCanc
             <Label htmlFor="status">Status</Label>
             <select
               id="status"
-              className="flex h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+              className="flex h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)]"
               {...register("status")}
             >
               {meta.statuses.map((status) => (
@@ -139,7 +139,7 @@ export function LeadForm({ meta, members, initial, submitLabel, onSubmit, onCanc
             <Label htmlFor="source">Source</Label>
             <select
               id="source"
-              className="flex h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+              className="flex h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)]"
               {...register("source")}
             >
               <option value="">—</option>
@@ -158,7 +158,7 @@ export function LeadForm({ meta, members, initial, submitLabel, onSubmit, onCanc
             <Label htmlFor="assigned_to_id">Assigned to</Label>
             <select
               id="assigned_to_id"
-              className="flex h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+              className="flex h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)]"
               {...register("assigned_to_id")}
             >
               <option value="">Unassigned</option>
@@ -174,7 +174,7 @@ export function LeadForm({ meta, members, initial, submitLabel, onSubmit, onCanc
             <textarea
               id="notes"
               rows={4}
-              className="flex w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+              className="flex w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)]"
               {...register("notes")}
             />
           </div>

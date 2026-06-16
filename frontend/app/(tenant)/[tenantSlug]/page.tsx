@@ -1,4 +1,7 @@
+import { DashboardTaskWidgets } from "@/components/dashboard/dashboard-task-widgets";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { buttonVariants } from "@/components/ui/button-variants";
+import Link from "next/link";
 
 export default async function TenantDashboardPage({
   params,
@@ -9,10 +12,23 @@ export default async function TenantDashboardPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold">Dashboard</h2>
-        <p className="text-zinc-500">Welcome to your organization workspace.</p>
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-white p-5 shadow-sm">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Dashboard</h2>
+          <p className="text-[var(--muted-foreground)]">Track pipeline, revenue, and team activity in one place.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/${tenantSlug}/tasks?due=overdue`} className={buttonVariants({ variant: "outline" })}>
+            Review overdue
+          </Link>
+          <Link href={`/${tenantSlug}/tasks`} className={buttonVariants()}>
+            Open tasks
+          </Link>
+        </div>
       </div>
+
+      <DashboardTaskWidgets tenantSlug={tenantSlug} />
+
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -20,20 +36,20 @@ export default async function TenantDashboardPage({
             <CardDescription>Your workspace slug</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="font-mono text-sm">/{tenantSlug}</p>
+            <p className="inline-flex rounded-lg bg-[var(--surface-muted)] px-3 py-1.5 font-mono text-sm">/{tenantSlug}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Foundation ready</CardTitle>
-            <CardDescription>Phase 1 complete</CardDescription>
+            <CardTitle>Workspace snapshot</CardTitle>
+            <CardDescription>Quick overview of active modules</CardDescription>
           </CardHeader>
           <CardContent>
-            <ul className="list-inside list-disc text-sm text-zinc-600 dark:text-zinc-400">
-              <li>JWT authentication with refresh tokens</li>
-              <li>Multi-tenant organization isolation</li>
+            <ul className="list-inside list-disc space-y-1 text-sm text-[var(--muted-foreground)]">
+              <li>Leads, Contacts, Deals pipeline</li>
+              <li>Activities timeline</li>
+              <li>Tasks and follow-ups</li>
               <li>Role-based team management</li>
-              <li>Protected routes</li>
             </ul>
           </CardContent>
         </Card>

@@ -144,13 +144,13 @@ export function LeadsPage({ tenantSlug }: LeadsPageProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <form
-            className="flex flex-wrap gap-3"
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6"
             onSubmit={(e) => {
               e.preventDefault();
               updateParams({ q: searchInput.trim() || null, page: "1" });
             }}
           >
-            <div className="relative min-w-[220px] flex-1">
+            <div className="relative sm:col-span-2 xl:col-span-2">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
               <Input
                 className="pl-9"
@@ -160,7 +160,7 @@ export function LeadsPage({ tenantSlug }: LeadsPageProps) {
               />
             </div>
             <select
-              className="h-10 rounded-lg border border-zinc-200 bg-white px-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+              className="h-10 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
               value={status}
               onChange={(e) => updateParams({ status: e.target.value || null, page: "1" })}
             >
@@ -172,7 +172,7 @@ export function LeadsPage({ tenantSlug }: LeadsPageProps) {
               ))}
             </select>
             <select
-              className="h-10 rounded-lg border border-zinc-200 bg-white px-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+              className="h-10 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
               value={source}
               onChange={(e) => updateParams({ source: e.target.value || null, page: "1" })}
             >
@@ -184,7 +184,7 @@ export function LeadsPage({ tenantSlug }: LeadsPageProps) {
               ))}
             </select>
             <select
-              className="h-10 rounded-lg border border-zinc-200 bg-white px-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+              className="h-10 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
               value={assignedTo}
               onChange={(e) => updateParams({ assigned_to_id: e.target.value || null, page: "1" })}
             >
@@ -216,14 +216,23 @@ export function LeadsPage({ tenantSlug }: LeadsPageProps) {
         <CardContent className="p-0">
           {error && <p className="p-4 text-sm text-red-600">{error}</p>}
           {loading ? (
-            <p className="p-8 text-center text-zinc-500">Loading leads...</p>
+            <div className="p-6">
+              <div className="space-y-3 animate-pulse">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <div key={idx} className="h-12 rounded-xl bg-[var(--surface-muted)]" />
+                ))}
+              </div>
+            </div>
           ) : leads.length === 0 ? (
-            <p className="p-8 text-center text-zinc-500">No leads found.</p>
+            <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
+              <p className="text-base font-medium text-[var(--foreground)]">No leads found</p>
+              <p className="mt-1 text-sm text-[var(--muted-foreground)]">Try changing filters or create a new lead.</p>
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 text-left dark:border-zinc-800">
+                  <tr className="border-b border-[var(--border)] text-left">
                     <th className="px-4 py-3 font-medium">Name</th>
                     <th className="px-4 py-3 font-medium">Company</th>
                     <th className="px-4 py-3 font-medium">Status</th>
@@ -234,7 +243,10 @@ export function LeadsPage({ tenantSlug }: LeadsPageProps) {
                 </thead>
                 <tbody>
                   {leads.map((lead) => (
-                    <tr key={lead.id} className="border-b border-zinc-100 dark:border-zinc-800/50">
+                    <tr
+                      key={lead.id}
+                      className="border-b border-[var(--border)]/70 transition-colors hover:bg-[var(--surface-muted)]"
+                    >
                       <td className="px-4 py-3">
                         <div className="font-medium">{formatLeadName(lead)}</div>
                         <div className="text-zinc-500">{lead.email ?? lead.phone ?? "—"}</div>
@@ -292,7 +304,7 @@ export function LeadsPage({ tenantSlug }: LeadsPageProps) {
       </Card>
 
       {pages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <p className="text-sm text-zinc-500">
             Page {page} of {pages}
           </p>

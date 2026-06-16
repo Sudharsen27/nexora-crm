@@ -28,10 +28,10 @@ export function KanbanColumn({ column, tenantSlug, onAdd, onEdit, onDelete }: Ka
   return (
     <div
       className={cn(
-        "flex w-72 shrink-0 flex-col rounded-xl border border-zinc-200 bg-zinc-100/80 dark:border-zinc-800 dark:bg-zinc-900/50",
+        "flex w-80 shrink-0 flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)]",
         "border-t-4",
         STAGE_COLORS[column.slug],
-        isOver && "ring-2 ring-zinc-400",
+        isOver && "ring-2 ring-[var(--primary)]/40",
       )}
     >
       <div className="flex items-center justify-between gap-2 p-3">
@@ -46,10 +46,7 @@ export function KanbanColumn({ column, tenantSlug, onAdd, onEdit, onDelete }: Ka
           <Plus className="h-4 w-4" />
         </Button>
       </div>
-      <div
-        ref={setNodeRef}
-        className="flex min-h-[120px] flex-1 flex-col gap-2 overflow-y-auto p-2 pt-0"
-      >
+      <div ref={setNodeRef} className="flex min-h-[120px] flex-1 flex-col gap-2 overflow-y-auto p-2 pt-0">
         <SortableContext items={column.deals.map((d) => d.id)} strategy={verticalListSortingStrategy}>
           {column.deals.map((deal) => (
             <DealCard
@@ -62,7 +59,7 @@ export function KanbanColumn({ column, tenantSlug, onAdd, onEdit, onDelete }: Ka
           ))}
         </SortableContext>
         {column.deals.length === 0 && (
-          <p className="py-6 text-center text-xs text-zinc-400">Drop deals here</p>
+          <p className="py-6 text-center text-xs text-[var(--muted-foreground)]">Drop deals here</p>
         )}
       </div>
     </div>
