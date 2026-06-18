@@ -30,6 +30,7 @@ def _to_response(activity) -> ActivityResponse:
         created_by_id=activity.created_by_id,
         created_by=creator,
         created_at=activity.created_at,
+        scheduled_at=activity.scheduled_at,
     )
 
 

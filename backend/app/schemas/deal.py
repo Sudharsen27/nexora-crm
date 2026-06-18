@@ -105,6 +105,7 @@ class DealResponse(BaseModel):
     created_by_id: UUID | None
     created_at: datetime
     updated_at: datetime
+    closed_at: datetime | None = None
 
 
 class DealStageColumn(BaseModel):

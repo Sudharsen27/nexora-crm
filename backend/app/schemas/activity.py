@@ -13,6 +13,7 @@ class ActivityCreate(BaseModel):
     activity_type: str = Field(min_length=1, max_length=30)
     description: str = Field(min_length=1, max_length=5000)
     metadata: dict[str, Any] | None = None
+    scheduled_at: datetime | None = None
 
     @field_validator("entity_type")
     @classmethod
@@ -59,6 +60,7 @@ class ActivityResponse(BaseModel):
     created_by_id: UUID | None
     created_by: ActivityCreator | None = None
     created_at: datetime
+    scheduled_at: datetime | None = None
 
 
 class ActivityListResponse(BaseModel):

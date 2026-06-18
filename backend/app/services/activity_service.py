@@ -122,6 +122,7 @@ class ActivityService:
             activity_type=payload.activity_type,
             description=payload.description,
             activity_metadata=payload.metadata,
+            scheduled_at=payload.scheduled_at,
             created_by_id=created_by_id,
         )
         self.db.add(activity)

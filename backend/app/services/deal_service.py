@@ -5,6 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
+from app.db.mixins import utcnow
 from app.models import Deal, Lead, TenantMembership
 from app.models.deal import DEAL_STAGE_LABELS, DEAL_STAGES
 from app.schemas.deal import DealCreate, DealMove, DealUpdate
@@ -51,6 +52,13 @@ class DealService:
             )
         )
         return (max_pos or -1) + 1
+
+    def _apply_stage_side_effects(self, deal: Deal, old_stage: str, new_stage: str) -> None:
+        terminal = {"won", "lost"}
+        if new_stage in terminal and old_stage not in terminal:
+            deal.closed_at = utcnow()
+        elif new_stage not in terminal and old_stage in terminal:
+            deal.closed_at = None
 
     def get_board(self, tenant_id: uuid.UUID) -> tuple[list[dict], int]:
         deals = list(
@@ -100,6 +108,8 @@ class DealService:
             assigned_to_id=payload.assigned_to_id,
             created_by_id=created_by_id,
         )
+        if deal.stage in ("won", "lost"):
+            deal.closed_at = utcnow()
         self.db.add(deal)
         self.db.commit()
         return self.get_deal(tenant_id, deal.id)
@@ -124,6 +134,7 @@ class DealService:
 
         if "stage" in data and data["stage"] != old_stage:
             deal.position = self._next_position(tenant_id, deal.stage)
+            self._apply_stage_side_effects(deal, old_stage, deal.stage)
 
         self.db.commit()
         return self.get_deal(tenant_id, deal_id)
@@ -169,6 +180,7 @@ class DealService:
                 ).all()
             )
             deal.stage = target_stage
+            self._apply_stage_side_effects(deal, source_stage, target_stage)
             target_deals.insert(min(target_position, len(target_deals)), deal)
             for index, item in enumerate(target_deals):
                 item.position = index

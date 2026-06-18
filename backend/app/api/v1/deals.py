@@ -44,6 +44,7 @@ def _to_response(deal) -> DealResponse:
         created_by_id=deal.created_by_id,
         created_at=deal.created_at,
         updated_at=deal.updated_at,
+        closed_at=deal.closed_at,
     )
 
 
