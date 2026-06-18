@@ -5,6 +5,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { NexoraLogo } from "@/components/brand/nexora-logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -42,7 +43,11 @@ export function CreateOrganizationForm() {
   }
 
   return (
-    <Card className="w-full max-w-lg">
+    <div className="w-full max-w-lg space-y-6">
+      <div className="flex justify-center">
+        <NexoraLogo href="/" markClassName="h-11 w-11" />
+      </div>
+      <Card className="w-full">
       <CardHeader>
         <CardTitle>Create your organization</CardTitle>
         <CardDescription>Set up your workspace to get started with Nexora CRM.</CardDescription>
@@ -99,5 +104,6 @@ export function CreateOrganizationForm() {
         </form>
       </CardContent>
     </Card>
+    </div>
   );
 }

@@ -28,16 +28,17 @@ export function KanbanColumn({ column, tenantSlug, onAdd, onEdit, onDelete }: Ka
   return (
     <div
       className={cn(
-        "flex w-80 shrink-0 flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)]",
+        "flex min-h-[12rem] w-full min-w-0 flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)]",
+        "lg:max-h-[min(70vh,720px)]",
         "border-t-4",
         STAGE_COLORS[column.slug],
         isOver && "ring-2 ring-[var(--primary)]/40",
       )}
     >
       <div className="flex items-center justify-between gap-2 p-3">
-        <div>
-          <h3 className="font-semibold">{column.label}</h3>
-          <p className="text-xs text-zinc-500">
+        <div className="min-w-0">
+          <h3 className="truncate font-semibold">{column.label}</h3>
+          <p className="text-xs text-[var(--muted-foreground)]">
             {column.deals.length} deal{column.deals.length !== 1 ? "s" : ""}
             {totalValue > 0 && ` · $${totalValue.toLocaleString()}`}
           </p>
@@ -46,7 +47,10 @@ export function KanbanColumn({ column, tenantSlug, onAdd, onEdit, onDelete }: Ka
           <Plus className="h-4 w-4" />
         </Button>
       </div>
-      <div ref={setNodeRef} className="flex min-h-[120px] flex-1 flex-col gap-2 overflow-y-auto p-2 pt-0">
+      <div
+        ref={setNodeRef}
+        className="flex min-h-[5rem] flex-1 flex-col gap-2 overflow-y-auto p-2 pt-0 lg:min-h-[6rem]"
+      >
         <SortableContext items={column.deals.map((d) => d.id)} strategy={verticalListSortingStrategy}>
           {column.deals.map((deal) => (
             <DealCard

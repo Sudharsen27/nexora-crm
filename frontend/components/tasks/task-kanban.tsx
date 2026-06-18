@@ -166,13 +166,13 @@ function TaskColumn({
   return (
     <div
       className={cn(
-        "flex w-[85vw] max-w-80 shrink-0 flex-col rounded-xl border border-zinc-200 bg-zinc-100/80 transition-all duration-200 sm:w-72 dark:border-zinc-800 dark:bg-zinc-900/50",
-        isOver && "ring-2 ring-zinc-400 shadow-md",
+        "flex min-h-[12rem] w-full min-w-0 flex-col rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] transition-all duration-200 lg:max-h-[min(70vh,720px)]",
+        isOver && "ring-2 ring-[var(--primary)]/40 shadow-md",
       )}
     >
       <div className="p-3">
         <h3 className="font-semibold">{label}</h3>
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-[var(--muted-foreground)]">
           {tasks.length} task{tasks.length !== 1 ? "s" : ""}
         </p>
       </div>
@@ -187,8 +187,8 @@ function TaskColumn({
           />
         ))}
         {tasks.length === 0 && (
-          <div className="rounded-lg border border-dashed border-zinc-300 px-3 py-6 text-center dark:border-zinc-700">
-            <p className="text-xs text-zinc-400">Drop tasks here</p>
+          <div className="rounded-lg border border-dashed border-[var(--border)] px-3 py-6 text-center">
+            <p className="text-xs text-[var(--muted-foreground)]">Drop tasks here</p>
           </div>
         )}
       </div>
@@ -198,20 +198,19 @@ function TaskColumn({
 
 function KanbanSkeleton() {
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {TASK_COLUMN_ORDER.map((status) => (
         <div
           key={status}
-          className="flex w-[85vw] max-w-80 shrink-0 animate-pulse flex-col rounded-xl border border-zinc-200 bg-zinc-100/80 p-3 sm:w-72 dark:border-zinc-800 dark:bg-zinc-900/50"
+          className="min-h-[12rem] w-full animate-pulse rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-3"
         >
-          <div className="h-5 w-28 rounded bg-zinc-200 dark:bg-zinc-800" />
-          <div className="mt-1 h-3 w-20 rounded bg-zinc-200 dark:bg-zinc-800" />
+          <div className="h-5 w-28 rounded bg-[var(--border)]" />
+          <div className="mt-1 h-3 w-20 rounded bg-[var(--border)]" />
           <div className="mt-3 space-y-2">
-            {Array.from({ length: 3 }).map((_, idx) => (
-              <div key={idx} className="rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900">
-                <div className="h-4 w-36 rounded bg-zinc-200 dark:bg-zinc-800" />
-                <div className="mt-2 h-4 w-16 rounded-full bg-zinc-200 dark:bg-zinc-800" />
-                <div className="mt-2 h-4 w-24 rounded bg-zinc-200 dark:bg-zinc-800" />
+            {Array.from({ length: 2 }).map((_, idx) => (
+              <div key={idx} className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
+                <div className="h-4 w-36 rounded bg-[var(--border)]" />
+                <div className="mt-2 h-4 w-16 rounded-full bg-[var(--border)]" />
               </div>
             ))}
           </div>
@@ -312,7 +311,7 @@ export function TaskKanban({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {TASK_COLUMN_ORDER.map((statusSlug) => {
             const column = board?.columns.find((c) => c.slug === statusSlug);
             if (!column) return null;
@@ -331,7 +330,7 @@ export function TaskKanban({
         </div>
         <DragOverlay>
           {activeTask ? (
-            <div className="w-64 rounded-lg border border-zinc-200 bg-white p-3 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+            <div className="w-full max-w-sm rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 shadow-lg">
               <p className="font-medium">{activeTask.title}</p>
             </div>
           ) : null}

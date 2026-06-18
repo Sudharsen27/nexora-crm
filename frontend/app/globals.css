@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
-/* App uses CSS variables for a single light theme — ignore OS dark preference */
-@variant dark (false);
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --background: #f4f6fb;
@@ -17,6 +16,34 @@
   --sidebar-muted: #94a3b8;
   --sidebar-active: #ffffff;
   --sidebar-active-bg: #7c3aed;
+  --chart-1: #7c3aed;
+  --chart-2: #6366f1;
+  --chart-3: #3b82f6;
+  --chart-4: #06b6d4;
+  --chart-5: #10b981;
+  --destructive: #dc2626;
+}
+
+.dark {
+  --background: #0b0f19;
+  --foreground: #f3f4f6;
+  --surface: #111827;
+  --surface-muted: #1f2937;
+  --border: #374151;
+  --muted-foreground: #9ca3af;
+  --primary: #8b5cf6;
+  --primary-foreground: #ffffff;
+  --sidebar-bg: #030712;
+  --sidebar-fg: #cbd5e1;
+  --sidebar-muted: #94a3b8;
+  --sidebar-active: #ffffff;
+  --sidebar-active-bg: #7c3aed;
+  --chart-1: #a78bfa;
+  --chart-2: #818cf8;
+  --chart-3: #60a5fa;
+  --chart-4: #22d3ee;
+  --chart-5: #34d399;
+  --destructive: #f87171;
 }
 
 @theme inline {
@@ -45,4 +72,37 @@ body {
 
 * {
   border-color: var(--border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse {
+    animation: none;
+  }
+}
+
+/* Kanban boards: contained horizontal scroll with subtle themed scrollbar */
+.kanban-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--border) 80%, transparent) transparent;
+}
+
+.kanban-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.kanban-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.kanban-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted-foreground) 35%, transparent);
+  border-radius: 9999px;
+}
+
+.kanban-scroll::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--muted-foreground) 55%, transparent);
 }

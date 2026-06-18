@@ -139,14 +139,17 @@ export function DealsKanban({ tenantSlug }: DealsKanbanProps) {
 
   if (loading && !board) {
     return (
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {Array.from({ length: 4 }).map((_, idx) => (
-          <div key={idx} className="w-80 shrink-0 animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-3">
-            <div className="h-5 w-24 rounded bg-zinc-200" />
-            <div className="mt-2 h-4 w-20 rounded bg-zinc-200" />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+        {Array.from({ length: 6 }).map((_, idx) => (
+          <div
+            key={idx}
+            className="min-h-[12rem] w-full animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-3"
+          >
+            <div className="h-5 w-24 rounded bg-[var(--border)]" />
+            <div className="mt-2 h-4 w-20 rounded bg-[var(--border)]" />
             <div className="mt-3 space-y-2">
-              {Array.from({ length: 3 }).map((_, j) => (
-                <div key={j} className="h-20 rounded-xl bg-zinc-200" />
+              {Array.from({ length: 2 }).map((_, j) => (
+                <div key={j} className="h-16 rounded-xl bg-[var(--border)]" />
               ))}
             </div>
           </div>
@@ -156,19 +159,25 @@ export function DealsKanban({ tenantSlug }: DealsKanbanProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold">Deals pipeline</h2>
-          <p className="text-zinc-500">{board?.total ?? 0} deals · drag cards to move stages</p>
+    <div className="min-w-0 space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">Deals pipeline</h2>
+          <p className="text-sm text-[var(--muted-foreground)]">
+            {board?.total ?? 0} deals · drag cards to move stages
+          </p>
         </div>
-        <Button onClick={() => openCreate("new")}>
+        <Button onClick={() => openCreate("new")} className="w-full shrink-0 sm:w-auto">
           <Plus className="h-4 w-4" />
           New deal
         </Button>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+          {error}
+        </p>
+      )}
 
       <DndContext
         sensors={sensors}
@@ -176,7 +185,10 @@ export function DealsKanban({ tenantSlug }: DealsKanbanProps) {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6"
+          aria-label="Deal pipeline board"
+        >
           {board?.stages.map((column) => (
             <KanbanColumn
               key={column.slug}
@@ -190,8 +202,8 @@ export function DealsKanban({ tenantSlug }: DealsKanbanProps) {
         </div>
         <DragOverlay>
           {activeDeal ? (
-            <div className="w-64 rounded-lg border border-zinc-200 bg-white p-3 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
-              <p className="font-medium">{activeDeal.title}</p>
+            <div className="w-full max-w-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 shadow-lg">
+              <p className="font-medium text-[var(--foreground)]">{activeDeal.title}</p>
             </div>
           ) : null}
         </DragOverlay>

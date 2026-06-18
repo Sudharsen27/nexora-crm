@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { NexoraLogo } from "@/components/brand/nexora-logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -45,7 +46,11 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <div className="w-full max-w-md space-y-6">
+      <div className="flex justify-center">
+        <NexoraLogo href="/" markClassName="h-11 w-11" />
+      </div>
+      <Card className="w-full">
       <CardHeader>
         <CardTitle>Sign in to Nexora</CardTitle>
         <CardDescription>Enter your credentials to access your workspace.</CardDescription>
@@ -75,5 +80,6 @@ export function LoginForm() {
         </p>
       </CardContent>
     </Card>
+    </div>
   );
 }
