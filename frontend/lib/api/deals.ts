@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api/client";
-import type { Deal, DealBoard } from "@/types/api";
+import type { Deal, DealBoard, DealStageMeta } from "@/types/api";
 
 export type DealInput = {
   title: string;
@@ -19,6 +19,10 @@ export type DealMoveInput = {
 
 export async function getDealBoard(slug: string): Promise<DealBoard> {
   return apiFetch<DealBoard>(`/tenants/${slug}/deals/board`);
+}
+
+export async function getDealMeta(slug: string): Promise<{ stages: DealStageMeta[] }> {
+  return apiFetch<{ stages: DealStageMeta[] }>(`/tenants/${slug}/deals/meta`);
 }
 
 export async function getDeal(slug: string, dealId: string): Promise<Deal> {

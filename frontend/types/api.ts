@@ -115,6 +115,7 @@ export interface Deal {
   currency: string;
   expected_close_date: string | null;
   lead_id: string | null;
+  company_id: string | null;
   assigned_to_id: string | null;
   assigned_to: DealAssignee | null;
   created_by_id: string | null;
@@ -151,10 +152,17 @@ export interface ContactLeadRef {
   status: string;
 }
 
+export interface ContactCompanyRef {
+  id: string;
+  company_name: string;
+  company_code: string | null;
+}
+
 export interface Contact {
   id: string;
   tenant_id: string;
   lead_id: string | null;
+  company_id: string | null;
   first_name: string;
   last_name: string;
   email: string | null;
@@ -164,6 +172,7 @@ export interface Contact {
   assigned_to_id: string | null;
   assigned_to: ContactAssignee | null;
   lead: ContactLeadRef | null;
+  linked_company: ContactCompanyRef | null;
   created_by_id: string | null;
   created_at: string;
   updated_at: string;
@@ -180,7 +189,63 @@ export interface ContactListResponse {
 export interface ContactFilters {
   q?: string;
   company?: string;
+  company_id?: string;
   assigned_to_id?: string;
+  page?: number;
+  page_size?: number;
+  sort_by?: string;
+  sort_order?: "asc" | "desc";
+}
+
+export interface CompanyOwner {
+  id: string;
+  full_name: string;
+  email: string;
+}
+
+export interface Company {
+  id: string;
+  tenant_id: string;
+  company_name: string;
+  company_code: string | null;
+  industry: string | null;
+  website: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  postal_code: string | null;
+  annual_revenue: string | null;
+  employee_count: number | null;
+  owner_id: string | null;
+  owner: CompanyOwner | null;
+  description: string | null;
+  created_by_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CompanyListResponse {
+  items: Company[];
+  total: number;
+  page: number;
+  page_size: number;
+  pages: number;
+}
+
+export interface CompanyMeta {
+  industries: string[];
+  sort_fields: string[];
+}
+
+export interface CompanyFilters {
+  q?: string;
+  industry?: string;
+  owner_id?: string;
+  city?: string;
+  country?: string;
   page?: number;
   page_size?: number;
   sort_by?: string;

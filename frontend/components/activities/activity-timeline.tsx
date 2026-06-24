@@ -10,6 +10,7 @@ import {
   getActivityTitle,
   listActivities,
   listContactActivities,
+  listCompanyActivities,
   listDealActivities,
   listLeadActivities,
 } from "@/lib/api/activities";
@@ -17,7 +18,7 @@ import type { Activity, ActivityFilters } from "@/types/api";
 
 interface ActivityTimelineProps {
   tenantSlug: string;
-  entityType?: "lead" | "contact" | "deal";
+  entityType?: "lead" | "contact" | "deal" | "company";
   entityId?: string;
   activities?: Activity[];
   compact?: boolean;
@@ -57,6 +58,8 @@ export function ActivityTimeline({
         data = await listContactActivities(tenantSlug, entityId, filters);
       } else if (entityType === "deal" && entityId) {
         data = await listDealActivities(tenantSlug, entityId, filters);
+      } else if (entityType === "company" && entityId) {
+        data = await listCompanyActivities(tenantSlug, entityId, filters);
       } else if (entityType === "lead" && entityId) {
         data = await listLeadActivities(tenantSlug, entityId, filters);
       } else {

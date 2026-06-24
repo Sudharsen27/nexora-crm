@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 
 interface EntityTasksPanelProps {
   tenantSlug: string;
-  entityType: "lead" | "contact" | "deal";
+  entityType: "lead" | "contact" | "deal" | "company";
   entityId: string;
 }
 

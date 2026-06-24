@@ -28,6 +28,7 @@ interface DealFormDialogProps {
   members: Member[];
   initial?: Deal | null;
   defaultStage?: string;
+  defaultLeadId?: string;
   onClose: () => void;
   onSubmit: (data: DealInput) => Promise<void>;
 }
@@ -38,6 +39,7 @@ export function DealFormDialog({
   members,
   initial,
   defaultStage = "new",
+  defaultLeadId,
   onClose,
   onSubmit,
 }: DealFormDialogProps) {
@@ -89,6 +91,7 @@ export function DealFormDialog({
                 value: data.value ? Number(data.value) : null,
                 currency: data.currency || "USD",
                 expected_close_date: data.expected_close_date || null,
+                lead_id: defaultLeadId ?? initial?.lead_id ?? null,
                 assigned_to_id: data.assigned_to_id || null,
               });
               onClose();

@@ -9,9 +9,6 @@ import { Input } from "@/components/ui/input";
 import { ActivityFormDialog } from "@/components/activities/activity-form-dialog";
 import { ActivityTimeline } from "@/components/activities/activity-timeline";
 import { ACTIVITY_TYPES, createActivity, listActivities } from "@/lib/api/activities";
-import { formatContactName, listContacts } from "@/lib/api/contacts";
-import { formatLeadName, listLeads } from "@/lib/api/leads";
-import { getDealBoard } from "@/lib/api/deals";
 import type { Activity } from "@/types/api";
 
 interface ActivitiesPageProps {
@@ -27,7 +24,6 @@ export function ActivitiesPage({ tenantSlug }: ActivitiesPageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
-  const [entityOptions, setEntityOptions] = useState<{ id: string; label: string }[]>([]);
 
   const q = searchParams.get("q") ?? "";
   const activityType = searchParams.get("activity_type") ?? "";
@@ -77,20 +73,6 @@ export function ActivitiesPage({ tenantSlug }: ActivitiesPageProps) {
     setSearchInput(q);
   }, [q]);
 
-  async function loadEntityOptions(type: "lead" | "contact" | "deal") {
-    if (type === "lead") {
-      const data = await listLeads(tenantSlug, { page_size: 50 });
-      setEntityOptions(data.items.map((l) => ({ id: l.id, label: formatLeadName(l) })));
-    } else if (type === "contact") {
-      const data = await listContacts(tenantSlug, { page_size: 50 });
-      setEntityOptions(data.items.map((c) => ({ id: c.id, label: formatContactName(c) })));
-    } else {
-      const board = await getDealBoard(tenantSlug);
-      const deals = board.stages.flatMap((stage) => stage.deals);
-      setEntityOptions(deals.map((d) => ({ id: d.id, label: d.title })));
-    }
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -100,12 +82,7 @@ export function ActivitiesPage({ tenantSlug }: ActivitiesPageProps) {
             {total} activit{total !== 1 ? "ies" : "y"} total
           </p>
         </div>
-        <Button
-          onClick={() => {
-            void loadEntityOptions("contact");
-            setFormOpen(true);
-          }}
-        >
+        <Button onClick={() => setFormOpen(true)}>
           <Plus className="h-4 w-4" />
           Log activity
         </Button>
@@ -221,7 +198,6 @@ export function ActivitiesPage({ tenantSlug }: ActivitiesPageProps) {
       <ActivityFormDialog
         open={formOpen}
         tenantSlug={tenantSlug}
-        entityOptions={entityOptions}
         onClose={() => setFormOpen(false)}
         onSubmit={async (data) => {
           await createActivity(tenantSlug, data);

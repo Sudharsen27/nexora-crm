@@ -19,7 +19,7 @@ export const ACTIVITY_TYPES = [
   "deal_update",
 ] as const;
 
-export const ENTITY_TYPES = ["lead", "contact", "deal"] as const;
+export const ENTITY_TYPES = ["lead", "contact", "deal", "company"] as const;
 
 export const ACTIVITY_TYPE_LABELS: Record<string, string> = {
   call: "Call",
@@ -90,6 +90,17 @@ export async function listDealActivities(
   const params = buildQuery(filters);
   return apiFetch<ActivityListResponse>(
     `/tenants/${slug}/activities/deal/${dealId}${params}`,
+  );
+}
+
+export async function listCompanyActivities(
+  slug: string,
+  companyId: string,
+  filters: Omit<ActivityFilters, "entity_type" | "entity_id"> = {},
+): Promise<ActivityListResponse> {
+  const params = buildQuery(filters);
+  return apiFetch<ActivityListResponse>(
+    `/tenants/${slug}/activities/company/${companyId}${params}`,
   );
 }
 

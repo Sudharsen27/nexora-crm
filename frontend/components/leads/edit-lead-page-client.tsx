@@ -52,9 +52,9 @@ export function EditLeadPageClient({ tenantSlug, leadId }: EditLeadPageClientPro
       }}
       onSubmit={async (data) => {
         await updateLead(tenantSlug, leadId, data);
-        router.push(`/${tenantSlug}/leads`);
+        router.push(`/${tenantSlug}/leads/${leadId}`);
       }}
-      onCancel={() => router.push(`/${tenantSlug}/leads`)}
+      onCancel={() => router.push(`/${tenantSlug}/leads/${leadId}`)}
     />
   );
 }

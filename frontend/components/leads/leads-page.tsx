@@ -13,20 +13,13 @@ import {
   listLeads,
   getLeadMeta,
   SOURCE_LABELS,
+  STATUS_COLORS,
   STATUS_LABELS,
 } from "@/lib/api/leads";
 import { convertLeadToContact } from "@/lib/api/contacts";
 import { listMembers } from "@/lib/api/tenants";
 import type { Lead, LeadMeta, Member } from "@/types/api";
 import { cn } from "@/lib/utils";
-
-const STATUS_COLORS: Record<string, string> = {
-  new: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-  contacted: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
-  qualified: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  unqualified: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
-  converted: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
-};
 
 interface LeadsPageProps {
   tenantSlug: string;
@@ -248,8 +241,13 @@ export function LeadsPage({ tenantSlug }: LeadsPageProps) {
                       className="border-b border-[var(--border)]/70 transition-colors hover:bg-[var(--surface-muted)]"
                     >
                       <td className="px-4 py-3">
-                        <div className="font-medium">{formatLeadName(lead)}</div>
-                        <div className="text-zinc-500">{lead.email ?? lead.phone ?? "—"}</div>
+                        <Link
+                          href={`/${tenantSlug}/leads/${lead.id}`}
+                          className="block hover:underline"
+                        >
+                          <div className="font-medium">{formatLeadName(lead)}</div>
+                          <div className="text-zinc-500">{lead.email ?? lead.phone ?? "—"}</div>
+                        </Link>
                       </td>
                       <td className="px-4 py-3">{lead.company ?? "—"}</td>
                       <td className="px-4 py-3">
@@ -279,8 +277,8 @@ export function LeadsPage({ tenantSlug }: LeadsPageProps) {
                               <UserPlus className="h-4 w-4" />
                             </Button>
                           )}
-                          <Link href={`/${tenantSlug}/leads/${lead.id}/edit`}>
-                            <Button variant="ghost" size="sm">
+                          <Link href={`/${tenantSlug}/leads/${lead.id}`}>
+                            <Button variant="ghost" size="sm" title="View lead">
                               <Pencil className="h-4 w-4" />
                             </Button>
                           </Link>

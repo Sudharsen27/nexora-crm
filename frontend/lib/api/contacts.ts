@@ -7,6 +7,7 @@ export type ContactInput = {
   email?: string | null;
   phone?: string | null;
   company?: string | null;
+  company_id?: string | null;
   job_title?: string | null;
   lead_id?: string | null;
   assigned_to_id?: string | null;
@@ -16,6 +17,7 @@ function buildQuery(filters: ContactFilters): string {
   const params = new URLSearchParams();
   if (filters.q) params.set("q", filters.q);
   if (filters.company) params.set("company", filters.company);
+  if (filters.company_id) params.set("company_id", filters.company_id);
   if (filters.assigned_to_id) params.set("assigned_to_id", filters.assigned_to_id);
   if (filters.page) params.set("page", String(filters.page));
   if (filters.page_size) params.set("page_size", String(filters.page_size));

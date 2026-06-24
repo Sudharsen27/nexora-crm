@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api/client";
-import type { Lead, LeadFilters, LeadListResponse, LeadMeta } from "@/types/api";
+import type { Contact, Deal, Lead, LeadFilters, LeadListResponse, LeadMeta } from "@/types/api";
 
 export type LeadInput = {
   first_name: string;
@@ -57,6 +57,14 @@ export async function deleteLead(slug: string, leadId: string): Promise<void> {
   await apiFetch<void>(`/tenants/${slug}/leads/${leadId}`, { method: "DELETE" });
 }
 
+export async function listLeadDeals(slug: string, leadId: string): Promise<Deal[]> {
+  return apiFetch<Deal[]>(`/tenants/${slug}/leads/${leadId}/deals`);
+}
+
+export async function getLeadContact(slug: string, leadId: string): Promise<Contact> {
+  return apiFetch<Contact>(`/tenants/${slug}/leads/${leadId}/contact`);
+}
+
 export function formatLeadName(lead: Lead): string {
   return [lead.first_name, lead.last_name].filter(Boolean).join(" ");
 }
@@ -69,6 +77,14 @@ export const STATUS_LABELS: Record<string, string> = {
   converted: "Converted",
 };
 
+export const STATUS_COLORS: Record<string, string> = {
+  new: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+  contacted: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+  qualified: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  unqualified: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+  converted: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+};
+
 export const SOURCE_LABELS: Record<string, string> = {
   website: "Website",
   referral: "Referral",
@@ -78,3 +94,36 @@ export const SOURCE_LABELS: Record<string, string> = {
   social: "Social",
   other: "Other",
 };
+
+/** Derived lead score (0–100) from status and profile completeness. */
+export function getLeadScore(lead: Lead): number {
+  const statusBase: Record<string, number> = {
+    new: 25,
+    contacted: 45,
+    qualified: 75,
+    unqualified: 15,
+    converted: 100,
+  };
+  let score = statusBase[lead.status] ?? 20;
+  if (lead.email) score += 8;
+  if (lead.phone) score += 8;
+  if (lead.company) score += 7;
+  if (lead.job_title) score += 5;
+  if (lead.estimated_value) score += 7;
+  return Math.min(100, score);
+}
+
+export function formatDate(value: string): string {
+  return new Date(value).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+export function formatCurrency(value: string | null): string {
+  if (!value) return "—";
+  const num = Number(value);
+  if (Number.isNaN(num)) return "—";
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(num);
+}
