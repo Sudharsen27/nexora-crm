@@ -14,6 +14,7 @@ class ContactCreate(BaseModel):
     company: str | None = Field(default=None, max_length=255)
     job_title: str | None = Field(default=None, max_length=150)
     lead_id: UUID | None = None
+    company_id: UUID | None = None
     assigned_to_id: UUID | None = None
 
     @field_validator("first_name", "last_name", "company", "job_title", mode="before")
@@ -48,6 +49,7 @@ class ContactUpdate(BaseModel):
     company: str | None = Field(default=None, max_length=255)
     job_title: str | None = Field(default=None, max_length=150)
     lead_id: UUID | None = None
+    company_id: UUID | None = None
     assigned_to_id: UUID | None = None
 
     @field_validator("first_name", "last_name", "company", "job_title", mode="before")
@@ -91,12 +93,21 @@ class ContactLeadRef(BaseModel):
     status: str
 
 
+class ContactCompanyRef(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    company_name: str
+    company_code: str | None = None
+
+
 class ContactResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     tenant_id: UUID
     lead_id: UUID | None
+    company_id: UUID | None
     first_name: str
     last_name: str
     email: str | None
@@ -106,6 +117,7 @@ class ContactResponse(BaseModel):
     assigned_to_id: UUID | None
     assigned_to: ContactAssignee | None = None
     lead: ContactLeadRef | None = None
+    linked_company: ContactCompanyRef | None = None
     created_by_id: UUID | None
     created_at: datetime
     updated_at: datetime

@@ -39,6 +39,7 @@ def _to_response(deal) -> DealResponse:
         currency=deal.currency,
         expected_close_date=deal.expected_close_date,
         lead_id=deal.lead_id,
+        company_id=deal.company_id,
         assigned_to_id=deal.assigned_to_id,
         assigned_to=assigned,
         created_by_id=deal.created_by_id,

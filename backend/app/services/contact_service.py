@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import asc, desc, func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
-from app.models import Contact, Lead, TenantMembership
+from app.models import Contact, Company, Lead, TenantMembership
 from app.models.contact import CONTACT_SORT_FIELDS
 from app.schemas.contact import ContactCreate, ContactUpdate
 
@@ -20,6 +20,7 @@ class ContactService:
             .options(
                 joinedload(Contact.assigned_to),
                 joinedload(Contact.lead),
+                joinedload(Contact.linked_company),
             )
             .where(Contact.tenant_id == tenant_id)
         )
@@ -56,12 +57,25 @@ class ContactService:
             )
         return lead
 
+    def _validate_company(self, tenant_id: uuid.UUID, company_id: uuid.UUID | None) -> None:
+        if company_id is None:
+            return
+        company = self.db.scalar(
+            select(Company).where(Company.id == company_id, Company.tenant_id == tenant_id)
+        )
+        if company is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Company not found in this organization",
+            )
+
     def list_contacts(
         self,
         tenant_id: uuid.UUID,
         *,
         q: str | None = None,
         company: str | None = None,
+        company_id: uuid.UUID | None = None,
         assigned_to_id: uuid.UUID | None = None,
         page: int = 1,
         page_size: int = 20,
@@ -89,6 +103,9 @@ class ContactService:
 
         if company:
             query = query.where(Contact.company.ilike(f"%{company.strip()}%"))
+
+        if company_id:
+            query = query.where(Contact.company_id == company_id)
 
         if assigned_to_id:
             query = query.where(Contact.assigned_to_id == assigned_to_id)
@@ -122,10 +139,12 @@ class ContactService:
     ) -> Contact:
         self._validate_assignee(tenant_id, payload.assigned_to_id)
         self._validate_lead(tenant_id, payload.lead_id)
+        self._validate_company(tenant_id, payload.company_id)
 
         contact = Contact(
             tenant_id=tenant_id,
             lead_id=payload.lead_id,
+            company_id=payload.company_id,
             first_name=payload.first_name,
             last_name=payload.last_name or "",
             email=payload.email,
@@ -151,6 +170,7 @@ class ContactService:
             if payload.lead_id is not None:
                 self._validate_lead(tenant_id, payload.lead_id)
 
+        self._validate_company(tenant_id, payload.company_id)
         self._validate_assignee(tenant_id, payload.assigned_to_id)
 
         contact.first_name = payload.first_name
@@ -160,6 +180,7 @@ class ContactService:
         contact.company = payload.company
         contact.job_title = payload.job_title
         contact.lead_id = payload.lead_id
+        contact.company_id = payload.company_id
         contact.assigned_to_id = payload.assigned_to_id
 
         self.db.commit()

@@ -10,7 +10,7 @@ from app.db.mixins import TimestampMixin
 
 TASK_STATUSES = ("pending", "in_progress", "completed", "cancelled")
 TASK_PRIORITIES = ("low", "medium", "high", "urgent")
-TASK_ENTITY_TYPES = ("lead", "contact", "deal")
+TASK_ENTITY_TYPES = ("lead", "contact", "deal", "company")
 TASK_SORT_FIELDS = ("title", "status", "priority", "due_date", "created_at", "updated_at")
 KANBAN_STATUSES = ("pending", "in_progress", "completed")
 

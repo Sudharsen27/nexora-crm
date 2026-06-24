@@ -155,6 +155,33 @@ def list_deal_activities(
     )
 
 
+@router.get("/company/{company_id}", response_model=ActivityListResponse)
+def list_company_activities(
+    company_id: UUID,
+    q: str | None = Query(default=None, max_length=200),
+    activity_type: str | None = Query(default=None, max_length=30),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    ctx: TenantContext = Depends(require_permission("activity:read")),
+    db: Session = Depends(get_db),
+) -> ActivityListResponse:
+    service = ActivityService(db)
+    activities, total = service.list_activities(
+        ctx.tenant.id,
+        q=q,
+        entity_type="company",
+        entity_id=company_id,
+        activity_type=activity_type,
+        page=page,
+        page_size=page_size,
+    )
+    meta = paginate(total, page, page_size)
+    return ActivityListResponse(
+        items=[_to_response(activity) for activity in activities],
+        **meta,
+    )
+
+
 @router.get("/{activity_id}", response_model=ActivityResponse)
 def get_activity(
     activity_id: UUID,

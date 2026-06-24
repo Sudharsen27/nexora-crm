@@ -17,7 +17,7 @@ ACTIVITY_TYPES = (
     "deal_update",
 )
 
-ENTITY_TYPES = ("lead", "contact", "deal")
+ENTITY_TYPES = ("lead", "contact", "deal", "company")
 
 
 class Activity(Base):

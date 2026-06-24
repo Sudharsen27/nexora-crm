@@ -15,6 +15,7 @@ class DealCreate(BaseModel):
     currency: str = Field(default="USD", min_length=3, max_length=3)
     expected_close_date: date | None = None
     lead_id: UUID | None = None
+    company_id: UUID | None = None
     assigned_to_id: UUID | None = None
 
     @field_validator("title", "description", mode="before")
@@ -45,6 +46,7 @@ class DealUpdate(BaseModel):
     currency: str | None = Field(default=None, min_length=3, max_length=3)
     expected_close_date: date | None = None
     lead_id: UUID | None = None
+    company_id: UUID | None = None
     assigned_to_id: UUID | None = None
 
     @field_validator("title", "description", mode="before")
@@ -100,6 +102,7 @@ class DealResponse(BaseModel):
     currency: str
     expected_close_date: date | None
     lead_id: UUID | None
+    company_id: UUID | None
     assigned_to_id: UUID | None
     assigned_to: DealAssignee | None = None
     created_by_id: UUID | None

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 from app.db.mixins import TimestampMixin
 
-CONTACT_SORT_FIELDS = ("first_name", "last_name", "company", "email", "created_at")
+CONTACT_SORT_FIELDS = ("first_name", "last_name", "company", "email", "created_at", "company_id")
 
 
 class Contact(Base, TimestampMixin):
@@ -25,6 +25,9 @@ class Contact(Base, TimestampMixin):
     lead_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("leads.id", ondelete="SET NULL"), nullable=True
     )
+    company_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("companies.id", ondelete="SET NULL"), nullable=True
+    )
     first_name: Mapped[str] = mapped_column(String(100), nullable=False)
     last_name: Mapped[str] = mapped_column(String(100), nullable=False, default="")
     email: Mapped[str | None] = mapped_column(String(320), nullable=True)
@@ -40,5 +43,8 @@ class Contact(Base, TimestampMixin):
 
     tenant: Mapped["Tenant"] = relationship(back_populates="contacts")
     lead: Mapped["Lead | None"] = relationship()
+    linked_company: Mapped["Company | None"] = relationship(
+        back_populates="contacts", foreign_keys=[company_id]
+    )
     assigned_to: Mapped["User | None"] = relationship(foreign_keys=[assigned_to_id])
     created_by: Mapped["User | None"] = relationship(foreign_keys=[created_by_id])

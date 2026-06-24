@@ -6,7 +6,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import asc, desc, func, nulls_last, or_, select
 from sqlalchemy.orm import Session, joinedload
 
-from app.models import Contact, Deal, Lead, Task, TenantMembership, User
+from app.models import Company, Contact, Deal, Lead, Task, TenantMembership, User
 from app.models.task import KANBAN_STATUSES, TASK_ENTITY_TYPES, TASK_PRIORITIES, TASK_SORT_FIELDS, TASK_STATUSES
 from app.schemas.task import TaskCreate, TaskDashboardSummary, TaskUpdate
 
@@ -67,9 +67,13 @@ class TaskService:
             exists = self.db.scalar(
                 select(Contact.id).where(Contact.id == entity_id, Contact.tenant_id == tenant_id)
             )
-        else:
+        elif entity_type == "deal":
             exists = self.db.scalar(
                 select(Deal.id).where(Deal.id == entity_id, Deal.tenant_id == tenant_id)
+            )
+        else:
+            exists = self.db.scalar(
+                select(Company.id).where(Company.id == entity_id, Company.tenant_id == tenant_id)
             )
         if exists is None:
             raise HTTPException(

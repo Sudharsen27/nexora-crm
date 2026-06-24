@@ -3,10 +3,10 @@ import uuid
 from decimal import Decimal
 
 from fastapi import HTTPException, status
-from sqlalchemy import func, or_, select
+from sqlalchemy import desc, func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
-from app.models import Lead, TenantMembership, User
+from app.models import Contact, Deal, Lead, TenantMembership, User
 from app.schemas.lead import LeadCreate, LeadUpdate
 
 
@@ -153,6 +153,31 @@ class LeadService:
         lead = self.get_lead(tenant_id, lead_id)
         self.db.delete(lead)
         self.db.commit()
+
+    def list_lead_deals(self, tenant_id: uuid.UUID, lead_id: uuid.UUID) -> list[Deal]:
+        self.get_lead(tenant_id, lead_id)
+        return list(
+            self.db.scalars(
+                select(Deal)
+                .options(joinedload(Deal.assigned_to))
+                .where(Deal.tenant_id == tenant_id, Deal.lead_id == lead_id)
+                .order_by(desc(Deal.created_at))
+            ).all()
+        )
+
+    def get_lead_contact(self, tenant_id: uuid.UUID, lead_id: uuid.UUID) -> Contact:
+        self.get_lead(tenant_id, lead_id)
+        contact = self.db.scalar(
+            select(Contact)
+            .options(joinedload(Contact.assigned_to))
+            .where(Contact.tenant_id == tenant_id, Contact.lead_id == lead_id)
+        )
+        if contact is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No contact linked to this lead",
+            )
+        return contact
 
 
 def paginate(total: int, page: int, page_size: int) -> dict:

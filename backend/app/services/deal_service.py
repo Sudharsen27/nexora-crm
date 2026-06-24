@@ -6,7 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.db.mixins import utcnow
-from app.models import Deal, Lead, TenantMembership
+from app.models import Company, Deal, Lead, TenantMembership
 from app.models.deal import DEAL_STAGE_LABELS, DEAL_STAGES
 from app.schemas.deal import DealCreate, DealMove, DealUpdate
 
@@ -44,6 +44,18 @@ class DealService:
         lead = self.db.scalar(select(Lead).where(Lead.id == lead_id, Lead.tenant_id == tenant_id))
         if lead is None:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Lead not found in this organization")
+
+    def _validate_company(self, tenant_id: uuid.UUID, company_id: uuid.UUID | None) -> None:
+        if company_id is None:
+            return
+        company = self.db.scalar(
+            select(Company).where(Company.id == company_id, Company.tenant_id == tenant_id)
+        )
+        if company is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Company not found in this organization",
+            )
 
     def _next_position(self, tenant_id: uuid.UUID, stage: str) -> int:
         max_pos = self.db.scalar(
@@ -94,6 +106,7 @@ class DealService:
     ) -> Deal:
         self._validate_assignee(tenant_id, payload.assigned_to_id)
         self._validate_lead(tenant_id, payload.lead_id)
+        self._validate_company(tenant_id, payload.company_id)
 
         deal = Deal(
             tenant_id=tenant_id,
@@ -105,6 +118,7 @@ class DealService:
             currency=payload.currency,
             expected_close_date=payload.expected_close_date,
             lead_id=payload.lead_id,
+            company_id=payload.company_id,
             assigned_to_id=payload.assigned_to_id,
             created_by_id=created_by_id,
         )
@@ -127,6 +141,8 @@ class DealService:
             self._validate_assignee(tenant_id, data["assigned_to_id"])
         if "lead_id" in data:
             self._validate_lead(tenant_id, data["lead_id"])
+        if "company_id" in data:
+            self._validate_company(tenant_id, data["company_id"])
 
         old_stage = deal.stage
         for field, value in data.items():

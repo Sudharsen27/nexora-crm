@@ -50,6 +50,9 @@ class Deal(Base, TimestampMixin):
     lead_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("leads.id", ondelete="SET NULL"), nullable=True
     )
+    company_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("companies.id", ondelete="SET NULL"), nullable=True
+    )
     assigned_to_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
@@ -60,5 +63,6 @@ class Deal(Base, TimestampMixin):
 
     tenant: Mapped["Tenant"] = relationship(back_populates="deals")
     lead: Mapped["Lead | None"] = relationship()
+    company: Mapped["Company | None"] = relationship(back_populates="deals")
     assigned_to: Mapped["User | None"] = relationship(foreign_keys=[assigned_to_id])
     created_by: Mapped["User | None"] = relationship(foreign_keys=[created_by_id])

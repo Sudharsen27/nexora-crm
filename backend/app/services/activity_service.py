@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import desc, func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
-from app.models import Activity, Contact, Deal, Lead
+from app.models import Activity, Company, Contact, Deal, Lead
 from app.models.activity import ACTIVITY_TYPES, ENTITY_TYPES
 from app.schemas.activity import ActivityCreate
 
@@ -33,6 +33,10 @@ class ActivityService:
         elif entity_type == "deal":
             exists = self.db.scalar(
                 select(Deal.id).where(Deal.id == entity_id, Deal.tenant_id == tenant_id)
+            )
+        elif entity_type == "company":
+            exists = self.db.scalar(
+                select(Company.id).where(Company.id == entity_id, Company.tenant_id == tenant_id)
             )
         else:
             raise HTTPException(

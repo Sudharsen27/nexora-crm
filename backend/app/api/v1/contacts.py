@@ -27,10 +27,18 @@ def _to_response(contact) -> ContactResponse:
             "last_name": contact.lead.last_name,
             "status": contact.lead.status,
         }
+    company_ref = None
+    if contact.linked_company:
+        company_ref = {
+            "id": contact.linked_company.id,
+            "company_name": contact.linked_company.company_name,
+            "company_code": contact.linked_company.company_code,
+        }
     return ContactResponse(
         id=contact.id,
         tenant_id=contact.tenant_id,
         lead_id=contact.lead_id,
+        company_id=contact.company_id,
         first_name=contact.first_name,
         last_name=contact.last_name,
         email=contact.email,
@@ -40,6 +48,7 @@ def _to_response(contact) -> ContactResponse:
         assigned_to_id=contact.assigned_to_id,
         assigned_to=assigned,
         lead=lead_ref,
+        linked_company=company_ref,
         created_by_id=contact.created_by_id,
         created_at=contact.created_at,
         updated_at=contact.updated_at,
@@ -50,6 +59,7 @@ def _to_response(contact) -> ContactResponse:
 def list_contacts(
     q: str | None = Query(default=None, max_length=200),
     company: str | None = Query(default=None, max_length=255),
+    company_id: UUID | None = Query(default=None),
     assigned_to_id: UUID | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
@@ -63,6 +73,7 @@ def list_contacts(
         ctx.tenant.id,
         q=q,
         company=company,
+        company_id=company_id,
         assigned_to_id=assigned_to_id,
         page=page,
         page_size=page_size,

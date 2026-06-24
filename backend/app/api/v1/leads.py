@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 from app.core.deps import TenantContext, require_permission
 from app.db.session import get_db
 from app.models.lead import LEAD_SOURCES, LEAD_STATUSES
+from app.schemas.contact import ContactResponse
+from app.schemas.deal import DealResponse
 from app.schemas.lead import LeadCreate, LeadListResponse, LeadMetaResponse, LeadResponse, LeadUpdate
 from app.services.lead_service import LeadService, paginate
 
@@ -84,6 +86,30 @@ def create_lead(
 ) -> LeadResponse:
     lead = LeadService(db).create_lead(ctx.tenant.id, payload, ctx.membership.user_id)
     return _to_response(lead)
+
+
+@router.get("/{lead_id}/deals", response_model=list[DealResponse])
+def list_lead_deals(
+    lead_id: UUID,
+    ctx: TenantContext = Depends(require_permission("lead:read")),
+    db: Session = Depends(get_db),
+) -> list[DealResponse]:
+    from app.api.v1.deals import _to_response as deal_to_response
+
+    deals = LeadService(db).list_lead_deals(ctx.tenant.id, lead_id)
+    return [deal_to_response(deal) for deal in deals]
+
+
+@router.get("/{lead_id}/contact", response_model=ContactResponse)
+def get_lead_contact(
+    lead_id: UUID,
+    ctx: TenantContext = Depends(require_permission("lead:read")),
+    db: Session = Depends(get_db),
+) -> ContactResponse:
+    from app.api.v1.contacts import _to_response as contact_to_response
+
+    contact = LeadService(db).get_lead_contact(ctx.tenant.id, lead_id)
+    return contact_to_response(contact)
 
 
 @router.get("/{lead_id}", response_model=LeadResponse)
