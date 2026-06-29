@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -5,19 +6,15 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
-from app.db.session import SessionLocal
-from app.services.auth_service import seed_permissions
+from app.db.bootstrap import bootstrap_database
 
+logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    db = SessionLocal()
-    try:
-        seed_permissions(db)
-    finally:
-        db.close()
+    bootstrap_database()
     yield
 
 

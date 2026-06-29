@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import inspect, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.config import get_settings
@@ -17,6 +17,7 @@ from app.core.security import (
 )
 from app.db.mixins import utcnow
 from app.db.seed import ROLE_PERMISSIONS, SYSTEM_ROLES
+from app.db.session import engine
 from app.models import (
     PasswordResetToken,
     Permission,
@@ -417,8 +418,13 @@ class TenantService:
 
 
 def seed_permissions(db: Session) -> None:
+    """Insert missing global permissions and backfill role links (idempotent)."""
     from app.db.seed import PERMISSIONS, ROLE_PERMISSIONS
     from app.models import Role, RolePermission
+
+    if "permissions" not in inspect(engine).get_table_names():
+        logger.warning("permissions table not found; skipping seed")
+        return
 
     existing = {permission.slug: permission for permission in db.scalars(select(Permission)).all()}
     for resource, action, slug in PERMISSIONS:

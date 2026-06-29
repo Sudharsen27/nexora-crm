@@ -11,6 +11,7 @@ from app.models import (  # noqa: F401
     Contact,
     Deal,
     Lead,
+    PasswordResetToken,
     Permission,
     RefreshToken,
     Role,
