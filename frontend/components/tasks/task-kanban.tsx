@@ -17,6 +17,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { AlertTriangle, CalendarDays, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePermissions } from "@/contexts/permissions-context";
 import {
   formatDueDate,
   getTaskBoard,
@@ -67,9 +68,15 @@ function TaskCard({
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
 }) {
+  const { canWrite, canDelete, loading } = usePermissions();
+  const canEdit = !loading && canWrite("task");
+  const canRemove = !loading && canDelete("task");
+  const canDrag = !loading && canWrite("task");
+
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
     data: { type: "task", task },
+    disabled: !canDrag,
   });
 
   const style = transform ? { transform: CSS.Translate.toString(transform) } : undefined;
@@ -86,9 +93,11 @@ function TaskCard({
       <div className="flex items-start justify-between gap-2">
         <button
           type="button"
-          className="flex-1 cursor-grab text-left active:cursor-grabbing"
-          {...listeners}
-          {...attributes}
+          className={cn(
+            "flex-1 text-left",
+            canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-default",
+          )}
+          {...(canDrag ? { ...listeners, ...attributes } : {})}
         >
           <Link
             href={`/${tenantSlug}/tasks/${task.id}`}
@@ -133,14 +142,20 @@ function TaskCard({
             </div>
           )}
         </button>
-        <div className="flex shrink-0 gap-0.5">
-          <Button variant="ghost" size="sm" onClick={() => onEdit(task)}>
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => onDelete(task)}>
-            <Trash2 className="h-3.5 w-3.5 text-red-600" />
-          </Button>
-        </div>
+        {(canEdit || canRemove) && (
+          <div className="flex shrink-0 gap-0.5">
+            {canEdit && (
+              <Button variant="ghost" size="sm" onClick={() => onEdit(task)}>
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+            )}
+            {canRemove && (
+              <Button variant="ghost" size="sm" onClick={() => onDelete(task)}>
+                <Trash2 className="h-3.5 w-3.5 text-red-600" />
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -227,6 +242,8 @@ export function TaskKanban({
   onDelete,
   refreshKey = 0,
 }: TaskKanbanProps) {
+  const { canWrite, loading: permsLoading } = usePermissions();
+  const canMove = !permsLoading && canWrite("task");
   const [board, setBoard] = useState<TaskBoard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -267,6 +284,7 @@ export function TaskKanban({
 
   async function handleDragEnd(event: DragEndEvent) {
     setActiveTask(null);
+    if (!canMove) return;
     const { active, over } = event;
     if (!over) return;
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Check, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
+import { usePermissions } from "@/contexts/permissions-context";
 import {
   createTask,
   deleteTask,
@@ -28,6 +29,7 @@ interface EntityTasksPanelProps {
 }
 
 export function EntityTasksPanel({ tenantSlug, entityType, entityId }: EntityTasksPanelProps) {
+  const { canWrite, canDelete } = usePermissions();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,16 +78,18 @@ export function EntityTasksPanel({ tenantSlug, entityType, entityId }: EntityTas
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-zinc-500">{tasks.length} task{tasks.length !== 1 ? "s" : ""}</p>
-        <Button
-          size="sm"
-          onClick={() => {
-            setEditing(null);
-            setFormOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4" />
-          Add task
-        </Button>
+        {canWrite("task") && (
+          <Button
+            size="sm"
+            onClick={() => {
+              setEditing(null);
+              setFormOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4" />
+            Add task
+          </Button>
+        )}
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
       {loading ? (
@@ -122,24 +126,28 @@ export function EntityTasksPanel({ tenantSlug, entityType, entityId }: EntityTas
                 </div>
               </div>
               <div className="flex shrink-0 gap-1">
-                {task.status !== "completed" && (
+                {task.status !== "completed" && canWrite("task") && (
                   <Button variant="ghost" size="sm" onClick={() => void handleComplete(task)}>
                     <Check className="h-4 w-4" />
                   </Button>
                 )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setEditing(task);
-                    setFormOpen(true);
-                  }}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => void handleDelete(task)}>
-                  <Trash2 className="h-4 w-4 text-red-600" />
-                </Button>
+                {canWrite("task") && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setEditing(task);
+                      setFormOpen(true);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+                {canDelete("task") && (
+                  <Button variant="ghost" size="sm" onClick={() => void handleDelete(task)}>
+                    <Trash2 className="h-4 w-4 text-red-600" />
+                  </Button>
+                )}
               </div>
             </div>
           ))}

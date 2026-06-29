@@ -4,7 +4,13 @@ from sqlalchemy.orm import Session
 from app.core.deps import TenantContext, get_current_user, get_tenant_context, require_permission
 from app.db.session import get_db
 from app.models import User
-from app.schemas.tenant import TenantCreate, TenantListResponse, TenantResponse, TenantUpdate
+from app.schemas.tenant import (
+    TenantCreate,
+    TenantListResponse,
+    TenantPermissionsResponse,
+    TenantResponse,
+    TenantUpdate,
+)
 from app.services.auth_service import AuthService, TenantService
 
 router = APIRouter(prefix="/tenants", tags=["tenants"])
@@ -52,6 +58,17 @@ def get_tenant(ctx: TenantContext = Depends(require_permission("tenant:read"))) 
         slug=ctx.tenant.slug,
         status=ctx.tenant.status,
         role=ctx.role.slug,
+    )
+
+
+@router.get("/{slug}/permissions", response_model=TenantPermissionsResponse)
+def get_tenant_permissions(
+    ctx: TenantContext = Depends(get_tenant_context),
+) -> TenantPermissionsResponse:
+    return TenantPermissionsResponse(
+        role=ctx.role.slug,
+        role_name=ctx.role.name,
+        permissions=ctx.permissions,
     )
 
 

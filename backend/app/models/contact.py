@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import ForeignKey, Index, String, UniqueConstraint
+from sqlalchemy import ForeignKey, Index, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -34,6 +34,7 @@ class Contact(Base, TimestampMixin):
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     company: Mapped[str | None] = mapped_column(String(255), nullable=True)
     job_title: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     assigned_to_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )

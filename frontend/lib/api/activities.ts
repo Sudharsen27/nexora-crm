@@ -115,6 +115,17 @@ export async function createActivity(slug: string, data: ActivityInput): Promise
   });
 }
 
+export async function updateActivity(
+  slug: string,
+  activityId: string,
+  data: Partial<ActivityInput>,
+): Promise<Activity> {
+  return apiFetch<Activity>(`/tenants/${slug}/activities/${activityId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
 export async function deleteActivity(slug: string, activityId: string): Promise<void> {
   await apiFetch<void>(`/tenants/${slug}/activities/${activityId}`, { method: "DELETE" });
 }

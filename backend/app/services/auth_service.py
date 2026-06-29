@@ -1,5 +1,7 @@
+import logging
 import re
 import uuid
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, status
@@ -15,9 +17,27 @@ from app.core.security import (
 )
 from app.db.mixins import utcnow
 from app.db.seed import ROLE_PERMISSIONS, SYSTEM_ROLES
-from app.models import Permission, RefreshToken, Role, RolePermission, Tenant, TenantMembership, User
+from app.models import (
+    PasswordResetToken,
+    Permission,
+    RefreshToken,
+    Role,
+    RolePermission,
+    Tenant,
+    TenantMembership,
+    User,
+)
 
+from app.services.email_service import send_password_reset_email
+
+logger = logging.getLogger(__name__)
 settings = get_settings()
+
+
+@dataclass
+class PasswordResetResult:
+    dev_reset_url: str | None = None
+    email_sent: bool = False
 
 
 class AuthService:
@@ -106,6 +126,73 @@ class AuthService:
         if stored and stored.revoked_at is None:
             stored.revoked_at = utcnow()
             self.db.commit()
+
+    def request_password_reset(self, email: str) -> PasswordResetResult:
+        """Create a reset token. Sends email when SMTP is configured."""
+        settings = get_settings()
+        user = self.db.scalar(select(User).where(User.email == email.lower()))
+        if user is None or not user.is_active:
+            return PasswordResetResult()
+
+        now = utcnow()
+        existing = self.db.scalars(
+            select(PasswordResetToken).where(
+                PasswordResetToken.user_id == user.id,
+                PasswordResetToken.used_at.is_(None),
+            )
+        ).all()
+        for row in existing:
+            row.used_at = now
+
+        raw_token = create_refresh_token_value()
+        reset_token = PasswordResetToken(
+            user_id=user.id,
+            token_hash=hash_token(raw_token),
+            expires_at=now + timedelta(minutes=settings.PASSWORD_RESET_EXPIRE_MINUTES),
+            created_at=now,
+        )
+        self.db.add(reset_token)
+        self.db.commit()
+
+        reset_url = f"{settings.FRONTEND_URL.rstrip('/')}/reset-password?token={raw_token}"
+        email_sent = False
+        if settings.email_enabled:
+            try:
+                send_password_reset_email(to=user.email, full_name=user.full_name, reset_url=reset_url)
+                email_sent = True
+            except Exception:
+                logger.exception("Failed to send password reset email to %s", user.email)
+
+        dev_reset_url = reset_url if settings.DEBUG and not email_sent else None
+        return PasswordResetResult(dev_reset_url=dev_reset_url, email_sent=email_sent)
+
+    def reset_password(self, raw_token: str, new_password: str) -> None:
+        token_hash = hash_token(raw_token)
+        stored = self.db.scalar(
+            select(PasswordResetToken)
+            .options(joinedload(PasswordResetToken.user))
+            .where(PasswordResetToken.token_hash == token_hash)
+        )
+        if stored is None or stored.used_at is not None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset link")
+        if stored.expires_at < utcnow():
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset link")
+        if not stored.user.is_active:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is inactive")
+
+        stored.user.password_hash = hash_password(new_password)
+        stored.used_at = utcnow()
+
+        refresh_rows = self.db.scalars(
+            select(RefreshToken).where(
+                RefreshToken.user_id == stored.user_id,
+                RefreshToken.revoked_at.is_(None),
+            )
+        ).all()
+        for row in refresh_rows:
+            row.revoked_at = utcnow()
+
+        self.db.commit()
 
 
 class TenantService:

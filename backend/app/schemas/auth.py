@@ -28,6 +28,22 @@ class RefreshRequest(BaseModel):
     refresh_token: str | None = None
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ForgotPasswordResponse(BaseModel):
+    message: str
+    reset_url: str | None = None
+    email_sent: bool = False
+    email_configured: bool = False
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(min_length=16, max_length=256)
+    password: str = Field(min_length=8, max_length=128)
+
+
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

@@ -6,7 +6,6 @@ import { getDashboard, getDefaultTimezone } from "@/lib/api/dashboard";
 import type { DashboardFilters, DashboardRange, DashboardResponse, DashboardScope } from "@/types/dashboard";
 import { DashboardFilters as DashboardFiltersBar } from "@/components/dashboard/dashboard-filters";
 import { QuickActions } from "@/components/dashboard/quick-actions";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { KpiRow } from "@/components/dashboard/kpi-row";
 import { SalesFunnelChart } from "@/components/dashboard/sales-funnel-chart";
 import { RevenueTrendChart } from "@/components/dashboard/revenue-trend-chart";
@@ -16,6 +15,7 @@ import { RecentActivityFeed } from "@/components/dashboard/recent-activity-feed"
 import { UpcomingTasksList } from "@/components/dashboard/upcoming-tasks-list";
 import { CalendarStrip } from "@/components/dashboard/calendar-strip";
 import { WidgetError, WidgetSkeleton } from "@/components/dashboard/widget-states";
+import { RoleLabel } from "@/components/layout/role-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button-variants";
 import Link from "next/link";
@@ -86,7 +86,8 @@ export function DashboardPage({ tenantSlug }: DashboardPageProps) {
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight text-[var(--foreground)]">Dashboard</h1>
             <p className="text-sm text-[var(--muted-foreground)]">
-              Track pipeline, revenue, and team activity in one place.
+              Track pipeline, revenue, and team activity in one place. Signed in as{" "}
+              <RoleLabel className="font-medium text-[var(--foreground)]" />.
             </p>
             {data ? (
               <p className="text-xs text-[var(--muted-foreground)]">
@@ -97,7 +98,6 @@ export function DashboardPage({ tenantSlug }: DashboardPageProps) {
           </div>
           <div className="flex flex-col gap-3 sm:items-end">
             <div className="flex items-center gap-2 self-start sm:self-end">
-              <ThemeToggle />
               <Link
                 href={`/${tenantSlug}/tasks?due=overdue`}
                 className={cn(buttonVariants({ variant: "outline", size: "sm" }))}

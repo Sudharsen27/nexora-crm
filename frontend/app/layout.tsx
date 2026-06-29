@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -22,7 +21,7 @@ export const metadata: Metadata = {
   },
 };
 
-const themeInitScript = `(function(){try{var t=localStorage.getItem('nexora_theme');var d=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);}catch(e){}})();`;
+const themeInitScript = `(function(){try{var t=localStorage.getItem('nexora_theme');var theme=(t==='light'||t==='dark'||t==='system')?t:'system';var d=theme==='dark'||(theme==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);}catch(e){}})();`;
 
 export default function RootLayout({
   children,
@@ -35,10 +34,12 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{ __html: themeInitScript }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
-        <Script id="nexora-theme-init" strategy="beforeInteractive">
-          {themeInitScript}
-        </Script>
         {children}
       </body>
     </html>

@@ -9,6 +9,7 @@ export type DealInput = {
   currency?: string;
   expected_close_date?: string | null;
   lead_id?: string | null;
+  company_id?: string | null;
   assigned_to_id?: string | null;
 };
 

@@ -7,6 +7,7 @@ import { Pencil, Plus, Search, Trash2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { usePermissions } from "@/contexts/permissions-context";
 import {
   deleteLead,
   formatLeadName,
@@ -27,6 +28,7 @@ interface LeadsPageProps {
 
 export function LeadsPage({ tenantSlug }: LeadsPageProps) {
   const router = useRouter();
+  const { canWrite, canDelete } = usePermissions();
   const searchParams = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [meta, setMeta] = useState<LeadMeta | null>(null);
@@ -123,12 +125,14 @@ export function LeadsPage({ tenantSlug }: LeadsPageProps) {
           <h2 className="text-2xl font-semibold">Leads</h2>
           <p className="text-zinc-500">{total} lead{total !== 1 ? "s" : ""} total</p>
         </div>
-        <Link href={`/${tenantSlug}/leads/new`} className="inline-flex">
-          <Button>
-            <Plus className="h-4 w-4" />
-            New lead
-          </Button>
-        </Link>
+        {canWrite("lead") && (
+          <Link href={`/${tenantSlug}/leads/new`} className="inline-flex">
+            <Button>
+              <Plus className="h-4 w-4" />
+              New lead
+            </Button>
+          </Link>
+        )}
       </div>
 
       <Card>
@@ -266,7 +270,7 @@ export function LeadsPage({ tenantSlug }: LeadsPageProps) {
                       <td className="px-4 py-3">{lead.assigned_to?.full_name ?? "—"}</td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
-                          {lead.status !== "converted" && (
+                          {lead.status !== "converted" && canWrite("contact") && canWrite("lead") && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -282,14 +286,16 @@ export function LeadsPage({ tenantSlug }: LeadsPageProps) {
                               <Pencil className="h-4 w-4" />
                             </Button>
                           </Link>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(lead)}
-                            aria-label={`Delete ${formatLeadName(lead)}`}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-600" />
-                          </Button>
+                          {canDelete("lead") && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(lead)}
+                              aria-label={`Delete ${formatLeadName(lead)}`}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>

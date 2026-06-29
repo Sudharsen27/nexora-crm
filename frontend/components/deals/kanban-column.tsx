@@ -4,6 +4,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePermissions } from "@/contexts/permissions-context";
 import { DealCard } from "@/components/deals/deal-card";
 import { STAGE_COLORS } from "@/lib/api/deals";
 import type { Deal, DealStageColumn } from "@/types/api";
@@ -18,6 +19,8 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({ column, tenantSlug, onAdd, onEdit, onDelete }: KanbanColumnProps) {
+  const { canWrite, loading } = usePermissions();
+  const canAdd = !loading && canWrite("deal");
   const { setNodeRef, isOver } = useDroppable({
     id: `stage:${column.slug}`,
     data: { type: "column", stage: column.slug },
@@ -43,9 +46,11 @@ export function KanbanColumn({ column, tenantSlug, onAdd, onEdit, onDelete }: Ka
             {totalValue > 0 && ` · $${totalValue.toLocaleString()}`}
           </p>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => onAdd(column.slug)} aria-label={`Add to ${column.label}`}>
-          <Plus className="h-4 w-4" />
-        </Button>
+        {canAdd && (
+          <Button variant="ghost" size="sm" onClick={() => onAdd(column.slug)} aria-label={`Add to ${column.label}`}>
+            <Plus className="h-4 w-4" />
+          </Button>
+        )}
       </div>
       <div
         ref={setNodeRef}

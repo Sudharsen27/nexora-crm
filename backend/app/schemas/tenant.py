@@ -33,3 +33,9 @@ class TenantResponse(BaseModel):
 
 class TenantListResponse(BaseModel):
     items: list[TenantResponse]
+
+
+class TenantPermissionsResponse(BaseModel):
+    role: str
+    role_name: str
+    permissions: list[str]

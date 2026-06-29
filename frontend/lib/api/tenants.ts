@@ -20,6 +20,16 @@ export async function getTenant(slug: string): Promise<Tenant> {
   return apiFetch<Tenant>(`/tenants/${slug}`);
 }
 
+export async function getTenantPermissions(slug: string): Promise<{
+  role: string;
+  role_name: string;
+  permissions: string[];
+}> {
+  return apiFetch<{ role: string; role_name: string; permissions: string[] }>(
+    `/tenants/${slug}/permissions`,
+  );
+}
+
 export async function listMembers(slug: string): Promise<Member[]> {
   const data = await apiFetch<{ items: Member[] }>(`/tenants/${slug}/users`);
   return data.items;

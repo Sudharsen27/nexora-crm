@@ -11,6 +11,7 @@ import { formatContactName, listContacts } from "@/lib/api/contacts";
 import { formatLeadName, listLeads } from "@/lib/api/leads";
 import { getDealBoard } from "@/lib/api/deals";
 import { listCompanies } from "@/lib/api/companies";
+import type { Activity } from "@/types/api";
 
 const schema = z.object({
   entity_type: z.enum(ENTITY_TYPES),
@@ -32,6 +33,7 @@ interface EntityOption {
 interface ActivityFormDialogProps {
   open: boolean;
   tenantSlug: string;
+  initial?: Activity | null;
   defaultEntityType?: (typeof ENTITY_TYPES)[number];
   defaultEntityId?: string;
   entityOptions?: EntityOption[];
@@ -43,6 +45,7 @@ interface ActivityFormDialogProps {
 export function ActivityFormDialog({
   open,
   tenantSlug,
+  initial = null,
   defaultEntityType = "contact",
   defaultEntityId = "",
   entityOptions: initialEntityOptions = [],
@@ -53,6 +56,8 @@ export function ActivityFormDialog({
   const [error, setError] = useState<string | null>(null);
   const [entityOptions, setEntityOptions] = useState<EntityOption[]>(initialEntityOptions);
   const [loadingEntities, setLoadingEntities] = useState(false);
+  const isEdit = Boolean(initial);
+  const entityLocked = lockEntity;
 
   const {
     register,
@@ -62,18 +67,25 @@ export function ActivityFormDialog({
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    values: {
-      entity_type: defaultEntityType,
-      entity_id: defaultEntityId,
-      activity_type: "note",
-      description: "",
-    },
+    values: initial
+      ? {
+          entity_type: initial.entity_type as FormData["entity_type"],
+          entity_id: initial.entity_id,
+          activity_type: initial.activity_type as FormData["activity_type"],
+          description: initial.description,
+        }
+      : {
+          entity_type: defaultEntityType,
+          entity_id: defaultEntityId,
+          activity_type: "note",
+          description: "",
+        },
   });
 
   const entityType = watch("entity_type");
 
   useEffect(() => {
-    if (lockEntity || !open) return;
+    if (entityLocked || !open) return;
 
     let cancelled = false;
     setLoadingEntities(true);
@@ -96,7 +108,11 @@ export function ActivityFormDialog({
         }
         if (!cancelled) {
           setEntityOptions(options);
-          setValue("entity_id", "");
+          if (initial && entityType === initial.entity_type) {
+            setValue("entity_id", initial.entity_id);
+          } else {
+            setValue("entity_id", "");
+          }
         }
       } catch {
         if (!cancelled) setEntityOptions([]);
@@ -109,28 +125,30 @@ export function ActivityFormDialog({
     return () => {
       cancelled = true;
     };
-  }, [entityType, lockEntity, open, tenantSlug, setValue]);
+  }, [entityType, entityLocked, open, tenantSlug, setValue, initial]);
 
   useEffect(() => {
-    if (!lockEntity && open && initialEntityOptions.length > 0) {
+    if (!entityLocked && open && initialEntityOptions.length > 0) {
       setEntityOptions(initialEntityOptions);
     }
-  }, [initialEntityOptions, lockEntity, open]);
+  }, [initialEntityOptions, entityLocked, open]);
 
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-xl">
-        <h2 className="text-lg font-semibold text-[var(--foreground)]">Log activity</h2>
+        <h2 className="text-lg font-semibold text-[var(--foreground)]">
+          {isEdit ? "Edit activity" : "Log activity"}
+        </h2>
         <form
           className="mt-4 space-y-4"
           onSubmit={handleSubmit(async (data) => {
             setError(null);
             try {
               await onSubmit({
-                entity_type: lockEntity ? defaultEntityType : data.entity_type,
-                entity_id: lockEntity ? defaultEntityId : data.entity_id,
+                entity_type: entityLocked && initial ? initial.entity_type : data.entity_type,
+                entity_id: entityLocked && initial ? initial.entity_id : data.entity_id,
                 activity_type: data.activity_type,
                 description: data.description.trim(),
               });
@@ -140,7 +158,7 @@ export function ActivityFormDialog({
             }
           })}
         >
-          {!lockEntity && (
+          {!entityLocked && (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="entity_type">Related to</Label>
@@ -178,9 +196,9 @@ export function ActivityFormDialog({
               </div>
             </div>
           )}
-          {lockEntity && (
-            <p className="rounded-xl bg-[var(--surface-muted)] px-3 py-2 text-sm text-zinc-600">
-              Linked to this {defaultEntityType}
+          {entityLocked && (
+            <p className="rounded-xl bg-[var(--surface-muted)] px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Linked to this {initial?.entity_type ?? defaultEntityType}
             </p>
           )}
           <div className="space-y-2">
@@ -216,7 +234,7 @@ export function ActivityFormDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : "Log activity"}
+              {isSubmitting ? "Saving..." : isEdit ? "Save changes" : "Log activity"}
             </Button>
           </div>
         </form>

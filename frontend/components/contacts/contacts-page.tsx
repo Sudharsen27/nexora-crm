@@ -7,6 +7,7 @@ import { ArrowRightLeft, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { usePermissions } from "@/contexts/permissions-context";
 import { ContactFormDialog } from "@/components/contacts/contact-form-dialog";
 import {
   convertLeadToContact,
@@ -27,6 +28,7 @@ interface ContactsPageProps {
 
 export function ContactsPage({ tenantSlug }: ContactsPageProps) {
   const router = useRouter();
+  const { canWrite, canDelete } = usePermissions();
   const searchParams = useSearchParams();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
@@ -159,19 +161,23 @@ export function ContactsPage({ tenantSlug }: ContactsPageProps) {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => void openConvertDialog()}>
-            <ArrowRightLeft className="h-4 w-4" />
-            Convert lead
-          </Button>
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            New contact
-          </Button>
+          {canWrite("contact") && canWrite("lead") && (
+            <Button variant="outline" onClick={() => void openConvertDialog()}>
+              <ArrowRightLeft className="h-4 w-4" />
+              Convert lead
+            </Button>
+          )}
+          {canWrite("contact") && (
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4" />
+              New contact
+            </Button>
+          )}
         </div>
       </div>
 
@@ -303,24 +309,28 @@ export function ContactsPage({ tenantSlug }: ContactsPageProps) {
                       <td className="px-4 py-3">{formatDate(contact.created_at)}</td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setEditing(contact);
-                              setFormOpen(true);
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(contact)}
-                            aria-label={`Delete ${formatContactName(contact)}`}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-600" />
-                          </Button>
+                          {canWrite("contact") && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setEditing(contact);
+                                setFormOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {canDelete("contact") && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(contact)}
+                              aria-label={`Delete ${formatContactName(contact)}`}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -359,6 +369,7 @@ export function ContactsPage({ tenantSlug }: ContactsPageProps) {
       )}
 
       <ContactFormDialog
+        tenantSlug={tenantSlug}
         open={formOpen}
         members={members}
         initial={editing}

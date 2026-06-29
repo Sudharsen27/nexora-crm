@@ -169,6 +169,7 @@ export interface Contact {
   phone: string | null;
   company: string | null;
   job_title: string | null;
+  notes: string | null;
   assigned_to_id: string | null;
   assigned_to: ContactAssignee | null;
   lead: ContactLeadRef | null;

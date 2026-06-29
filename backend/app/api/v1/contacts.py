@@ -45,6 +45,7 @@ def _to_response(contact) -> ContactResponse:
         phone=contact.phone,
         company=contact.company,
         job_title=contact.job_title,
+        notes=contact.notes,
         assigned_to_id=contact.assigned_to_id,
         assigned_to=assigned,
         lead=lead_ref,

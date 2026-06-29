@@ -23,6 +23,21 @@ class Settings(BaseSettings):
     COOKIE_SECURE: bool = False
     COOKIE_DOMAIN: str | None = None
 
+    FRONTEND_URL: str = "http://localhost:3000"
+    PASSWORD_RESET_EXPIRE_MINUTES: int = 60
+
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = ""
+    SMTP_FROM_NAME: str = "Nexora"
+    SMTP_USE_TLS: bool = True
+
+    @property
+    def email_enabled(self) -> bool:
+        return bool(self.SMTP_HOST.strip() and self.SMTP_FROM_EMAIL.strip())
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def parse_cors_origins(cls, value: str | list[str]) -> list[str]:

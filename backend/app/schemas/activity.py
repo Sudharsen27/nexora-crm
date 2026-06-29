@@ -39,6 +39,44 @@ class ActivityCreate(BaseModel):
         return value
 
 
+class ActivityUpdate(BaseModel):
+    entity_type: str | None = Field(default=None, min_length=1, max_length=30)
+    entity_id: UUID | None = None
+    activity_type: str | None = Field(default=None, min_length=1, max_length=30)
+    description: str | None = Field(default=None, min_length=1, max_length=5000)
+    metadata: dict[str, Any] | None = None
+    scheduled_at: datetime | None = None
+
+    @field_validator("entity_type")
+    @classmethod
+    def validate_entity_type(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip().lower()
+        if normalized not in ENTITY_TYPES:
+            raise ValueError(f"entity_type must be one of: {', '.join(ENTITY_TYPES)}")
+        return normalized
+
+    @field_validator("activity_type")
+    @classmethod
+    def validate_activity_type(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip().lower()
+        if normalized not in ACTIVITY_TYPES:
+            raise ValueError(f"activity_type must be one of: {', '.join(ACTIVITY_TYPES)}")
+        return normalized
+
+    @field_validator("description", mode="before")
+    @classmethod
+    def strip_description(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if isinstance(value, str):
+            return value.strip()
+        return value
+
+
 class ActivityCreator(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

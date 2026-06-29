@@ -80,3 +80,58 @@ export async function refreshSession(): Promise<TokenResponse | null> {
   setTokens(data.access_token);
   return data;
 }
+
+function parseErrorMessage(body: unknown, fallback: string): string {
+  if (typeof body === "object" && body !== null && "detail" in body) {
+    const detail = (body as { detail: unknown }).detail;
+    if (typeof detail === "string") return detail;
+    if (Array.isArray(detail) && detail.length > 0) {
+      const first = detail[0];
+      if (typeof first === "object" && first !== null && "msg" in first) {
+        return String((first as { msg: unknown }).msg);
+      }
+    }
+  }
+  return fallback;
+}
+
+const authBase = () => process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
+
+export async function requestPasswordReset(email: string): Promise<{
+  message: string;
+  reset_url?: string | null;
+  email_sent?: boolean;
+  email_configured?: boolean;
+}> {
+  const response = await fetch(`${authBase()}/auth/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  const body = await response.json();
+  if (!response.ok) {
+    throw new Error(parseErrorMessage(body, "Request failed"));
+  }
+  return body as {
+    message: string;
+    reset_url?: string | null;
+    email_sent?: boolean;
+    email_configured?: boolean;
+  };
+}
+
+export async function resetPassword(data: {
+  token: string;
+  password: string;
+}): Promise<{ message: string }> {
+  const response = await fetch(`${authBase()}/auth/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const body = await response.json();
+  if (!response.ok) {
+    throw new Error(parseErrorMessage(body, "Reset failed"));
+  }
+  return body as { message: string };
+}

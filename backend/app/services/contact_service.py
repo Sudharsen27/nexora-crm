@@ -151,6 +151,7 @@ class ContactService:
             phone=payload.phone,
             company=payload.company,
             job_title=payload.job_title,
+            notes=payload.notes,
             assigned_to_id=payload.assigned_to_id,
             created_by_id=created_by_id,
         )
@@ -179,6 +180,7 @@ class ContactService:
         contact.phone = payload.phone
         contact.company = payload.company
         contact.job_title = payload.job_title
+        contact.notes = payload.notes
         contact.lead_id = payload.lead_id
         contact.company_id = payload.company_id
         contact.assigned_to_id = payload.assigned_to_id
@@ -225,6 +227,7 @@ class ContactService:
             phone=lead.phone,
             company=lead.company,
             job_title=lead.job_title,
+            notes=lead.notes,
             assigned_to_id=lead.assigned_to_id,
             created_by_id=created_by_id,
         )

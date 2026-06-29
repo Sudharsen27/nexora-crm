@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { usePermissions } from "@/contexts/permissions-context";
 import { ActivityFormDialog } from "@/components/activities/activity-form-dialog";
 import { ActivityTimeline } from "@/components/activities/activity-timeline";
 import { EntityTasksPanel } from "@/components/tasks/entity-tasks-panel";
@@ -22,6 +23,7 @@ interface DealDetailPageProps {
 }
 
 export function DealDetailPage({ tenantSlug, dealId }: DealDetailPageProps) {
+  const { canWrite } = usePermissions();
   const [deal, setDeal] = useState<Deal | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
   const [loading, setLoading] = useState(true);
@@ -78,7 +80,7 @@ export function DealDetailPage({ tenantSlug, dealId }: DealDetailPageProps) {
             {formatCurrency(deal.value, deal.currency)} · {deal.stage}
           </p>
         </div>
-        {activeTab === "Activity" && (
+        {activeTab === "Activity" && canWrite("activity") && (
           <Button onClick={() => setFormOpen(true)}>
             <Plus className="h-4 w-4" />
             Log activity

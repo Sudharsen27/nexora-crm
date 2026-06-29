@@ -19,13 +19,12 @@ function formatError(detail: ApiError["detail"]): string {
 
 async function refreshAccessToken(): Promise<string | null> {
   const refreshToken = getRefreshToken();
-  if (!refreshToken) return null;
 
   const response = await fetch(`${API_BASE}/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ refresh_token: refreshToken }),
+    body: JSON.stringify(refreshToken ? { refresh_token: refreshToken } : {}),
   });
 
   if (!response.ok) {
@@ -34,7 +33,7 @@ async function refreshAccessToken(): Promise<string | null> {
   }
 
   const data = await response.json();
-  setTokens(data.access_token, refreshToken);
+  setTokens(data.access_token, refreshToken ?? undefined);
   return data.access_token as string;
 }
 
@@ -63,6 +62,11 @@ export async function apiFetch<T>(
     const newToken = await refreshAccessToken();
     if (newToken) {
       return apiFetch<T>(path, options, false);
+    }
+    if (typeof window !== "undefined") {
+      clearTokens();
+      const returnTo = `${window.location.pathname}${window.location.search}`;
+      window.location.href = `/login?from=${encodeURIComponent(returnTo)}`;
     }
   }
 

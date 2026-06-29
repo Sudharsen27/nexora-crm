@@ -7,10 +7,13 @@ from app.db.session import get_db
 from app.models import User
 from app.schemas.auth import (
     AuthResponse,
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
     LoginRequest,
     MessageResponse,
     RefreshRequest,
     RegisterRequest,
+    ResetPasswordRequest,
     TokenResponse,
     UserResponse,
 )
@@ -118,3 +121,28 @@ def logout(
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)) -> UserResponse:
     return UserResponse.model_validate(current_user)
+
+
+@router.post("/forgot-password", response_model=ForgotPasswordResponse)
+def forgot_password(
+    payload: ForgotPasswordRequest,
+    db: Session = Depends(get_db),
+) -> ForgotPasswordResponse:
+    settings = get_settings()
+    service = AuthService(db)
+    result = service.request_password_reset(payload.email)
+    return ForgotPasswordResponse(
+        message="If an account exists for that email, password reset instructions have been sent.",
+        reset_url=result.dev_reset_url,
+        email_sent=result.email_sent,
+        email_configured=settings.email_enabled,
+    )
+
+
+@router.post("/reset-password", response_model=MessageResponse)
+def reset_password(
+    payload: ResetPasswordRequest,
+    db: Session = Depends(get_db),
+) -> MessageResponse:
+    AuthService(db).reset_password(payload.token, payload.password)
+    return MessageResponse(message="Password updated. You can sign in with your new password.")

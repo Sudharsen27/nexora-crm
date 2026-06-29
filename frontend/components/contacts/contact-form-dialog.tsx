@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { Contact, Member } from "@/types/api";
+import { CompanyPickerField } from "@/components/companies/company-picker-field";
+import type { Company, Contact, Member } from "@/types/api";
 import type { ContactInput } from "@/lib/api/contacts";
 
 const schema = z.object({
@@ -15,6 +16,7 @@ const schema = z.object({
   last_name: z.string().max(100).optional(),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   phone: z.string().max(50).optional(),
+  company_id: z.string().optional(),
   company: z.string().max(255).optional(),
   job_title: z.string().max(150).optional(),
   assigned_to_id: z.string().optional(),
@@ -23,6 +25,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 interface ContactFormDialogProps {
+  tenantSlug: string;
   open: boolean;
   members: Member[];
   initial?: Contact | null;
@@ -31,6 +34,7 @@ interface ContactFormDialogProps {
 }
 
 export function ContactFormDialog({
+  tenantSlug,
   open,
   members,
   initial,
@@ -38,11 +42,17 @@ export function ContactFormDialog({
   onSubmit,
 }: ContactFormDialogProps) {
   const [error, setError] = useState<string | null>(null);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const isEdit = Boolean(initial);
+
+  const handleCompaniesLoaded = useCallback((loaded: Company[]) => {
+    setCompanies(loaded);
+  }, []);
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -52,6 +62,7 @@ export function ContactFormDialog({
           last_name: initial.last_name,
           email: initial.email ?? "",
           phone: initial.phone ?? "",
+          company_id: initial.company_id ?? "",
           company: initial.company ?? "",
           job_title: initial.job_title ?? "",
           assigned_to_id: initial.assigned_to_id ?? "",
@@ -61,11 +72,14 @@ export function ContactFormDialog({
           last_name: "",
           email: "",
           phone: "",
+          company_id: "",
           company: "",
           job_title: "",
           assigned_to_id: "",
         },
   });
+
+  const companyId = watch("company_id");
 
   if (!open) return null;
 
@@ -78,15 +92,20 @@ export function ContactFormDialog({
           onSubmit={handleSubmit(async (data) => {
             setError(null);
             try {
+              const linkedCompanyId = data.company_id?.trim() || null;
+              const linkedCompany = companies.find((company) => company.id === linkedCompanyId);
+
               await onSubmit({
                 first_name: data.first_name.trim(),
                 last_name: data.last_name?.trim() || "",
                 email: data.email?.trim() || null,
                 phone: data.phone?.trim() || null,
-                company: data.company?.trim() || null,
+                company_id: linkedCompanyId,
+                company: linkedCompany?.company_name ?? (data.company?.trim() || null),
                 job_title: data.job_title?.trim() || null,
                 assigned_to_id: data.assigned_to_id || null,
                 lead_id: initial?.lead_id ?? null,
+                notes: initial?.notes ?? null,
               });
               onClose();
             } catch (err) {
@@ -119,15 +138,28 @@ export function ContactFormDialog({
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="company">Company</Label>
-              <Input id="company" {...register("company")} />
-            </div>
+            <CompanyPickerField
+              tenantSlug={tenantSlug}
+              open={open}
+              label="Linked company"
+              registration={register("company_id")}
+              onCompaniesLoaded={handleCompaniesLoaded}
+            />
             <div className="space-y-2">
               <Label htmlFor="job_title">Job title</Label>
               <Input id="job_title" {...register("job_title")} />
             </div>
           </div>
+          {!companyId && (
+            <div className="space-y-2">
+              <Label htmlFor="company">Company name</Label>
+              <Input
+                id="company"
+                placeholder="Enter company name if not linked"
+                {...register("company")}
+              />
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="assigned_to_id">Assigned to</Label>
             <select

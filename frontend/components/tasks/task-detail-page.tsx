@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { usePermissions } from "@/contexts/permissions-context";
 import { ActivityTimeline } from "@/components/activities/activity-timeline";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
 import {
@@ -29,6 +30,7 @@ interface TaskDetailPageProps {
 
 export function TaskDetailPage({ tenantSlug, taskId }: TaskDetailPageProps) {
   const router = useRouter();
+  const { canWrite, canDelete } = usePermissions();
   const [task, setTask] = useState<Task | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,20 +135,24 @@ export function TaskDetailPage({ tenantSlug, taskId }: TaskDetailPageProps) {
           </div>
         </div>
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-          {task.status !== "completed" && (
+          {task.status !== "completed" && canWrite("task") && (
             <Button variant="outline" className="transition-all hover:shadow-sm" onClick={() => void handleComplete()}>
               <Check className="h-4 w-4" />
               Mark complete
             </Button>
           )}
-          <Button variant="outline" className="transition-all hover:shadow-sm" onClick={() => setFormOpen(true)}>
-            <Pencil className="h-4 w-4" />
-            Edit
-          </Button>
-          <Button variant="outline" className="transition-all hover:shadow-sm" onClick={() => void handleDelete()}>
-            <Trash2 className="h-4 w-4 text-red-600" />
-            Delete
-          </Button>
+          {canWrite("task") && (
+            <Button variant="outline" className="transition-all hover:shadow-sm" onClick={() => setFormOpen(true)}>
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Button>
+          )}
+          {canDelete("task") && (
+            <Button variant="outline" className="transition-all hover:shadow-sm" onClick={() => void handleDelete()}>
+              <Trash2 className="h-4 w-4 text-red-600" />
+              Delete
+            </Button>
+          )}
         </div>
       </div>
 

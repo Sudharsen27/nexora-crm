@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getAccessTokenFromCookie } from "@/lib/auth/tokens";
 
-const publicPaths = ["/", "/login", "/register"];
-const authPaths = ["/login", "/register"];
+const publicPaths = ["/", "/login", "/register", "/forgot-password", "/reset-password"];
+const authPaths = ["/login", "/register", "/forgot-password", "/reset-password"];
 const protectedPrefixes = ["/create-organization"];
 
 function isTokenValid(token: string): boolean {
@@ -20,7 +20,7 @@ function isTokenValid(token: string): boolean {
 function isTenantRoute(pathname: string): boolean {
   const segments = pathname.split("/").filter(Boolean);
   if (segments.length === 0) return false;
-  const reserved = new Set(["login", "register", "create-organization"]);
+  const reserved = new Set(["login", "register", "create-organization", "forgot-password", "reset-password"]);
   return !reserved.has(segments[0]);
 }
 

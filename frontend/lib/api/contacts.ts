@@ -9,6 +9,7 @@ export type ContactInput = {
   company?: string | null;
   company_id?: string | null;
   job_title?: string | null;
+  notes?: string | null;
   lead_id?: string | null;
   assigned_to_id?: string | null;
 };

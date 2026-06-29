@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CompanyPickerField } from "@/components/companies/company-picker-field";
 import type { Deal, DealStageMeta, Member } from "@/types/api";
 import type { DealInput } from "@/lib/api/deals";
 
@@ -17,29 +18,34 @@ const schema = z.object({
   value: z.string().optional(),
   currency: z.string().length(3).optional(),
   expected_close_date: z.string().optional(),
+  company_id: z.string().optional(),
   assigned_to_id: z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
 
 interface DealFormDialogProps {
+  tenantSlug: string;
   open: boolean;
   stages: DealStageMeta[];
   members: Member[];
   initial?: Deal | null;
   defaultStage?: string;
   defaultLeadId?: string;
+  defaultCompanyId?: string;
   onClose: () => void;
   onSubmit: (data: DealInput) => Promise<void>;
 }
 
 export function DealFormDialog({
+  tenantSlug,
   open,
   stages,
   members,
   initial,
   defaultStage = "new",
   defaultLeadId,
+  defaultCompanyId,
   onClose,
   onSubmit,
 }: DealFormDialogProps) {
@@ -60,6 +66,7 @@ export function DealFormDialog({
           value: initial.value ?? "",
           currency: initial.currency,
           expected_close_date: initial.expected_close_date ?? "",
+          company_id: initial.company_id ?? "",
           assigned_to_id: initial.assigned_to_id ?? "",
         }
       : {
@@ -69,6 +76,7 @@ export function DealFormDialog({
           value: "",
           currency: "USD",
           expected_close_date: "",
+          company_id: defaultCompanyId ?? "",
           assigned_to_id: "",
         },
   });
@@ -92,6 +100,7 @@ export function DealFormDialog({
                 currency: data.currency || "USD",
                 expected_close_date: data.expected_close_date || null,
                 lead_id: defaultLeadId ?? initial?.lead_id ?? null,
+                company_id: data.company_id?.trim() || null,
                 assigned_to_id: data.assigned_to_id || null,
               });
               onClose();
@@ -146,6 +155,12 @@ export function DealFormDialog({
               </select>
             </div>
           </div>
+          <CompanyPickerField
+            tenantSlug={tenantSlug}
+            open={open}
+            label="Company"
+            registration={register("company_id")}
+          />
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <textarea

@@ -6,6 +6,7 @@ import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { usePermissions } from "@/contexts/permissions-context";
 import { ActivityFormDialog } from "@/components/activities/activity-form-dialog";
 import { ActivityTimeline } from "@/components/activities/activity-timeline";
 import { ACTIVITY_TYPES, createActivity, listActivities } from "@/lib/api/activities";
@@ -17,6 +18,7 @@ interface ActivitiesPageProps {
 
 export function ActivitiesPage({ tenantSlug }: ActivitiesPageProps) {
   const router = useRouter();
+  const { canWrite } = usePermissions();
   const searchParams = useSearchParams();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [total, setTotal] = useState(0);
@@ -82,10 +84,12 @@ export function ActivitiesPage({ tenantSlug }: ActivitiesPageProps) {
             {total} activit{total !== 1 ? "ies" : "y"} total
           </p>
         </div>
-        <Button onClick={() => setFormOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Log activity
-        </Button>
+        {canWrite("activity") && (
+          <Button onClick={() => setFormOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Log activity
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -163,6 +167,7 @@ export function ActivitiesPage({ tenantSlug }: ActivitiesPageProps) {
               tenantSlug={tenantSlug}
               activities={activities}
               showDelete
+              lockEntityOnEdit={false}
               onChanged={() => void loadActivities()}
             />
           )}

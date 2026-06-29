@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models import Activity, Company, Contact, Deal, Lead
 from app.models.activity import ACTIVITY_TYPES, ENTITY_TYPES
-from app.schemas.activity import ActivityCreate
+from app.schemas.activity import ActivityCreate, ActivityUpdate
 
 
 class ActivityService:
@@ -132,6 +132,30 @@ class ActivityService:
         self.db.add(activity)
         self.db.commit()
         return self.get_activity(tenant_id, activity.id)
+
+    def update_activity(
+        self,
+        tenant_id: uuid.UUID,
+        activity_id: uuid.UUID,
+        payload: ActivityUpdate,
+    ) -> Activity:
+        activity = self.get_activity(tenant_id, activity_id)
+        data = payload.model_dump(exclude_unset=True)
+
+        entity_type = data.get("entity_type", activity.entity_type)
+        entity_id = data.get("entity_id", activity.entity_id)
+        if "entity_type" in data or "entity_id" in data:
+            self._validate_entity(tenant_id, entity_type, entity_id)
+
+        if "metadata" in data:
+            activity.activity_metadata = data["metadata"]
+
+        for field in ("entity_type", "entity_id", "activity_type", "description", "scheduled_at"):
+            if field in data:
+                setattr(activity, field, data[field])
+
+        self.db.commit()
+        return self.get_activity(tenant_id, activity_id)
 
     def delete_activity(self, tenant_id: uuid.UUID, activity_id: uuid.UUID) -> None:
         activity = self.get_activity(tenant_id, activity_id)

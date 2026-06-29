@@ -106,3 +106,16 @@ body {
 .kanban-scroll::-webkit-scrollbar-thumb:hover {
   background: color-mix(in srgb, var(--muted-foreground) 55%, transparent);
 }
+
+/* Sidebar: scroll without visible scrollbar */
+.sidebar-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sidebar-scroll::-webkit-scrollbar {
+  display: none;
+}

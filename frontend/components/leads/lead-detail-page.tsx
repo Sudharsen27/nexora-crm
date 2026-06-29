@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { ActivityFormDialog } from "@/components/activities/activity-form-dialog";
 import { ActivityTimeline } from "@/components/activities/activity-timeline";
+import { EntityNotesPanel, EntityNotesPreview } from "@/components/shared/entity-notes-panel";
 import { DealFormDialog } from "@/components/deals/deal-form-dialog";
 import { LeadFormDialog } from "@/components/leads/lead-form-dialog";
 import { EntityTasksPanel } from "@/components/tasks/entity-tasks-panel";
@@ -23,6 +24,7 @@ import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { usePermissions } from "@/contexts/permissions-context";
 import { createActivity } from "@/lib/api/activities";
 import { createCompany } from "@/lib/api/companies";
 import { convertLeadToContact } from "@/lib/api/contacts";
@@ -78,6 +80,7 @@ function ScoreRing({ score }: { score: number }) {
 
 export function LeadDetailPage({ tenantSlug, leadId }: LeadDetailPageProps) {
   const router = useRouter();
+  const { canWrite, canDelete } = usePermissions();
   const [lead, setLead] = useState<Lead | null>(null);
   const [meta, setMeta] = useState<LeadMeta | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
@@ -196,6 +199,7 @@ export function LeadDetailPage({ tenantSlug, leadId }: LeadDetailPageProps) {
       setLead(updated);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to save notes");
+      throw err;
     } finally {
       setSavingNotes(false);
     }
@@ -348,14 +352,10 @@ export function LeadDetailPage({ tenantSlug, leadId }: LeadDetailPageProps) {
         </div>
 
         {lead.notes && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Notes preview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">{lead.notes}</p>
-            </CardContent>
-          </Card>
+          <EntityNotesPreview
+            notes={lead.notes}
+            onEdit={canWrite("lead") ? () => setActiveTab("Notes") : undefined}
+          />
         )}
 
         <div className="flex gap-1 overflow-x-auto border-b border-zinc-200 dark:border-zinc-800">
@@ -385,10 +385,12 @@ export function LeadDetailPage({ tenantSlug, leadId }: LeadDetailPageProps) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Activities</CardTitle>
-              <Button size="sm" onClick={() => setActivityFormOpen(true)}>
-                <Plus className="h-4 w-4" />
-                Log activity
-              </Button>
+              {canWrite("activity") && (
+                <Button size="sm" onClick={() => setActivityFormOpen(true)}>
+                  <Plus className="h-4 w-4" />
+                  Log activity
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               <ActivityTimeline
@@ -417,10 +419,12 @@ export function LeadDetailPage({ tenantSlug, leadId }: LeadDetailPageProps) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Deals ({deals.length})</CardTitle>
-              <Button size="sm" onClick={() => setDealFormOpen(true)}>
-                <Plus className="h-4 w-4" />
-                Create deal
-              </Button>
+              {canWrite("deal") && (
+                <Button size="sm" onClick={() => setDealFormOpen(true)}>
+                  <Plus className="h-4 w-4" />
+                  Create deal
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               {deals.length === 0 ? (
@@ -480,23 +484,15 @@ export function LeadDetailPage({ tenantSlug, leadId }: LeadDetailPageProps) {
         )}
 
         {activeTab === "Notes" && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Notes</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <textarea
-                rows={8}
-                className="flex w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
-                value={notesDraft}
-                onChange={(e) => setNotesDraft(e.target.value)}
-                placeholder="Add notes about this lead..."
-              />
-              <Button onClick={() => void handleSaveNotes()} disabled={savingNotes}>
-                {savingNotes ? "Saving..." : "Save notes"}
-              </Button>
-            </CardContent>
-          </Card>
+          <EntityNotesPanel
+            value={notesDraft}
+            onChange={setNotesDraft}
+            onSave={handleSaveNotes}
+            saving={savingNotes}
+            readOnly={!canWrite("lead")}
+            placeholder="Add notes about this lead — discovery calls, objections, next steps..."
+            description="Team-visible notes attached to this lead record."
+          />
         )}
       </div>
 
@@ -506,45 +502,57 @@ export function LeadDetailPage({ tenantSlug, leadId }: LeadDetailPageProps) {
             <CardTitle className="text-base">Actions</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
-            <Button variant="outline" className="justify-start" onClick={() => setLeadFormOpen(true)}>
-              <Pencil className="h-4 w-4" />
-              Edit lead
-            </Button>
-            <Button
-              variant="outline"
-              className="justify-start text-red-600 hover:text-red-700"
-              onClick={() => void handleDelete()}
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete lead
-            </Button>
-            <hr className="my-1 border-[var(--border)]" />
-            <Button
-              variant="outline"
-              className="justify-start"
-              disabled={isConverted || converting}
-              onClick={() => void handleConvertToContact()}
-            >
-              <UserPlus className="h-4 w-4" />
-              {converting ? "Converting..." : "Convert to contact"}
-            </Button>
-            <Button
-              variant="outline"
-              className="justify-start"
-              disabled={converting}
-              onClick={() => void handleConvertToCompany()}
-            >
-              <Building2 className="h-4 w-4" />
-              Convert to company
-            </Button>
-            <Button variant="outline" className="justify-start" onClick={() => setDealFormOpen(true)}>
-              <Briefcase className="h-4 w-4" />
-              Create deal
-            </Button>
-            <Button variant="outline" className="justify-start" onClick={() => setTaskFormOpen(true)}>
-              <ListTodo className="h-4 w-4" />
-              Create task
-            </Button>
+            {canWrite("lead") && (
+              <Button variant="outline" className="justify-start" onClick={() => setLeadFormOpen(true)}>
+                <Pencil className="h-4 w-4" />
+                Edit lead
+              </Button>
+            )}
+            {canDelete("lead") && (
+              <Button
+                variant="outline"
+                className="justify-start text-red-600 hover:text-red-700"
+                onClick={() => void handleDelete()}
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete lead
+              </Button>
+            )}
+            {(canWrite("lead") || canDelete("lead")) && <hr className="my-1 border-[var(--border)]" />}
+            {canWrite("contact") && canWrite("lead") && (
+              <Button
+                variant="outline"
+                className="justify-start"
+                disabled={isConverted || converting}
+                onClick={() => void handleConvertToContact()}
+              >
+                <UserPlus className="h-4 w-4" />
+                {converting ? "Converting..." : "Convert to contact"}
+              </Button>
+            )}
+            {canWrite("company") && canWrite("lead") && (
+              <Button
+                variant="outline"
+                className="justify-start"
+                disabled={converting}
+                onClick={() => void handleConvertToCompany()}
+              >
+                <Building2 className="h-4 w-4" />
+                Convert to company
+              </Button>
+            )}
+            {canWrite("deal") && (
+              <Button variant="outline" className="justify-start" onClick={() => setDealFormOpen(true)}>
+                <Briefcase className="h-4 w-4" />
+                Create deal
+              </Button>
+            )}
+            {canWrite("task") && (
+              <Button variant="outline" className="justify-start" onClick={() => setTaskFormOpen(true)}>
+                <ListTodo className="h-4 w-4" />
+                Create task
+              </Button>
+            )}
             {linkedContact && (
               <Link href={`/${tenantSlug}/contacts/${linkedContact.id}`}>
                 <Button variant="ghost" className="w-full justify-start">
@@ -584,6 +592,7 @@ export function LeadDetailPage({ tenantSlug, leadId }: LeadDetailPageProps) {
       />
 
       <DealFormDialog
+        tenantSlug={tenantSlug}
         open={dealFormOpen}
         stages={dealStages}
         members={members}

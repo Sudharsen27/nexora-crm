@@ -8,6 +8,7 @@ import { CompanyFormDialog } from "@/components/companies/company-form-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { usePermissions } from "@/contexts/permissions-context";
 import {
   createCompany,
   deleteCompany,
@@ -28,6 +29,7 @@ interface CompaniesPageProps {
 
 export function CompaniesPage({ tenantSlug }: CompaniesPageProps) {
   const router = useRouter();
+  const { canWrite, canDelete } = usePermissions();
   const searchParams = useSearchParams();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
@@ -135,15 +137,17 @@ export function CompaniesPage({ tenantSlug }: CompaniesPageProps) {
             {total} compan{total !== 1 ? "ies" : "y"} total
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setEditing(null);
-            setFormOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4" />
-          New company
-        </Button>
+        {canWrite("company") && (
+          <Button
+            onClick={() => {
+              setEditing(null);
+              setFormOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4" />
+            New company
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -297,24 +301,28 @@ export function CompaniesPage({ tenantSlug }: CompaniesPageProps) {
                       <td className="px-4 py-3">{formatDate(company.created_at)}</td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setEditing(company);
-                              setFormOpen(true);
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => void handleDelete(company)}
-                            aria-label={`Delete ${company.company_name}`}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-600" />
-                          </Button>
+                          {canWrite("company") && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setEditing(company);
+                                setFormOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {canDelete("company") && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => void handleDelete(company)}
+                              aria-label={`Delete ${company.company_name}`}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>

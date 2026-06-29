@@ -15,6 +15,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DealFormDialog } from "@/components/deals/deal-form-dialog";
 import { KanbanColumn } from "@/components/deals/kanban-column";
+import { usePermissions } from "@/contexts/permissions-context";
 import {
   createDeal,
   deleteDeal,
@@ -30,6 +31,9 @@ interface DealsKanbanProps {
 }
 
 export function DealsKanban({ tenantSlug }: DealsKanbanProps) {
+  const { canWrite, loading: permsLoading } = usePermissions();
+  const canCreate = !permsLoading && canWrite("deal");
+  const canMove = !permsLoading && canWrite("deal");
   const [board, setBoard] = useState<DealBoard | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,6 +84,7 @@ export function DealsKanban({ tenantSlug }: DealsKanbanProps) {
 
   async function handleDragEnd(event: DragEndEvent) {
     setActiveDeal(null);
+    if (!canMove) return;
     const { active, over } = event;
     if (!over || !board) return;
 
@@ -164,13 +169,16 @@ export function DealsKanban({ tenantSlug }: DealsKanbanProps) {
         <div className="min-w-0">
           <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">Deals pipeline</h2>
           <p className="text-sm text-[var(--muted-foreground)]">
-            {board?.total ?? 0} deals · drag cards to move stages
+            {board?.total ?? 0} deals
+            {canMove ? " · drag cards to move stages" : ""}
           </p>
         </div>
-        <Button onClick={() => openCreate("new")} className="w-full shrink-0 sm:w-auto">
-          <Plus className="h-4 w-4" />
-          New deal
-        </Button>
+        {canCreate && (
+          <Button onClick={() => openCreate("new")} className="w-full shrink-0 sm:w-auto">
+            <Plus className="h-4 w-4" />
+            New deal
+          </Button>
+        )}
       </div>
 
       {error && (
@@ -210,6 +218,7 @@ export function DealsKanban({ tenantSlug }: DealsKanbanProps) {
       </DndContext>
 
       <DealFormDialog
+        tenantSlug={tenantSlug}
         open={dialogOpen}
         stages={stages}
         members={members}

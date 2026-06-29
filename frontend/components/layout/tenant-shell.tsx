@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
   Bell,
   Briefcase,
   Building2,
+  ChevronLeft,
+  ChevronRight,
   Contact,
   LayoutDashboard,
   ListTodo,
@@ -16,10 +19,14 @@ import {
   Settings,
   UserRoundPlus,
   Users,
+  X,
 } from "lucide-react";
 import { NexoraMark } from "@/components/brand/nexora-mark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { PermissionsProvider, usePermissions } from "@/contexts/permissions-context";
+import { TenantSubtitle } from "@/components/layout/role-badge";
 import { logoutUser } from "@/lib/api/auth";
 import { clearTokens } from "@/lib/auth/tokens";
 import { cn } from "@/lib/utils";
@@ -31,25 +38,45 @@ interface TenantShellProps {
 }
 
 const navItems = [
-  { href: "", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/leads", label: "Leads", icon: UserRoundPlus },
-  { href: "/contacts", label: "Contacts", icon: Contact },
-  { href: "/companies", label: "Companies", icon: Building2 },
-  { href: "/deals", label: "Deals", icon: Briefcase },
-  { href: "/activities", label: "Activities", icon: Activity },
-  { href: "/tasks", label: "Tasks", icon: ListTodo },
-  { href: "/settings/team", label: "Team", icon: Users },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "", label: "Dashboard", icon: LayoutDashboard, permission: "tenant:read" },
+  { href: "/leads", label: "Leads", icon: UserRoundPlus, permission: "lead:read" },
+  { href: "/contacts", label: "Contacts", icon: Contact, permission: "contact:read" },
+  { href: "/companies", label: "Companies", icon: Building2, permission: "company:read" },
+  { href: "/deals", label: "Deals", icon: Briefcase, permission: "deal:read" },
+  { href: "/activities", label: "Activities", icon: Activity, permission: "activity:read" },
+  { href: "/tasks", label: "Tasks", icon: ListTodo, permission: "task:read" },
+  { href: "/settings/team", label: "Team", icon: Users, permission: "user:read" },
+  { href: "/settings", label: "Settings", icon: Settings, permission: "settings:read" },
 ];
 
-export function TenantShell({ tenantSlug, tenantName, children }: TenantShellProps) {
-  const pathname = usePathname();
+const SIDEBAR_STORAGE_KEY = "nexora_sidebar_expanded";
+
+interface SidebarNavProps {
+  base: string;
+  pathname: string;
+  expanded: boolean;
+  onNavigate?: () => void;
+  showClose?: boolean;
+  onClose?: () => void;
+}
+
+function SidebarLabel({ expanded, children }: { expanded: boolean; children: React.ReactNode }) {
+  return (
+    <span
+      className={cn(
+        "truncate text-sm font-medium whitespace-nowrap transition-[opacity,width,margin] duration-300 ease-in-out",
+        expanded ? "ml-3 w-auto opacity-100" : "ml-0 w-0 overflow-hidden opacity-0",
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+function SidebarNav({ base, pathname, expanded, onNavigate, showClose = false, onClose }: SidebarNavProps) {
   const router = useRouter();
-  const base = `/${tenantSlug}`;
-  const currentSection = navItems.find((item) => {
-    const href = `${base}${item.href}`;
-    return pathname === href || (item.href && pathname.startsWith(href));
-  })?.label;
+  const { can, loading } = usePermissions();
+  const visibleNavItems = loading ? navItems : navItems.filter((item) => can(item.permission));
 
   async function handleLogout() {
     try {
@@ -61,54 +88,188 @@ export function TenantShell({ tenantSlug, tenantName, children }: TenantShellPro
   }
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-20 flex-col border-r border-white/10 bg-[var(--sidebar-bg)] lg:flex">
-        <div className="flex h-16 items-center justify-center border-b border-white/10">
-          <Link
-            href={base}
-            title="Nexora dashboard"
-            className="inline-flex rounded-xl shadow-lg shadow-[var(--primary)]/30 transition-transform hover:scale-105"
+    <>
+      <div
+        className={cn(
+          "flex h-16 shrink-0 items-center overflow-hidden border-b border-white/10",
+          expanded ? "justify-between px-4" : "justify-center px-2",
+        )}
+      >
+        <Link
+          href={base}
+          title="Nexora dashboard"
+          onClick={onNavigate}
+          className={cn(
+            "inline-flex min-w-0 items-center overflow-hidden rounded-xl transition-transform hover:scale-[1.02]",
+            expanded ? "gap-3" : "justify-center",
+          )}
+        >
+          <NexoraMark className="h-10 w-10 shrink-0 shadow-lg shadow-[var(--primary)]/30" />
+          <SidebarLabel expanded={expanded}>Nexora</SidebarLabel>
+        </Link>
+        {showClose && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-9 w-9 shrink-0 text-[var(--sidebar-fg)] hover:bg-white/10 hover:text-white"
+            onClick={onClose}
+            aria-label="Close menu"
           >
-            <NexoraMark className="h-10 w-10" />
-          </Link>
-        </div>
-        <nav className="flex-1 space-y-2 p-3">
-          {navItems.map((item) => {
-            const href = `${base}${item.href}`;
-            const active = pathname === href || (item.href && pathname.startsWith(href));
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.label}
-                href={href}
-                title={item.label}
-                className={cn(
-                  "flex h-11 items-center justify-center rounded-xl transition-all duration-200",
-                  active
-                    ? "bg-[var(--sidebar-active-bg)] text-[var(--sidebar-active)] shadow-lg shadow-[var(--primary)]/30"
-                    : "text-[var(--sidebar-fg)] hover:bg-white/10 hover:text-white",
-                )}
-              >
-                <Icon className="h-4 w-4" />
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="border-t border-white/10 p-3">
-          <Button variant="ghost" className="h-11 w-full justify-center text-[var(--sidebar-fg)] hover:bg-white/10 hover:text-white" onClick={handleLogout} title="Sign out">
-            <LogOut className="h-4 w-4" />
+            <X className="h-4 w-4" />
           </Button>
-        </div>
+        )}
+      </div>
+
+      <nav className="sidebar-scroll flex-1 space-y-1 p-3">
+        {visibleNavItems.map((item) => {
+          const href = `${base}${item.href}`;
+          const active = pathname === href || (item.href && pathname.startsWith(href));
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.label}
+              href={href}
+              title={!expanded ? item.label : undefined}
+              onClick={onNavigate}
+              className={cn(
+                "flex h-11 min-w-0 items-center overflow-hidden rounded-xl transition-colors duration-200",
+                expanded ? "px-3" : "justify-center px-0",
+                active
+                  ? "bg-[var(--sidebar-active-bg)] text-[var(--sidebar-active)] shadow-lg shadow-[var(--primary)]/30"
+                  : "text-[var(--sidebar-fg)] hover:bg-white/10 hover:text-white",
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              <SidebarLabel expanded={expanded}>{item.label}</SidebarLabel>
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="shrink-0 border-t border-white/10 p-3">
+        <Button
+          variant="ghost"
+          className={cn(
+            "text-[var(--sidebar-fg)] hover:bg-white/10 hover:text-white",
+            expanded ? "h-11 w-full justify-start px-3" : "mx-auto h-11 w-11 justify-center p-0",
+          )}
+          onClick={() => void handleLogout()}
+          title="Sign out"
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          <SidebarLabel expanded={expanded}>Sign out</SidebarLabel>
+        </Button>
+      </div>
+    </>
+  );
+}
+
+export function TenantShell({ tenantSlug, tenantName, children }: TenantShellProps) {
+  const pathname = usePathname();
+  const base = `/${tenantSlug}`;
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  const currentSection = navItems.find((item) => {
+    const href = `${base}${item.href}`;
+    return pathname === href || (item.href && pathname.startsWith(href));
+  })?.label;
+
+  useEffect(() => {
+    const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY);
+    if (stored !== null) {
+      setSidebarExpanded(stored === "true");
+    }
+  }, []);
+
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setMobileNavOpen(false);
+    }
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [mobileNavOpen]);
+
+  function toggleSidebar() {
+    setSidebarExpanded((prev) => {
+      const next = !prev;
+      localStorage.setItem(SIDEBAR_STORAGE_KEY, String(next));
+      return next;
+    });
+  }
+
+  return (
+    <PermissionsProvider tenantSlug={tenantSlug}>
+      <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-30 hidden flex-col overflow-hidden border-r border-white/10 bg-[var(--sidebar-bg)] transition-[width] duration-300 ease-in-out lg:flex",
+          sidebarExpanded ? "w-64" : "w-[4.5rem]",
+        )}
+      >
+        <SidebarNav base={base} pathname={pathname} expanded={sidebarExpanded} />
       </aside>
-      <div className="flex min-w-0 flex-1 flex-col lg:ml-20">
+
+      {mobileNavOpen && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            aria-label="Close menu"
+            onClick={() => setMobileNavOpen(false)}
+          />
+          <aside className="relative z-50 flex h-full w-72 max-w-[85vw] flex-col overflow-hidden border-r border-white/10 bg-[var(--sidebar-bg)] shadow-2xl">
+            <SidebarNav
+              base={base}
+              pathname={pathname}
+              expanded
+              onNavigate={() => setMobileNavOpen(false)}
+              showClose
+              onClose={() => setMobileNavOpen(false)}
+            />
+          </aside>
+        </div>
+      )}
+
+      <div
+        className={cn(
+          "flex min-w-0 flex-1 flex-col transition-[margin] duration-300 ease-in-out",
+          sidebarExpanded ? "lg:ml-64" : "lg:ml-[4.5rem]",
+        )}
+      >
         <header className="sticky top-0 z-20 border-b border-[var(--border)] bg-[var(--surface)]/95 backdrop-blur supports-[backdrop-filter]:bg-[var(--surface)]/80">
           <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center gap-3 px-4 sm:px-6">
-            <Button variant="ghost" size="sm" className="lg:hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden"
+              onClick={() => setMobileNavOpen(true)}
+              aria-label="Open menu"
+            >
               <Menu className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hidden lg:inline-flex"
+              onClick={toggleSidebar}
+              aria-label={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
+              title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
+            >
+              {sidebarExpanded ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
             </Button>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">{currentSection ?? "Workspace"}</p>
-              <p className="truncate text-xs text-[var(--muted-foreground)]">{tenantName}</p>
+              <TenantSubtitle tenantName={tenantName} />
             </div>
             <div className="ml-auto hidden w-full max-w-sm items-center md:flex">
               <div className="relative w-full">
@@ -116,6 +277,7 @@ export function TenantShell({ tenantSlug, tenantName, children }: TenantShellPro
                 <Input className="pl-9" placeholder="Search leads, contacts, deals..." />
               </div>
             </div>
+            <ThemeToggle />
             <Button variant="ghost" size="sm" className="hidden md:inline-flex">
               <Bell className="h-4 w-4" />
             </Button>
@@ -126,5 +288,6 @@ export function TenantShell({ tenantSlug, tenantName, children }: TenantShellPro
         </main>
       </div>
     </div>
+    </PermissionsProvider>
   );
 }

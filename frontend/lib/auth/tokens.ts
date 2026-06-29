@@ -3,7 +3,7 @@ const REFRESH_TOKEN_KEY = "nexora_refresh_token";
 
 export function getAccessToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem(ACCESS_TOKEN_KEY);
+  return localStorage.getItem(ACCESS_TOKEN_KEY) ?? getAccessTokenFromCookie(document.cookie);
 }
 
 export function getRefreshToken(): string | null {

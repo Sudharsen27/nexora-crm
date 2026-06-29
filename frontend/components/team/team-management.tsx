@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { usePermissions } from "@/contexts/permissions-context";
 import { addMember, listMembers, listRoles, removeMember, updateMember } from "@/lib/api/tenants";
 import type { Member, Role } from "@/types/api";
 
@@ -24,6 +25,9 @@ interface TeamManagementProps {
 }
 
 export function TeamManagement({ tenantSlug }: TeamManagementProps) {
+  const { canWrite, canDelete, loading: permsLoading } = usePermissions();
+  const canManageMembers = !permsLoading && canWrite("user");
+  const canRemoveMembers = !permsLoading && canDelete("user");
   const [members, setMembers] = useState<Member[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -94,6 +98,7 @@ export function TeamManagement({ tenantSlug }: TeamManagementProps) {
         <p className="text-[var(--muted-foreground)]">Manage members and roles for your organization.</p>
       </div>
 
+      {canManageMembers && (
       <Card>
         <CardHeader>
           <CardTitle>Add member</CardTitle>
@@ -126,6 +131,7 @@ export function TeamManagement({ tenantSlug }: TeamManagementProps) {
           </form>
         </CardContent>
       </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -146,7 +152,7 @@ export function TeamManagement({ tenantSlug }: TeamManagementProps) {
                     <span className="rounded-full bg-[var(--surface-muted)] px-3 py-1 text-xs font-medium">
                       Owner
                     </span>
-                  ) : (
+                  ) : canManageMembers ? (
                     <select
                       className="h-9 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-2 text-sm"
                       value={member.role_id}
@@ -158,8 +164,12 @@ export function TeamManagement({ tenantSlug }: TeamManagementProps) {
                         </option>
                       ))}
                     </select>
+                  ) : (
+                    <span className="rounded-full bg-[var(--surface-muted)] px-3 py-1 text-xs font-medium capitalize">
+                      {member.role_slug}
+                    </span>
                   )}
-                  {member.role_slug !== "owner" && (
+                  {member.role_slug !== "owner" && canRemoveMembers && (
                     <Button
                       variant="ghost"
                       size="sm"

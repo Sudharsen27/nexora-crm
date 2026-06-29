@@ -13,11 +13,12 @@ class ContactCreate(BaseModel):
     phone: str | None = Field(default=None, max_length=50)
     company: str | None = Field(default=None, max_length=255)
     job_title: str | None = Field(default=None, max_length=150)
+    notes: str | None = Field(default=None, max_length=5000)
     lead_id: UUID | None = None
     company_id: UUID | None = None
     assigned_to_id: UUID | None = None
 
-    @field_validator("first_name", "last_name", "company", "job_title", mode="before")
+    @field_validator("first_name", "last_name", "company", "job_title", "notes", mode="before")
     @classmethod
     def strip_strings(cls, value: str | None) -> str | None:
         if isinstance(value, str):
@@ -48,11 +49,12 @@ class ContactUpdate(BaseModel):
     phone: str | None = Field(default=None, max_length=50)
     company: str | None = Field(default=None, max_length=255)
     job_title: str | None = Field(default=None, max_length=150)
+    notes: str | None = Field(default=None, max_length=5000)
     lead_id: UUID | None = None
     company_id: UUID | None = None
     assigned_to_id: UUID | None = None
 
-    @field_validator("first_name", "last_name", "company", "job_title", mode="before")
+    @field_validator("first_name", "last_name", "company", "job_title", "notes", mode="before")
     @classmethod
     def strip_strings(cls, value: str | None) -> str | None:
         if isinstance(value, str):
@@ -114,6 +116,7 @@ class ContactResponse(BaseModel):
     phone: str | None
     company: str | None
     job_title: str | None
+    notes: str | None
     assigned_to_id: UUID | None
     assigned_to: ContactAssignee | None = None
     lead: ContactLeadRef | None = None

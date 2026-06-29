@@ -7,6 +7,7 @@ import { Check, LayoutGrid, List, Pencil, Plus, Search, Trash2 } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { usePermissions } from "@/contexts/permissions-context";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
 import { TaskKanban } from "@/components/tasks/task-kanban";
 import {
@@ -75,6 +76,7 @@ function TaskListSkeleton() {
 
 export function TasksPage({ tenantSlug }: TasksPageProps) {
   const router = useRouter();
+  const { canWrite, canDelete } = usePermissions();
   const searchParams = useSearchParams();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
@@ -192,15 +194,17 @@ export function TasksPage({ tenantSlug }: TasksPageProps) {
             <LayoutGrid className="h-4 w-4" />
             Kanban
           </Button>
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            New task
-          </Button>
+          {canWrite("task") && (
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4" />
+              New task
+            </Button>
+          )}
         </div>
       </div>
 
@@ -357,24 +361,28 @@ export function TasksPage({ tenantSlug }: TasksPageProps) {
                         <td className="px-4 py-3">{task.assigned_to?.full_name ?? "—"}</td>
                         <td className="px-4 py-3">
                           <div className="flex justify-end gap-2">
-                            {task.status !== "completed" && (
+                            {task.status !== "completed" && canWrite("task") && (
                               <Button variant="ghost" size="sm" onClick={() => void handleComplete(task)}>
                                 <Check className="h-4 w-4" />
                               </Button>
                             )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setEditing(task);
-                                setFormOpen(true);
-                              }}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => void handleDelete(task)}>
-                              <Trash2 className="h-4 w-4 text-red-600" />
-                            </Button>
+                            {canWrite("task") && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setEditing(task);
+                                  setFormOpen(true);
+                                }}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {canDelete("task") && (
+                              <Button variant="ghost" size="sm" onClick={() => void handleDelete(task)}>
+                                <Trash2 className="h-4 w-4 text-red-600" />
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>

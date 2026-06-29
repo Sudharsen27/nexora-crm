@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import TenantContext, require_permission
 from app.db.session import get_db
-from app.schemas.activity import ActivityCreate, ActivityListResponse, ActivityResponse
+from app.schemas.activity import ActivityCreate, ActivityListResponse, ActivityResponse, ActivityUpdate
 from app.services.activity_service import ActivityService, paginate
 
 router = APIRouter(prefix="/tenants/{slug}/activities", tags=["activities"])
@@ -189,6 +189,17 @@ def get_activity(
     db: Session = Depends(get_db),
 ) -> ActivityResponse:
     activity = ActivityService(db).get_activity(ctx.tenant.id, activity_id)
+    return _to_response(activity)
+
+
+@router.patch("/{activity_id}", response_model=ActivityResponse)
+def update_activity(
+    activity_id: UUID,
+    payload: ActivityUpdate,
+    ctx: TenantContext = Depends(require_permission("activity:write")),
+    db: Session = Depends(get_db),
+) -> ActivityResponse:
+    activity = ActivityService(db).update_activity(ctx.tenant.id, activity_id, payload)
     return _to_response(activity)
 
 

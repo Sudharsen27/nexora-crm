@@ -5,6 +5,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePermissions } from "@/contexts/permissions-context";
 import { formatCurrency } from "@/lib/api/deals";
 import type { Deal } from "@/types/api";
 import { cn } from "@/lib/utils";
@@ -17,9 +18,15 @@ interface DealCardProps {
 }
 
 export function DealCard({ deal, tenantSlug, onEdit, onDelete }: DealCardProps) {
+  const { canWrite, canDelete, loading } = usePermissions();
+  const canEdit = !loading && canWrite("deal");
+  const canRemove = !loading && canDelete("deal");
+  const canDrag = !loading && canWrite("deal");
+
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: deal.id,
     data: { type: "deal", deal },
+    disabled: !canDrag,
   });
 
   const style = transform
@@ -38,9 +45,11 @@ export function DealCard({ deal, tenantSlug, onEdit, onDelete }: DealCardProps) 
       <div className="flex items-start justify-between gap-2">
         <button
           type="button"
-          className="flex-1 cursor-grab text-left active:cursor-grabbing"
-          {...listeners}
-          {...attributes}
+          className={cn(
+            "flex-1 text-left",
+            canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-default",
+          )}
+          {...(canDrag ? { ...listeners, ...attributes } : {})}
         >
           <p className="font-medium leading-snug">
             <Link
@@ -60,19 +69,25 @@ export function DealCard({ deal, tenantSlug, onEdit, onDelete }: DealCardProps) 
             <p className="mt-1 text-xs text-zinc-500">{deal.assigned_to.full_name}</p>
           )}
         </button>
-        <div className="flex shrink-0 gap-0.5">
-          <Button variant="ghost" size="sm" onClick={() => onEdit(deal)} aria-label="Edit deal">
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onDelete(deal)}
-            aria-label="Delete deal"
-          >
-            <Trash2 className="h-3.5 w-3.5 text-red-600" />
-          </Button>
-        </div>
+        {(canEdit || canRemove) && (
+          <div className="flex shrink-0 gap-0.5">
+            {canEdit && (
+              <Button variant="ghost" size="sm" onClick={() => onEdit(deal)} aria-label="Edit deal">
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+            )}
+            {canRemove && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDelete(deal)}
+                aria-label="Delete deal"
+              >
+                <Trash2 className="h-3.5 w-3.5 text-red-600" />
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

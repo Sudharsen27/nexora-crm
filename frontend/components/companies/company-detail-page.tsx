@@ -10,6 +10,7 @@ import { CompanyFormDialog } from "@/components/companies/company-form-dialog";
 import { EntityTasksPanel } from "@/components/tasks/entity-tasks-panel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { usePermissions } from "@/contexts/permissions-context";
 import { createActivity } from "@/lib/api/activities";
 import {
   deleteCompany,
@@ -37,6 +38,7 @@ interface CompanyDetailPageProps {
 
 export function CompanyDetailPage({ tenantSlug, companyId }: CompanyDetailPageProps) {
   const router = useRouter();
+  const { canWrite, canDelete } = usePermissions();
   const [company, setCompany] = useState<Company | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
@@ -133,20 +135,24 @@ export function CompanyDetailPage({ tenantSlug, companyId }: CompanyDetailPagePr
           </p>
         </div>
         <div className="flex gap-2">
-          {activeTab === "Activity" && (
+          {activeTab === "Activity" && canWrite("activity") && (
             <Button onClick={() => setActivityFormOpen(true)}>
               <Plus className="h-4 w-4" />
               Log activity
             </Button>
           )}
-          <Button variant="outline" onClick={() => setFormOpen(true)}>
-            <Pencil className="h-4 w-4" />
-            Edit
-          </Button>
-          <Button variant="outline" onClick={() => void handleDelete()}>
-            <Trash2 className="h-4 w-4 text-red-600" />
-            Delete
-          </Button>
+          {canWrite("company") && (
+            <Button variant="outline" onClick={() => setFormOpen(true)}>
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Button>
+          )}
+          {canDelete("company") && (
+            <Button variant="outline" onClick={() => void handleDelete()}>
+              <Trash2 className="h-4 w-4 text-red-600" />
+              Delete
+            </Button>
+          )}
         </div>
       </div>
 
