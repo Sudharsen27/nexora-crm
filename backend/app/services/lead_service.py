@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models import Contact, Deal, Lead, TenantMembership, User
 from app.schemas.lead import LeadCreate, LeadUpdate
+from app.services.activity_logger import ActivityLogger
 
 
 class LeadService:
@@ -118,8 +119,18 @@ class LeadService:
             created_by_id=created_by_id,
         )
         self.db.add(lead)
+        self.db.flush()
+        name = f"{lead.first_name} {lead.last_name}".strip() or lead.email or "Lead"
+        ActivityLogger(self.db).log(
+            tenant_id=tenant_id,
+            actor_id=created_by_id,
+            entity_type="lead",
+            entity_id=lead.id,
+            action="lead_created",
+            title="Lead created",
+            description=f'Lead "{name}" was created',
+        )
         self.db.commit()
-        self.db.refresh(lead)
         return self.get_lead(tenant_id, lead.id)
 
     def update_lead(
@@ -127,9 +138,11 @@ class LeadService:
         tenant_id: uuid.UUID,
         lead_id: uuid.UUID,
         payload: LeadUpdate,
+        updated_by_id: uuid.UUID | None = None,
     ) -> Lead:
         lead = self.get_lead(tenant_id, lead_id)
         data = payload.model_dump(exclude_unset=True)
+        old_assignee = lead.assigned_to_id
 
         if "assigned_to_id" in data:
             self._validate_assignee(tenant_id, data["assigned_to_id"])
@@ -146,11 +159,46 @@ class LeadService:
         for field, value in data.items():
             setattr(lead, field, value)
 
+        name = f"{lead.first_name} {lead.last_name}".strip() or lead.email or "Lead"
+        if "assigned_to_id" in data and data["assigned_to_id"] != old_assignee:
+            ActivityLogger(self.db).log(
+                tenant_id=tenant_id,
+                actor_id=updated_by_id,
+                entity_type="lead",
+                entity_id=lead.id,
+                action="lead_assigned",
+                title="Lead assigned",
+                description=f'Lead "{name}" was reassigned',
+                metadata={"assigned_to_id": str(data["assigned_to_id"]) if data["assigned_to_id"] else None},
+            )
+        else:
+            ActivityLogger(self.db).log(
+                tenant_id=tenant_id,
+                actor_id=updated_by_id,
+                entity_type="lead",
+                entity_id=lead.id,
+                action="lead_updated",
+                title="Lead updated",
+                description=f'Lead "{name}" was updated',
+            )
+
         self.db.commit()
         return self.get_lead(tenant_id, lead_id)
 
-    def delete_lead(self, tenant_id: uuid.UUID, lead_id: uuid.UUID) -> None:
+    def delete_lead(
+        self, tenant_id: uuid.UUID, lead_id: uuid.UUID, deleted_by_id: uuid.UUID | None = None
+    ) -> None:
         lead = self.get_lead(tenant_id, lead_id)
+        name = f"{lead.first_name} {lead.last_name}".strip() or lead.email or "Lead"
+        ActivityLogger(self.db).log(
+            tenant_id=tenant_id,
+            actor_id=deleted_by_id,
+            entity_type="lead",
+            entity_id=lead.id,
+            action="lead_deleted",
+            title="Lead deleted",
+            description=f'Lead "{name}" was deleted',
+        )
         self.db.delete(lead)
         self.db.commit()
 

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.models import Company, Contact, Deal, Lead, Task, TenantMembership, User
 from app.models.task import KANBAN_STATUSES, TASK_ENTITY_TYPES, TASK_PRIORITIES, TASK_SORT_FIELDS, TASK_STATUSES
 from app.schemas.task import TaskCreate, TaskDashboardSummary, TaskUpdate
+from app.services.activity_logger import ActivityLogger
 
 
 class TaskService:
@@ -249,6 +250,16 @@ class TaskService:
             entity_id=payload.entity_id,
         )
         self.db.add(task)
+        self.db.flush()
+        ActivityLogger(self.db).log(
+            tenant_id=tenant_id,
+            actor_id=created_by_id,
+            entity_type="task",
+            entity_id=task.id,
+            action="task_created",
+            title="Task created",
+            description=f'Task "{task.title}" was created',
+        )
         self.db.commit()
         return self.get_task(tenant_id, task.id)
 
@@ -257,8 +268,10 @@ class TaskService:
         tenant_id: uuid.UUID,
         task_id: uuid.UUID,
         payload: TaskUpdate,
+        updated_by_id: uuid.UUID | None = None,
     ) -> Task:
         task = self.get_task(tenant_id, task_id)
+        old_status = task.status
         self._validate_assignee(tenant_id, payload.assigned_to_id)
         self._validate_entity(tenant_id, payload.entity_type, payload.entity_id)
 
@@ -271,11 +284,39 @@ class TaskService:
         task.entity_type = payload.entity_type
         task.entity_id = payload.entity_id
 
+        if payload.status == "completed" and old_status != "completed":
+            action, title = "task_completed", "Task completed"
+        elif old_status == "completed" and payload.status != "completed":
+            action, title = "task_reopened", "Task reopened"
+        else:
+            action, title = "task_updated", "Task updated"
+        ActivityLogger(self.db).log(
+            tenant_id=tenant_id,
+            actor_id=updated_by_id,
+            entity_type="task",
+            entity_id=task.id,
+            action=action,
+            title=title,
+            description=f'Task "{task.title}" — {title.lower()}',
+            metadata={"from_status": old_status, "to_status": task.status},
+        )
+
         self.db.commit()
         return self.get_task(tenant_id, task_id)
 
-    def delete_task(self, tenant_id: uuid.UUID, task_id: uuid.UUID) -> None:
+    def delete_task(
+        self, tenant_id: uuid.UUID, task_id: uuid.UUID, deleted_by_id: uuid.UUID | None = None
+    ) -> None:
         task = self.get_task(tenant_id, task_id)
+        ActivityLogger(self.db).log(
+            tenant_id=tenant_id,
+            actor_id=deleted_by_id,
+            entity_type="task",
+            entity_id=task.id,
+            action="task_deleted",
+            title="Task deleted",
+            description=f'Task "{task.title}" was deleted',
+        )
         self.db.delete(task)
         self.db.commit()
 

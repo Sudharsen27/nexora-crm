@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
+# Legacy + system activity_type values (kept for backward compatibility).
 ACTIVITY_TYPES = (
     "call",
     "meeting",
@@ -21,9 +22,29 @@ ACTIVITY_TYPES = (
     "deal_deleted",
     "deal_won",
     "deal_lost",
+    "company_created",
+    "company_updated",
+    "company_deleted",
+    "contact_created",
+    "contact_updated",
+    "contact_deleted",
+    "lead_created",
+    "lead_assigned",
+    "lead_converted",
+    "lead_deleted",
+    "deal_stage_changed",
+    "task_created",
+    "task_completed",
+    "task_reopened",
+    "task_deleted",
+    "note_added",
+    "note_edited",
+    "user_login",
+    "user_invited",
+    "password_reset",
 )
 
-ENTITY_TYPES = ("lead", "contact", "deal", "company")
+ENTITY_TYPES = ("lead", "contact", "deal", "company", "task", "user", "tenant")
 
 
 class Activity(Base):
@@ -33,6 +54,9 @@ class Activity(Base):
         Index("ix_activities_tenant_created_at", "tenant_id", "created_at"),
         Index("ix_activities_tenant_entity", "tenant_id", "entity_type", "entity_id"),
         Index("ix_activities_tenant_type", "tenant_id", "activity_type"),
+        Index("ix_activities_tenant_action", "tenant_id", "action"),
+        Index("ix_activities_tenant_actor", "tenant_id", "created_by_id"),
+        Index("ix_activities_tenant_archived", "tenant_id", "archived_at"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -41,13 +65,18 @@ class Activity(Base):
     )
     entity_type: Mapped[str] = mapped_column(String(30), nullable=False)
     entity_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
-    activity_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    activity_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    action: Mapped[str] = mapped_column(String(50), nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
+    icon: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    color: Mapped[str | None] = mapped_column(String(30), nullable=True)
     activity_metadata: Mapped[dict | None] = mapped_column("metadata", JSONB, nullable=True)
     created_by_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
     scheduled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

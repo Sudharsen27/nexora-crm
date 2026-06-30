@@ -461,6 +461,10 @@ class DashboardService:
                 DashboardActivityItem(
                     id=activity.id,
                     activity_type=activity.activity_type,
+                    action=activity.action,
+                    title=activity.title,
+                    icon=activity.icon,
+                    color=activity.color,
                     description=activity.description,
                     created_at=activity.created_at,
                     scheduled_at=activity.scheduled_at,

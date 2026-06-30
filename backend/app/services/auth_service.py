@@ -30,6 +30,7 @@ from app.models import (
 )
 
 from app.services.email_service import send_password_reset_email
+from app.services.activity_logger import ActivityLogger
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -193,7 +194,57 @@ class AuthService:
         for row in refresh_rows:
             row.revoked_at = utcnow()
 
+        self._log_user_event(
+            stored.user_id,
+            "password_reset",
+            "Password reset",
+            f"{stored.user.full_name} reset their password",
+            actor_id=stored.user_id,
+        )
         self.db.commit()
+
+    def log_user_login(self, user_id: uuid.UUID) -> None:
+        user = self.db.scalar(select(User).where(User.id == user_id))
+        if user is None:
+            return
+        self._log_user_event(
+            user_id,
+            "user_login",
+            "User login",
+            f"{user.full_name} signed in",
+            actor_id=user_id,
+        )
+        self.db.commit()
+
+    def _log_user_event(
+        self,
+        user_id: uuid.UUID,
+        action: str,
+        title: str,
+        description: str,
+        *,
+        tenant_id: uuid.UUID | None = None,
+        actor_id: uuid.UUID | None = None,
+    ) -> None:
+        if tenant_id is None:
+            membership = self.db.scalar(
+                select(TenantMembership).where(
+                    TenantMembership.user_id == user_id,
+                    TenantMembership.status == "active",
+                )
+            )
+            if membership is None:
+                return
+            tenant_id = membership.tenant_id
+        ActivityLogger(self.db).log(
+            tenant_id=tenant_id,
+            actor_id=actor_id or user_id,
+            entity_type="user",
+            entity_id=user_id,
+            action=action,
+            title=title,
+            description=description,
+        )
 
 
 class TenantService:
@@ -403,6 +454,17 @@ class TenantService:
             created_at=utcnow(),
         )
         self.db.add(membership)
+        self.db.flush()
+        ActivityLogger(self.db).log(
+            tenant_id=tenant_id,
+            actor_id=actor_membership.user_id,
+            entity_type="user",
+            entity_id=user.id,
+            action="user_invited",
+            title="User invited",
+            description=f"{user.full_name} was invited to the organization",
+            metadata={"role_slug": role.slug},
+        )
         self.db.commit()
         self.db.refresh(membership)
         return {

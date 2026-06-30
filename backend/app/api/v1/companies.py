@@ -137,7 +137,7 @@ def update_company(
     ctx: TenantContext = Depends(require_permission("company:write")),
     db: Session = Depends(get_db),
 ) -> CompanyResponse:
-    company = CompanyService(db).update_company(ctx.tenant.id, company_id, payload)
+    company = CompanyService(db).update_company(ctx.tenant.id, company_id, payload, ctx.membership.user_id)
     return _to_response(company)
 
 
@@ -147,4 +147,4 @@ def delete_company(
     ctx: TenantContext = Depends(require_permission("company:delete")),
     db: Session = Depends(get_db),
 ) -> None:
-    CompanyService(db).delete_company(ctx.tenant.id, company_id)
+    CompanyService(db).delete_company(ctx.tenant.id, company_id, ctx.membership.user_id)

@@ -244,7 +244,7 @@ def update_task(
     ctx: TenantContext = Depends(require_permission("task:write")),
     db: Session = Depends(get_db),
 ) -> TaskResponse:
-    task = TaskService(db).update_task(ctx.tenant.id, task_id, payload)
+    task = TaskService(db).update_task(ctx.tenant.id, task_id, payload, ctx.membership.user_id)
     return _to_response(task)
 
 
@@ -254,4 +254,4 @@ def delete_task(
     ctx: TenantContext = Depends(require_permission("task:delete")),
     db: Session = Depends(get_db),
 ) -> None:
-    TaskService(db).delete_task(ctx.tenant.id, task_id)
+    TaskService(db).delete_task(ctx.tenant.id, task_id, ctx.membership.user_id)

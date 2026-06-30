@@ -129,7 +129,7 @@ def update_contact(
     ctx: TenantContext = Depends(require_permission("contact:write")),
     db: Session = Depends(get_db),
 ) -> ContactResponse:
-    contact = ContactService(db).update_contact(ctx.tenant.id, contact_id, payload)
+    contact = ContactService(db).update_contact(ctx.tenant.id, contact_id, payload, ctx.membership.user_id)
     return _to_response(contact)
 
 
@@ -139,4 +139,4 @@ def delete_contact(
     ctx: TenantContext = Depends(require_permission("contact:delete")),
     db: Session = Depends(get_db),
 ) -> None:
-    ContactService(db).delete_contact(ctx.tenant.id, contact_id)
+    ContactService(db).delete_contact(ctx.tenant.id, contact_id, ctx.membership.user_id)

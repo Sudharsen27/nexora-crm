@@ -81,6 +81,7 @@ def login(
 ) -> AuthResponse:
     service = AuthService(db)
     user = service.authenticate(payload.email, payload.password)
+    service.log_user_login(user.id)
     access_token, refresh_token, expires_in = service.issue_tokens(
         user,
         user_agent=request.headers.get("user-agent"),

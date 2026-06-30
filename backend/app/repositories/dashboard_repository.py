@@ -462,7 +462,7 @@ class DashboardRepository:
             query = query.where(Activity.created_by_id == scope.assignee_id)
         return int(self.db.scalar(query) or 0)
 
-    def get_recent_activities(self, tenant_id: uuid.UUID, limit: int = 15) -> list[Activity]:
+    def get_recent_activities(self, tenant_id: uuid.UUID, limit: int = 10) -> list[Activity]:
         return list(
             self.db.scalars(
                 select(Activity)

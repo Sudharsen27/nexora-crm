@@ -7,7 +7,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.db.mixins import utcnow
-from app.models import Activity, Company, Contact, Deal, Lead, TenantMembership
+from app.models import Company, Contact, Deal, Lead, TenantMembership
 from app.models.deal import (
     DEAL_STAGE_LABELS,
     DEAL_STAGES,
@@ -15,6 +15,7 @@ from app.models.deal import (
     STAGE_DEFAULT_PROBABILITY,
 )
 from app.schemas.deal import DealCreate, DealMove, DealUpdate, default_probability_for_stage
+from app.services.activity_logger import ActivityLogger
 
 
 class DealPipelineFilters:
@@ -143,25 +144,26 @@ class DealService:
             query = query.where(Deal.value <= filters.value_max)
         return query
 
-    def _log_deal_activity(
+    def _log_deal(
         self,
         tenant_id: uuid.UUID,
         deal_id: uuid.UUID,
-        activity_type: str,
+        action: str,
+        title: str,
         description: str,
-        created_by_id: uuid.UUID | None,
+        actor_id: uuid.UUID | None,
         metadata: dict | None = None,
     ) -> None:
-        activity = Activity(
+        ActivityLogger(self.db).log(
             tenant_id=tenant_id,
+            actor_id=actor_id,
             entity_type="deal",
             entity_id=deal_id,
-            activity_type=activity_type,
+            action=action,
+            title=title,
             description=description,
-            activity_metadata=metadata,
-            created_by_id=created_by_id,
+            metadata=metadata,
         )
-        self.db.add(activity)
 
     def _group_deals_by_stage(self, deals: list[Deal]) -> list[dict]:
         by_stage: dict[str, list[Deal]] = {stage: [] for stage in DEAL_STAGES}
@@ -347,10 +349,11 @@ class DealService:
         self.db.add(deal)
         self.db.flush()
 
-        self._log_deal_activity(
+        self._log_deal(
             tenant_id,
             deal.id,
             "deal_created",
+            "Deal created",
             f'Deal "{deal.title}" was created in {DEAL_STAGE_LABELS[deal.stage]}',
             created_by_id,
             {"stage": deal.stage},
@@ -384,20 +387,26 @@ class DealService:
         if "stage" in data and data["stage"] != old_stage:
             deal.position = self._next_position(tenant_id, deal.stage)
             self._apply_stage_side_effects(deal, old_stage, deal.stage)
-            activity_type = "deal_won" if deal.stage == "won" else "deal_lost" if deal.stage == "lost" else "deal_moved"
-            self._log_deal_activity(
+            action = (
+                "deal_won" if deal.stage == "won"
+                else "deal_lost" if deal.stage == "lost"
+                else "deal_stage_changed"
+            )
+            self._log_deal(
                 tenant_id,
                 deal.id,
-                activity_type,
+                action,
+                DEAL_STAGE_LABELS.get(deal.stage, "Stage changed"),
                 f'Deal moved from {DEAL_STAGE_LABELS[old_stage]} to {DEAL_STAGE_LABELS[deal.stage]}',
                 updated_by_id,
                 {"from_stage": old_stage, "to_stage": deal.stage},
             )
         else:
-            self._log_deal_activity(
+            self._log_deal(
                 tenant_id,
                 deal.id,
                 "deal_updated",
+                "Deal updated",
                 f'Deal "{deal.title}" was updated',
                 updated_by_id,
             )
@@ -491,15 +500,19 @@ class DealService:
                 item.position = index
 
             if target_stage == "won":
-                activity_type = "deal_won"
+                action = "deal_won"
+                title = "Deal won"
             elif target_stage == "lost":
-                activity_type = "deal_lost"
+                action = "deal_lost"
+                title = "Deal lost"
             else:
-                activity_type = "deal_moved"
-            self._log_deal_activity(
+                action = "deal_stage_changed"
+                title = "Deal stage changed"
+            self._log_deal(
                 tenant_id,
                 deal.id,
-                activity_type,
+                action,
+                title,
                 f'Deal moved from {DEAL_STAGE_LABELS[source_stage]} to {DEAL_STAGE_LABELS[target_stage]}',
                 updated_by_id,
                 {"from_stage": source_stage, "to_stage": target_stage},
@@ -533,10 +546,11 @@ class DealService:
         )
         self.db.add(duplicate)
         self.db.flush()
-        self._log_deal_activity(
+        self._log_deal(
             tenant_id,
             duplicate.id,
             "deal_created",
+            "Deal duplicated",
             f'Deal duplicated from "{source.title}"',
             created_by_id,
             {"source_deal_id": str(source.id)},
@@ -553,10 +567,11 @@ class DealService:
         deal = self.get_deal(tenant_id, deal_id)
         stage = deal.stage
         title = deal.title
-        self._log_deal_activity(
+        self._log_deal(
             tenant_id,
             deal.id,
             "deal_deleted",
+            "Deal deleted",
             f'Deal "{title}" was deleted',
             deleted_by_id,
         )

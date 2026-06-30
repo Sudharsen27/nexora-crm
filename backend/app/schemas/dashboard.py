@@ -141,6 +141,10 @@ class DashboardPersonRef(BaseModel):
 class DashboardActivityItem(BaseModel):
     id: UUID
     activity_type: str
+    action: str | None = None
+    title: str | None = None
+    icon: str | None = None
+    color: str | None = None
     description: str
     created_at: datetime
     scheduled_at: datetime | None

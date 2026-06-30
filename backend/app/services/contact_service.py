@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.models import Contact, Company, Lead, TenantMembership
 from app.models.contact import CONTACT_SORT_FIELDS
 from app.schemas.contact import ContactCreate, ContactUpdate
+from app.services.activity_logger import ActivityLogger
 
 
 class ContactService:
@@ -156,6 +157,17 @@ class ContactService:
             created_by_id=created_by_id,
         )
         self.db.add(contact)
+        self.db.flush()
+        name = f"{contact.first_name} {contact.last_name}".strip() or contact.email or "Contact"
+        ActivityLogger(self.db).log(
+            tenant_id=tenant_id,
+            actor_id=created_by_id,
+            entity_type="contact",
+            entity_id=contact.id,
+            action="contact_created",
+            title="Contact created",
+            description=f'Contact "{name}" was created',
+        )
         self.db.commit()
         return self.get_contact(tenant_id, contact.id)
 
@@ -164,8 +176,10 @@ class ContactService:
         tenant_id: uuid.UUID,
         contact_id: uuid.UUID,
         payload: ContactUpdate,
+        updated_by_id: uuid.UUID | None = None,
     ) -> Contact:
         contact = self.get_contact(tenant_id, contact_id)
+        old_notes = contact.notes
 
         if payload.lead_id != contact.lead_id:
             if payload.lead_id is not None:
@@ -185,11 +199,46 @@ class ContactService:
         contact.company_id = payload.company_id
         contact.assigned_to_id = payload.assigned_to_id
 
+        name = f"{contact.first_name} {contact.last_name}".strip() or contact.email or "Contact"
+        if payload.notes is not None and (payload.notes or "") != (old_notes or ""):
+            note_action = "note_added" if not (old_notes or "").strip() else "note_edited"
+            ActivityLogger(self.db).log(
+                tenant_id=tenant_id,
+                actor_id=updated_by_id,
+                entity_type="contact",
+                entity_id=contact.id,
+                action=note_action,
+                title="Note added" if note_action == "note_added" else "Note edited",
+                description=f'Notes updated on contact "{name}"',
+            )
+        else:
+            ActivityLogger(self.db).log(
+                tenant_id=tenant_id,
+                actor_id=updated_by_id,
+                entity_type="contact",
+                entity_id=contact.id,
+                action="contact_updated",
+                title="Contact updated",
+                description=f'Contact "{name}" was updated',
+            )
+
         self.db.commit()
         return self.get_contact(tenant_id, contact_id)
 
-    def delete_contact(self, tenant_id: uuid.UUID, contact_id: uuid.UUID) -> None:
+    def delete_contact(
+        self, tenant_id: uuid.UUID, contact_id: uuid.UUID, deleted_by_id: uuid.UUID | None = None
+    ) -> None:
         contact = self.get_contact(tenant_id, contact_id)
+        name = f"{contact.first_name} {contact.last_name}".strip() or contact.email or "Contact"
+        ActivityLogger(self.db).log(
+            tenant_id=tenant_id,
+            actor_id=deleted_by_id,
+            entity_type="contact",
+            entity_id=contact.id,
+            action="contact_deleted",
+            title="Contact deleted",
+            description=f'Contact "{name}" was deleted',
+        )
         self.db.delete(contact)
         self.db.commit()
 
@@ -234,6 +283,30 @@ class ContactService:
         lead.status = "converted"
 
         self.db.add(contact)
+        self.db.flush()
+        lead_name = f"{lead.first_name} {lead.last_name}".strip() or lead.email or "Lead"
+        contact_name = f"{contact.first_name} {contact.last_name}".strip() or contact.email or "Contact"
+        ActivityLogger(self.db).log(
+            tenant_id=tenant_id,
+            actor_id=created_by_id,
+            entity_type="lead",
+            entity_id=lead.id,
+            action="lead_converted",
+            title="Lead converted",
+            description=f'Lead "{lead_name}" was converted to contact "{contact_name}"',
+            metadata={"contact_id": str(contact.id)},
+        )
+        ActivityLogger(self.db).log(
+            tenant_id=tenant_id,
+            actor_id=created_by_id,
+            entity_type="contact",
+            entity_id=contact.id,
+            action="contact_created",
+            title="Contact created from lead",
+            description=f'Contact "{contact_name}" was created from lead conversion',
+            metadata={"lead_id": str(lead.id)},
+        )
+
         self.db.commit()
         return self.get_contact(tenant_id, contact.id)
 

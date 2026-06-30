@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.models import Activity, Company, Contact, Deal, Task, TenantMembership
 from app.models.company import COMPANY_SORT_FIELDS
 from app.schemas.company import CompanyCreate, CompanyUpdate
+from app.services.activity_logger import ActivityLogger
 
 
 class CompanyService:
@@ -157,6 +158,16 @@ class CompanyService:
             created_by_id=created_by_id,
         )
         self.db.add(company)
+        self.db.flush()
+        ActivityLogger(self.db).log(
+            tenant_id=tenant_id,
+            actor_id=created_by_id,
+            entity_type="company",
+            entity_id=company.id,
+            action="company_created",
+            title="Company created",
+            description=f'Company "{company.company_name}" was created',
+        )
         self.db.commit()
         return self.get_company(tenant_id, company.id)
 
@@ -165,6 +176,7 @@ class CompanyService:
         tenant_id: uuid.UUID,
         company_id: uuid.UUID,
         payload: CompanyUpdate,
+        updated_by_id: uuid.UUID | None = None,
     ) -> Company:
         company = self.get_company(tenant_id, company_id)
         data = payload.model_dump(exclude_unset=True)
@@ -178,10 +190,22 @@ class CompanyService:
         for field, value in data.items():
             setattr(company, field, value)
 
+        ActivityLogger(self.db).log(
+            tenant_id=tenant_id,
+            actor_id=updated_by_id,
+            entity_type="company",
+            entity_id=company.id,
+            action="company_updated",
+            title="Company updated",
+            description=f'Company "{company.company_name}" was updated',
+        )
+
         self.db.commit()
         return self.get_company(tenant_id, company_id)
 
-    def delete_company(self, tenant_id: uuid.UUID, company_id: uuid.UUID) -> None:
+    def delete_company(
+        self, tenant_id: uuid.UUID, company_id: uuid.UUID, deleted_by_id: uuid.UUID | None = None
+    ) -> None:
         company = self.get_company(tenant_id, company_id)
 
         contact_count = self.db.scalar(
@@ -214,6 +238,15 @@ class CompanyService:
                 ),
             )
 
+        ActivityLogger(self.db).log(
+            tenant_id=tenant_id,
+            actor_id=deleted_by_id,
+            entity_type="company",
+            entity_id=company.id,
+            action="company_deleted",
+            title="Company deleted",
+            description=f'Company "{company.company_name}" was deleted',
+        )
         self.db.delete(company)
         self.db.commit()
 

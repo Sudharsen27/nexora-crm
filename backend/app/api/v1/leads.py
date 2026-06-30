@@ -129,7 +129,7 @@ def update_lead(
     ctx: TenantContext = Depends(require_permission("lead:write")),
     db: Session = Depends(get_db),
 ) -> LeadResponse:
-    lead = LeadService(db).update_lead(ctx.tenant.id, lead_id, payload)
+    lead = LeadService(db).update_lead(ctx.tenant.id, lead_id, payload, ctx.membership.user_id)
     return _to_response(lead)
 
 
@@ -139,4 +139,4 @@ def delete_lead(
     ctx: TenantContext = Depends(require_permission("lead:delete")),
     db: Session = Depends(get_db),
 ) -> None:
-    LeadService(db).delete_lead(ctx.tenant.id, lead_id)
+    LeadService(db).delete_lead(ctx.tenant.id, lead_id, ctx.membership.user_id)
