@@ -6,7 +6,12 @@ export type DashboardRange =
   | "last_30_days"
   | "this_quarter"
   | "this_year"
-  | "custom";
+  | "custom"
+  | "yesterday"
+  | "this_week"
+  | "last_week"
+  | "this_month"
+  | "last_month";
 
 export type DashboardScope = "my" | "team";
 

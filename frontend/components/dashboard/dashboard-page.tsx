@@ -1,12 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { getDashboard, getDefaultTimezone } from "@/lib/api/dashboard";
-import type { DashboardFilters, DashboardRange, DashboardResponse, DashboardScope } from "@/types/dashboard";
+import Link from "next/link";
+import { getDefaultTimezone } from "@/lib/api/dashboard";
+import { useAnalyticsCharts, useAnalyticsOverview } from "@/hooks/use-analytics";
+import { useDashboard } from "@/hooks/use-dashboard";
+import type { AnalyticsFilters, AnalyticsRange } from "@/types/analytics";
+import type { DashboardFilters, DashboardRange, DashboardScope } from "@/types/dashboard";
 import { DashboardFilters as DashboardFiltersBar } from "@/components/dashboard/dashboard-filters";
 import { QuickActions } from "@/components/dashboard/quick-actions";
-import { KpiRow } from "@/components/dashboard/kpi-row";
+import { AnalyticsKpiRow } from "@/components/dashboard/analytics-kpi-row";
 import { SalesFunnelChart } from "@/components/dashboard/sales-funnel-chart";
 import { RevenueTrendChart } from "@/components/dashboard/revenue-trend-chart";
 import { LeadAnalyticsCharts } from "@/components/dashboard/lead-analytics-charts";
@@ -14,66 +18,88 @@ import { TeamPerformanceTable } from "@/components/dashboard/team-performance-ta
 import { RecentActivityFeed } from "@/components/dashboard/recent-activity-feed";
 import { UpcomingTasksList } from "@/components/dashboard/upcoming-tasks-list";
 import { CalendarStrip } from "@/components/dashboard/calendar-strip";
+import { DealsByStageChart } from "@/components/dashboard/deals-by-stage-chart";
+import { TaskCompletionChart } from "@/components/dashboard/task-completion-chart";
+import { ActivityHeatmap } from "@/components/dashboard/activity-heatmap";
+import { SalesForecastChart } from "@/components/dashboard/sales-forecast-chart";
+import { EntityListPanel } from "@/components/dashboard/entity-list-panel";
+import { TaskSummaryWidget } from "@/components/dashboard/task-summary-widget";
 import { WidgetError, WidgetSkeleton } from "@/components/dashboard/widget-states";
 import { RoleLabel } from "@/components/layout/role-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button-variants";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 interface DashboardPageProps {
   tenantSlug: string;
 }
 
-function widgetError(
-  errors: DashboardResponse["errors"],
-  widget: string,
-): string | undefined {
-  return errors.find((e) => e.widget === widget)?.message;
-}
+const DASHBOARD_RANGE_MAP: Record<string, DashboardRange> = {
+  today: "today",
+  last_7_days: "last_7_days",
+  last_30_days: "last_30_days",
+  this_quarter: "this_quarter",
+  this_year: "this_year",
+  custom: "custom",
+  yesterday: "last_7_days",
+  this_week: "last_7_days",
+  last_week: "last_7_days",
+  this_month: "last_30_days",
+  last_month: "last_30_days",
+};
 
 export function DashboardPage({ tenantSlug }: DashboardPageProps) {
   const searchParams = useSearchParams();
-  const [data, setData] = useState<DashboardResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const filters: DashboardFilters = useMemo(
+  const analyticsFilters: AnalyticsFilters = useMemo(
     () => ({
-      range: (searchParams.get("range") as DashboardRange) || "last_30_days",
+      range: (searchParams.get("range") as AnalyticsRange) || "last_30_days",
       scope: (searchParams.get("scope") as DashboardScope) || "my",
+      start_date: searchParams.get("start_date") ?? undefined,
+      end_date: searchParams.get("end_date") ?? undefined,
       timezone: getDefaultTimezone(),
+      owner_id: searchParams.get("owner_id") ?? undefined,
     }),
     [searchParams],
   );
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await getDashboard(tenantSlug, filters);
-      setData(response);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load dashboard");
-      setData(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantSlug, filters]);
+  const dashboardFilters: DashboardFilters = useMemo(() => {
+    const range = searchParams.get("range") ?? "last_30_days";
+    return {
+      range: DASHBOARD_RANGE_MAP[range] ?? "last_30_days",
+      scope: (searchParams.get("scope") as DashboardScope) || "my",
+      start_date: searchParams.get("start_date") ?? undefined,
+      end_date: searchParams.get("end_date") ?? undefined,
+      timezone: getDefaultTimezone(),
+    };
+  }, [searchParams]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const { data: overview, loading: overviewLoading, error: overviewError, refresh: refreshOverview } =
+    useAnalyticsOverview(tenantSlug, analyticsFilters);
+  const { revenue, pipeline, tasks, activities, forecast, loading: chartsLoading, refresh: refreshCharts } =
+    useAnalyticsCharts(tenantSlug, analyticsFilters);
+  const { data, loading: dashLoading, error: dashError, refresh: refreshDash } = useDashboard(
+    tenantSlug,
+    dashboardFilters,
+  );
 
-  const visible = new Set(data?.meta.visible_widgets ?? []);
+  const loading = overviewLoading && !overview;
+  const refreshing = overviewLoading || dashLoading || chartsLoading;
   const currency = data?.kpis?.currency ?? "USD";
+  const visible = new Set(data?.meta.visible_widgets ?? []);
 
-  if (error && !data) {
+  function refreshAll() {
+    void refreshOverview();
+    void refreshCharts();
+    void refreshDash();
+  }
+
+  if (overviewError && !overview && dashError && !data) {
     return (
       <WidgetError
         title="Dashboard unavailable"
-        message={error}
-        onRetry={() => void load()}
+        message={overviewError || dashError || "Failed to load"}
+        onRetry={refreshAll}
         className="mt-2"
       />
     );
@@ -81,30 +107,28 @@ export function DashboardPage({ tenantSlug }: DashboardPageProps) {
 
   return (
     <div className="space-y-6">
-      <header className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
+      <header className="rounded-2xl border border-[var(--border)] bg-[var(--surface)]/90 p-5 shadow-sm backdrop-blur-sm">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight text-[var(--foreground)]">Dashboard</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Executive Dashboard</h1>
             <p className="text-sm text-[var(--muted-foreground)]">
-              Track pipeline, revenue, and team activity in one place. Signed in as{" "}
+              Revenue, pipeline, and team performance at a glance. Signed in as{" "}
               <RoleLabel className="font-medium text-[var(--foreground)]" />.
             </p>
-            {data ? (
+            {overview ? (
               <p className="text-xs text-[var(--muted-foreground)]">
-                {data.meta.start_date} — {data.meta.end_date} ·{" "}
-                {data.meta.scope === "team" ? "Team view" : "My view"}
+                {overview.meta.start_date} — {overview.meta.end_date} ·{" "}
+                {overview.meta.scope === "team" ? "Team view" : "My view"}
               </p>
             ) : null}
           </div>
           <div className="flex flex-col gap-3 sm:items-end">
-            <div className="flex items-center gap-2 self-start sm:self-end">
-              <Link
-                href={`/${tenantSlug}/tasks?due=overdue`}
-                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-              >
-                Review overdue
-              </Link>
-            </div>
+            <Link
+              href={`/${tenantSlug}/tasks?due=overdue`}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "self-start sm:self-end")}
+            >
+              Review overdue
+            </Link>
             <QuickActions tenantSlug={tenantSlug} />
           </div>
         </div>
@@ -113,150 +137,151 @@ export function DashboardPage({ tenantSlug }: DashboardPageProps) {
         </div>
       </header>
 
-      {loading && !data ? (
-        <div className="space-y-6" aria-busy="true" aria-label="Loading dashboard">
+      {loading ? (
+        <div className="space-y-6" aria-busy="true">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <WidgetSkeleton key={i} variant="kpi" />
             ))}
           </div>
-          <div className="grid gap-4 xl:grid-cols-12">
-            <div className="xl:col-span-5">
-              <Card>
-                <CardContent className="pt-6">
-                  <WidgetSkeleton variant="chart" />
-                </CardContent>
-              </Card>
-            </div>
-            <div className="xl:col-span-7">
-              <Card>
-                <CardContent className="pt-6">
-                  <WidgetSkeleton variant="chart" />
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+          <WidgetSkeleton variant="chart" />
         </div>
       ) : null}
 
-      {data ? (
-        <div className={cn("space-y-6", loading && "pointer-events-none opacity-60")}>
-          {data.errors.length > 0 ? (
-            <div
-              className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200"
-              role="status"
-            >
-              Some widgets could not be loaded. Partial data is shown below.
-            </div>
-          ) : null}
+      <div className={cn("space-y-6", refreshing && overview && "pointer-events-none opacity-70")}>
+        <AnalyticsKpiRow
+          tenantSlug={tenantSlug}
+          kpis={overview?.kpis ?? []}
+          loading={overviewLoading && !overview}
+        />
 
-          {visible.has("kpis") && data.kpis ? (
-            widgetError(data.errors, "kpis") ? (
-              <WidgetError title="KPIs" message={widgetError(data.errors, "kpis")!} onRetry={() => void load()} />
-            ) : (
-              <KpiRow tenantSlug={tenantSlug} kpis={data.kpis} />
-            )
-          ) : null}
+        {(visible.has("funnel") || revenue) && (
+          <div className="grid gap-4 xl:grid-cols-12">
+            {visible.has("funnel") && data?.funnel ? (
+              <div className="xl:col-span-5">
+                <SalesFunnelChart tenantSlug={tenantSlug} funnel={data.funnel} currency={currency} />
+              </div>
+            ) : null}
+            {revenue ? (
+              <div className={data?.funnel ? "xl:col-span-7" : "xl:col-span-12"}>
+                <RevenueTrendChart tenantSlug={tenantSlug} revenue={revenue.revenue} currency={currency} />
+              </div>
+            ) : null}
+          </div>
+        )}
 
-          {(visible.has("funnel") || visible.has("revenue")) && (
-            <div className="grid gap-4 xl:grid-cols-12">
-              {visible.has("funnel") ? (
-                <div className="xl:col-span-5">
-                  {widgetError(data.errors, "funnel") ? (
-                    <WidgetError
-                      title="Sales funnel"
-                      message={widgetError(data.errors, "funnel")!}
-                      onRetry={() => void load()}
-                    />
-                  ) : data.funnel ? (
-                    <SalesFunnelChart tenantSlug={tenantSlug} funnel={data.funnel} currency={currency} />
-                  ) : null}
-                </div>
-              ) : null}
-              {visible.has("revenue") ? (
-                <div className={visible.has("funnel") ? "xl:col-span-7" : "xl:col-span-12"}>
-                  {widgetError(data.errors, "revenue") ? (
-                    <WidgetError
-                      title="Revenue trend"
-                      message={widgetError(data.errors, "revenue")!}
-                      onRetry={() => void load()}
-                    />
-                  ) : data.revenue ? (
-                    <RevenueTrendChart tenantSlug={tenantSlug} revenue={data.revenue} currency={currency} />
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          )}
-
-          {visible.has("leads") ? (
-            widgetError(data.errors, "leads") ? (
-              <WidgetError title="Lead analytics" message={widgetError(data.errors, "leads")!} onRetry={() => void load()} />
-            ) : data.leads ? (
-              <LeadAnalyticsCharts tenantSlug={tenantSlug} leads={data.leads} />
-            ) : null
-          ) : null}
-
-          {visible.has("team_performance") ? (
-            widgetError(data.errors, "team_performance") ? (
-              <WidgetError
-                title="Team performance"
-                message={widgetError(data.errors, "team_performance")!}
-                onRetry={() => void load()}
-              />
-            ) : data.team_performance ? (
-              <TeamPerformanceTable
+        <div className="grid gap-4 xl:grid-cols-12">
+          {pipeline ? (
+            <div className="xl:col-span-6">
+              <DealsByStageChart
                 tenantSlug={tenantSlug}
-                members={data.team_performance}
+                stages={pipeline.deals_by_stage}
                 currency={currency}
               />
-            ) : null
-          ) : null}
-
-          {(visible.has("upcoming_tasks") || visible.has("calendar")) && (
-            <div className="grid gap-4 xl:grid-cols-12">
-              {visible.has("upcoming_tasks") ? (
-                <div className="xl:col-span-5">
-                  {widgetError(data.errors, "upcoming_tasks") ? (
-                    <WidgetError
-                      title="Upcoming tasks"
-                      message={widgetError(data.errors, "upcoming_tasks")!}
-                      onRetry={() => void load()}
-                    />
-                  ) : data.upcoming_tasks ? (
-                    <UpcomingTasksList tenantSlug={tenantSlug} tasks={data.upcoming_tasks} />
-                  ) : null}
-                </div>
-              ) : null}
-              {visible.has("calendar") ? (
-                <div className={visible.has("upcoming_tasks") ? "xl:col-span-7" : "xl:col-span-12"}>
-                  {widgetError(data.errors, "calendar") ? (
-                    <WidgetError
-                      title="Calendar"
-                      message={widgetError(data.errors, "calendar")!}
-                      onRetry={() => void load()}
-                    />
-                  ) : data.calendar ? (
-                    <CalendarStrip tenantSlug={tenantSlug} days={data.calendar} />
-                  ) : null}
-                </div>
-              ) : null}
             </div>
-          )}
-
-          {visible.has("recent_activities") ? (
-            widgetError(data.errors, "recent_activities") ? (
-              <WidgetError
-                title="Recent activity"
-                message={widgetError(data.errors, "recent_activities")!}
-                onRetry={() => void load()}
+          ) : null}
+          {forecast ? (
+            <div className="xl:col-span-6">
+              <SalesForecastChart
+                tenantSlug={tenantSlug}
+                buckets={forecast.buckets}
+                forecastRevenue={forecast.forecast_revenue}
+                currency={currency}
               />
-            ) : data.recent_activities ? (
-              <RecentActivityFeed tenantSlug={tenantSlug} activities={data.recent_activities} />
-            ) : null
+            </div>
           ) : null}
         </div>
-      ) : null}
+
+        {visible.has("leads") && data?.leads ? (
+          <LeadAnalyticsCharts tenantSlug={tenantSlug} leads={data.leads} />
+        ) : null}
+
+        <div className="grid gap-4 xl:grid-cols-12">
+          {tasks ? (
+            <div className="xl:col-span-5">
+              <TaskCompletionChart
+                completed={tasks.completed_tasks}
+                open={tasks.open_tasks}
+                overdue={tasks.overdue_tasks}
+                completionRate={tasks.completion_rate}
+              />
+            </div>
+          ) : null}
+          {activities ? (
+            <div className="xl:col-span-7">
+              <ActivityHeatmap days={activities.heatmap} />
+            </div>
+          ) : null}
+        </div>
+
+        {visible.has("team_performance") && data?.team_performance ? (
+          <TeamPerformanceTable
+            tenantSlug={tenantSlug}
+            members={data.team_performance}
+            currency={currency}
+          />
+        ) : null}
+
+        {visible.has("tasks_summary") && data?.tasks_summary ? (
+          <TaskSummaryWidget tenantSlug={tenantSlug} summary={data.tasks_summary} />
+        ) : null}
+
+        <div className="grid gap-4 xl:grid-cols-12">
+          {(visible.has("upcoming_tasks") || overview?.upcoming_tasks.length) ? (
+            <div className="xl:col-span-5">
+              <UpcomingTasksList
+                tenantSlug={tenantSlug}
+                tasks={overview?.upcoming_tasks ?? data?.upcoming_tasks ?? []}
+              />
+            </div>
+          ) : null}
+          {visible.has("calendar") && data?.calendar ? (
+            <div className="xl:col-span-7">
+              <CalendarStrip tenantSlug={tenantSlug} days={data.calendar} />
+            </div>
+          ) : null}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <EntityListPanel
+            title="Recent deals"
+            description="Latest deals in your pipeline"
+            items={overview?.recent_deals ?? []}
+            tenantSlug={tenantSlug}
+            emptyTitle="No deals"
+            emptyDescription="Create your first deal to track revenue."
+            emptyActionLabel="Create deal"
+            emptyActionHref={`/${tenantSlug}/deals`}
+          />
+          <EntityListPanel
+            title="Recent companies"
+            description="Newly added organizations"
+            items={overview?.recent_companies ?? []}
+            tenantSlug={tenantSlug}
+            emptyTitle="No companies"
+            emptyDescription="Add companies to organize accounts."
+            emptyActionLabel="Add company"
+            emptyActionHref={`/${tenantSlug}/companies`}
+          />
+          <EntityListPanel
+            title="Latest contacts"
+            description="Recently created contacts"
+            items={overview?.latest_contacts ?? []}
+            tenantSlug={tenantSlug}
+            emptyTitle="No contacts"
+            emptyDescription="Build your contact database."
+            emptyActionLabel="Add contact"
+            emptyActionHref={`/${tenantSlug}/contacts`}
+          />
+        </div>
+
+        {(overview?.recent_activities.length || visible.has("recent_activities")) ? (
+          <RecentActivityFeed
+            tenantSlug={tenantSlug}
+            activities={overview?.recent_activities ?? data?.recent_activities ?? []}
+          />
+        ) : null}
+      </div>
     </div>
   );
 }
