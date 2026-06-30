@@ -22,6 +22,7 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
     COOKIE_SECURE: bool = False
+    COOKIE_SAMESITE: str = "lax"
     COOKIE_DOMAIN: str | None = None
 
     FRONTEND_URL: str = "http://localhost:3000"
@@ -34,6 +35,14 @@ class Settings(BaseSettings):
     SMTP_FROM_EMAIL: str = ""
     SMTP_FROM_NAME: str = "Nexora"
     SMTP_USE_TLS: bool = True
+
+    @field_validator("COOKIE_SAMESITE", mode="before")
+    @classmethod
+    def normalize_cookie_samesite(cls, value: str) -> str:
+        normalized = str(value).strip().lower()
+        if normalized not in {"lax", "strict", "none"}:
+            return "lax"
+        return normalized
 
     @property
     def email_enabled(self) -> bool:
@@ -50,10 +59,22 @@ class Settings(BaseSettings):
     @classmethod
     def parse_cors_origins(cls, value: str | list[str]) -> list[str]:
         if isinstance(value, list):
-            return value
-        if value.startswith("["):
-            return json.loads(value)
-        return [origin.strip() for origin in value.split(",") if origin.strip()]
+            return [origin.strip().rstrip("/") for origin in value if origin.strip()]
+        text = value.strip()
+        if text.startswith("["):
+            parsed = json.loads(text)
+            return [str(origin).strip().rstrip("/") for origin in parsed if str(origin).strip()]
+        return [origin.strip().rstrip("/") for origin in text.split(",") if origin.strip()]
+
+    @property
+    def cors_origins(self) -> list[str]:
+        """Allowed browser origins — always includes FRONTEND_URL when set."""
+        origins: list[str] = []
+        for origin in [*self.CORS_ORIGINS, self.FRONTEND_URL]:
+            normalized = origin.strip().rstrip("/")
+            if normalized and normalized not in origins:
+                origins.append(normalized)
+        return origins
 
 
 @lru_cache

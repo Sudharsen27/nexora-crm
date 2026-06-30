@@ -1,8 +1,9 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
@@ -15,6 +16,7 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     bootstrap_database()
+    logger.info("CORS allowed origins: %s", settings.cors_origins)
     yield
 
 
@@ -22,13 +24,21 @@ app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION, lifespan=li
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Return JSON 500 so CORS headers are applied (plain uvicorn 500 responses omit them)."""
+    logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+    detail = str(exc) if settings.DEBUG else "Internal server error"
+    return JSONResponse(status_code=500, content={"detail": detail})
 
 
 @app.get("/")

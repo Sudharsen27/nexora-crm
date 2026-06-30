@@ -26,12 +26,16 @@ REFRESH_COOKIE = "nexora_refresh_token"
 
 
 def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
+    samesite = settings.COOKIE_SAMESITE
+    secure = settings.COOKIE_SECURE
+    if samesite == "none" and not secure:
+        secure = True
     response.set_cookie(
         key=REFRESH_COOKIE,
         value=refresh_token,
         httponly=True,
-        secure=settings.COOKIE_SECURE,
-        samesite="lax",
+        secure=secure,
+        samesite=samesite,
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
         domain=settings.COOKIE_DOMAIN,
         path="/",
