@@ -35,7 +35,9 @@ export const DASHBOARD_SCOPE_LABELS: Record<string, string> = {
 
 export function getDefaultTimezone(): string {
   try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz === "Asia/Calcutta") return "Asia/Kolkata";
+    return tz;
   } catch {
     return "UTC";
   }
