@@ -117,7 +117,11 @@ export interface DashboardPersonRef {
 export interface DashboardActivityItem {
   id: string;
   activity_type: string;
+  action?: string | null;
+  title?: string | null;
   description: string;
+  icon?: string | null;
+  color?: string | null;
   created_at: string;
   scheduled_at?: string | null;
   created_by?: DashboardPersonRef | null;

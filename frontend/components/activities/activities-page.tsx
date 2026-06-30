@@ -1,16 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search } from "lucide-react";
+import { Plus, RefreshCw, Search } from "lucide-react";
+import { ActivityDrawer } from "@/components/activities/activity-drawer";
+import { ActivityFormDialog } from "@/components/activities/activity-form-dialog";
+import { EnterpriseTimeline } from "@/components/activities/enterprise-timeline";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { usePermissions } from "@/contexts/permissions-context";
-import { ActivityFormDialog } from "@/components/activities/activity-form-dialog";
-import { ActivityTimeline } from "@/components/activities/activity-timeline";
-import { ACTIVITY_TYPES, createActivity, listActivities } from "@/lib/api/activities";
-import type { Activity } from "@/types/api";
+import { useActivities, useActivityPoll } from "@/hooks/use-activities";
+import {
+  ACTIVITY_CATEGORIES,
+  createActivity,
+  deleteActivity,
+} from "@/lib/api/activities";
+import { listMembers } from "@/lib/api/tenants";
+import type { Activity, ActivityFilters } from "@/types/api";
+import type { Member } from "@/types/api";
 
 interface ActivitiesPageProps {
   tenantSlug: string;
@@ -18,21 +26,34 @@ interface ActivitiesPageProps {
 
 export function ActivitiesPage({ tenantSlug }: ActivitiesPageProps) {
   const router = useRouter();
-  const { canWrite } = usePermissions();
   const searchParams = useSearchParams();
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [total, setTotal] = useState(0);
-  const [pages, setPages] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { canWrite, canDelete } = usePermissions();
   const [formOpen, setFormOpen] = useState(false);
+  const [drawerId, setDrawerId] = useState<string | null>(null);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [searchInput, setSearchInput] = useState(searchParams.get("q") ?? "");
 
   const q = searchParams.get("q") ?? "";
-  const activityType = searchParams.get("activity_type") ?? "";
-  const entityType = searchParams.get("entity_type") ?? "";
-  const page = Number(searchParams.get("page") ?? "1");
+  const category = searchParams.get("category") ?? "";
+  const actorId = searchParams.get("actor_id") ?? "";
+  const dateFrom = searchParams.get("date_from") ?? "";
+  const dateTo = searchParams.get("date_to") ?? "";
 
-  const [searchInput, setSearchInput] = useState(q);
+  const filters: ActivityFilters = useMemo(
+    () => ({
+      q: q || undefined,
+      category: category || undefined,
+      actor_id: actorId || undefined,
+      date_from: dateFrom || undefined,
+      date_to: dateTo || undefined,
+      page_size: 20,
+      sort: "desc",
+    }),
+    [q, category, actorId, dateFrom, dateTo],
+  );
+
+  const { items, total, loading, loadingMore, error, hasMore, loadMore, refresh, prepend, remove } =
+    useActivities(tenantSlug, filters);
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -46,159 +67,148 @@ export function ActivitiesPage({ tenantSlug }: ActivitiesPageProps) {
     [router, searchParams, tenantSlug],
   );
 
-  const loadActivities = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await listActivities(tenantSlug, {
-        q: q || undefined,
-        activity_type: activityType || undefined,
-        entity_type: entityType || undefined,
-        page,
-        page_size: 20,
-      });
-      setActivities(data.items);
-      setTotal(data.total);
-      setPages(data.pages);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load activities");
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantSlug, q, activityType, entityType, page]);
+  const handleNewActivities = useCallback(
+    (fresh: Activity[]) => {
+      fresh.forEach((a) => prepend(a));
+    },
+    [prepend],
+  );
+
+  useActivityPoll(tenantSlug, handleNewActivities, 30000, !loading);
 
   useEffect(() => {
-    void loadActivities();
-  }, [loadActivities]);
+    void listMembers(tenantSlug).then(setMembers);
+  }, [tenantSlug]);
 
-  useEffect(() => {
-    setSearchInput(q);
-  }, [q]);
+  async function handleDelete(activity: Activity) {
+    if (!confirm("Delete this activity?")) return;
+    await deleteActivity(tenantSlug, activity.id);
+    remove(activity.id);
+    if (drawerId === activity.id) setDrawerId(null);
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold">Activities</h2>
-          <p className="text-zinc-500">
-            {total} activit{total !== 1 ? "ies" : "y"} total
+          <h2 className="text-2xl font-semibold tracking-tight">Activity Timeline</h2>
+          <p className="text-sm text-[var(--muted-foreground)]">
+            {total.toLocaleString()} event{total !== 1 ? "s" : ""} · auto-tracked across your CRM
           </p>
         </div>
-        {canWrite("activity") && (
-          <Button onClick={() => setFormOpen(true)}>
-            <Plus className="h-4 w-4" />
-            Log activity
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => void refresh()} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
           </Button>
-        )}
+          {canWrite("activity") && (
+            <Button onClick={() => setFormOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Log activity
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Search & filters</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Filters</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {ACTIVITY_CATEGORIES.map((cat) => (
+              <Button
+                key={cat.value || "all"}
+                size="sm"
+                variant={category === cat.value ? "default" : "outline"}
+                onClick={() => updateParams({ category: cat.value || null })}
+              >
+                {cat.label}
+              </Button>
+            ))}
+          </div>
+
           <form
-            className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6"
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5"
             onSubmit={(e) => {
               e.preventDefault();
-              updateParams({ q: searchInput.trim() || null, page: "1" });
+              updateParams({ q: searchInput.trim() || null });
             }}
           >
-            <div className="relative sm:col-span-2 xl:col-span-2">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+            <div className="relative sm:col-span-2">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
               <Input
                 className="pl-9"
-                placeholder="Search descriptions..."
+                placeholder="Search activities..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
             </div>
             <select
               className="h-10 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
-              value={activityType}
-              onChange={(e) => updateParams({ activity_type: e.target.value || null, page: "1" })}
+              value={actorId}
+              onChange={(e) => updateParams({ actor_id: e.target.value || null })}
             >
-              <option value="">All types</option>
-              {ACTIVITY_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type.replace("_", " ")}
+              <option value="">All users</option>
+              {members.map((m) => (
+                <option key={m.user_id} value={m.user_id}>
+                  {m.full_name}
                 </option>
               ))}
             </select>
-            <select
-              className="h-10 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
-              value={entityType}
-              onChange={(e) => updateParams({ entity_type: e.target.value || null, page: "1" })}
-            >
-              <option value="">All entities</option>
-              <option value="lead">Leads</option>
-              <option value="contact">Contacts</option>
-              <option value="deal">Deals</option>
-            </select>
-            <Button type="submit">Search</Button>
-            {(q || activityType || entityType) && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setSearchInput("");
-                  router.push(`/${tenantSlug}/activities`);
-                }}
-              >
-                Clear
-              </Button>
-            )}
+            <Input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => updateParams({ date_from: e.target.value || null })}
+              aria-label="From date"
+            />
+            <Input
+              type="date"
+              value={dateTo}
+              onChange={(e) => updateParams({ date_to: e.target.value || null })}
+              aria-label="To date"
+            />
+            <div className="flex gap-2 sm:col-span-2 xl:col-span-5">
+              <Button type="submit">Apply</Button>
+              {(q || category || actorId || dateFrom || dateTo) && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setSearchInput("");
+                    router.push(`/${tenantSlug}/activities`);
+                  }}
+                >
+                  Clear filters
+                </Button>
+              )}
+            </div>
           </form>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Activity timeline</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
-          {loading ? (
-            <p className="text-sm text-zinc-500">Loading activities...</p>
-          ) : activities.length === 0 ? (
-            <p className="py-6 text-center text-sm text-zinc-500">No activities found.</p>
-          ) : (
-            <ActivityTimeline
-              tenantSlug={tenantSlug}
-              activities={activities}
-              showDelete
-              lockEntityOnEdit={false}
-              onChanged={() => void loadActivities()}
-            />
-          )}
-        </CardContent>
-      </Card>
-
-      {pages > 1 && (
-        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-          <p className="text-sm text-zinc-500">
-            Page {page} of {pages}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => updateParams({ page: String(page - 1) })}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= pages}
-              onClick={() => updateParams({ page: String(page + 1) })}
-            >
-              Next
-            </Button>
-          </div>
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
+          {error}
+          <Button variant="ghost" className="ml-2 h-auto p-0 text-red-700" onClick={() => void refresh()}>
+            Retry
+          </Button>
         </div>
       )}
+
+      <EnterpriseTimeline
+        tenantSlug={tenantSlug}
+        activities={items}
+        loading={loading}
+        loadingMore={loadingMore}
+        hasMore={hasMore}
+        onLoadMore={loadMore}
+        onOpen={(a) => setDrawerId(a.id)}
+        onDelete={canDelete("activity") ? handleDelete : undefined}
+        selectedId={drawerId}
+      />
+
+      <ActivityDrawer tenantSlug={tenantSlug} activityId={drawerId} onClose={() => setDrawerId(null)} />
 
       <ActivityFormDialog
         open={formOpen}
@@ -206,7 +216,7 @@ export function ActivitiesPage({ tenantSlug }: ActivitiesPageProps) {
         onClose={() => setFormOpen(false)}
         onSubmit={async (data) => {
           await createActivity(tenantSlug, data);
-          await loadActivities();
+          await refresh();
         }}
       />
     </div>

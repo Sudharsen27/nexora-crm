@@ -307,25 +307,43 @@ export interface ActivityCreator {
   email: string;
 }
 
+export interface ActivityEntityRef {
+  entity_type: string;
+  entity_id: string;
+  display_name: string;
+  href_path: string | null;
+}
+
 export interface Activity {
   id: string;
   tenant_id: string;
   entity_type: string;
   entity_id: string;
   activity_type: string;
+  action: string;
+  title: string;
   description: string;
+  icon: string | null;
+  color: string | null;
   metadata: Record<string, unknown> | null;
+  actor_id: string | null;
+  actor: ActivityCreator | null;
   created_by_id: string | null;
   created_by: ActivityCreator | null;
+  entity: ActivityEntityRef | null;
   created_at: string;
+  scheduled_at?: string | null;
+  archived_at?: string | null;
 }
 
 export interface ActivityListResponse {
   items: Activity[];
   total: number;
-  page: number;
-  page_size: number;
-  pages: number;
+  page: number | null;
+  page_size: number | null;
+  pages: number | null;
+  next_cursor: string | null;
+  has_more: boolean;
 }
 
 export interface ActivityFilters {
@@ -333,8 +351,15 @@ export interface ActivityFilters {
   entity_type?: string;
   entity_id?: string;
   activity_type?: string;
+  action?: string;
+  actor_id?: string;
+  date_from?: string;
+  date_to?: string;
+  category?: string;
   page?: number;
   page_size?: number;
+  cursor?: string;
+  sort?: "asc" | "desc";
 }
 
 export interface TaskAssignee {

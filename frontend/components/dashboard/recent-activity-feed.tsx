@@ -1,28 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Mail,
-  MessageSquare,
-  Phone,
-  RefreshCw,
-  StickyNote,
-  Users,
-} from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { WidgetEmpty } from "@/components/dashboard/widget-states";
-import type { DashboardActivityItem } from "@/types/dashboard";
 import { formatRelativeTime } from "@/lib/api/activities";
-
-const ACTIVITY_ICONS: Record<string, typeof Phone> = {
-  call: Phone,
-  meeting: Users,
-  email: Mail,
-  note: StickyNote,
-  task_update: RefreshCw,
-  lead_update: RefreshCw,
-  deal_update: RefreshCw,
-};
+import { getActivityIconFromFields, getDashboardActivityTitle } from "@/lib/activity-utils";
+import type { DashboardActivityItem } from "@/types/dashboard";
 
 interface RecentActivityFeedProps {
   tenantSlug: string;
@@ -48,18 +32,21 @@ export function RecentActivityFeed({ tenantSlug, activities }: RecentActivityFee
         {activities.length === 0 ? (
           <WidgetEmpty
             title="No activity yet"
-            description="Calls, meetings, and notes will show up here as your team works."
-            actionLabel="Log activity"
+            description="CRM actions are tracked automatically and will appear here."
+            actionLabel="View timeline"
             actionHref={`/${tenantSlug}/activities`}
           />
         ) : (
           <ul className="space-y-3" aria-label="Recent activities">
             {activities.map((activity) => {
-              const Icon = ACTIVITY_ICONS[activity.activity_type] ?? MessageSquare;
+              const Icon = activity.icon ? getActivityIconFromFields(activity.icon) : MessageSquare;
               const entityHref =
                 activity.entity?.href_path != null
                   ? `/${tenantSlug}/${activity.entity.href_path}`
                   : null;
+              const actorName = activity.created_by?.full_name ?? "System";
+              const title = getDashboardActivityTitle(activity);
+
               return (
                 <li
                   key={activity.id}
@@ -73,18 +60,17 @@ export function RecentActivityFeed({ tenantSlug, activities }: RecentActivityFee
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-[var(--foreground)]">
-                      {activity.created_by ? (
-                        <span className="font-medium">{activity.created_by.full_name}</span>
-                      ) : (
-                        <span className="font-medium">Someone</span>
-                      )}{" "}
-                      logged a {activity.activity_type.replace("_", " ")}
+                      <span className="font-medium">{actorName}</span>{" "}
+                      <span className="text-[var(--muted-foreground)]">·</span> {title}
                       {activity.entity ? (
                         <>
                           {" "}
                           on{" "}
                           {entityHref ? (
-                            <Link href={entityHref} className="font-medium text-[var(--primary)] hover:underline">
+                            <Link
+                              href={entityHref}
+                              className="font-medium text-[var(--primary)] hover:underline"
+                            >
                               {activity.entity.display_name}
                             </Link>
                           ) : (

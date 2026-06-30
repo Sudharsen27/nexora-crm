@@ -6,7 +6,6 @@ import { ActivityFormDialog } from "@/components/activities/activity-form-dialog
 import { Button } from "@/components/ui/button";
 import { usePermissions } from "@/contexts/permissions-context";
 import {
-  ACTIVITY_TYPE_ICONS,
   deleteActivity,
   formatRelativeTime,
   getActivityTitle,
@@ -18,6 +17,7 @@ import {
   updateActivity,
   type ActivityInput,
 } from "@/lib/api/activities";
+import { getActivityIcon, getActorName } from "@/lib/activity-utils";
 import type { Activity, ActivityFilters } from "@/types/api";
 
 interface ActivityTimelineProps {
@@ -139,7 +139,11 @@ export function ActivityTimeline({
   }
 
   const displayed = filterActivityTypes
-    ? activities.filter((a) => filterActivityTypes.includes(a.activity_type))
+    ? activities.filter(
+        (a) =>
+          filterActivityTypes.includes(a.activity_type) ||
+          (a.action && filterActivityTypes.includes(a.action)),
+      )
     : activities;
 
   if (displayed.length === 0) {
@@ -153,13 +157,15 @@ export function ActivityTimeline({
   return (
     <>
       <div className="space-y-0">
-        {displayed.map((activity, index) => (
+        {displayed.map((activity, index) => {
+          const Icon = getActivityIcon(activity);
+          return (
           <div key={activity.id} className="relative flex gap-4 pb-6">
             {index < displayed.length - 1 && (
               <span className="absolute left-[19px] top-10 h-[calc(100%-2rem)] w-px bg-[var(--border)]" />
             )}
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-lg">
-              {ACTIVITY_TYPE_ICONS[activity.activity_type] ?? "📌"}
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)]">
+              <Icon className="h-4 w-4 text-[var(--primary)]" />
             </div>
             <div className="min-w-0 flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm">
               <div className="flex items-start justify-between gap-2">
@@ -169,8 +175,7 @@ export function ActivityTimeline({
                     {activity.description}
                   </p>
                   <p className="mt-2 text-xs text-zinc-500">
-                    {activity.created_by?.full_name ?? "Unknown user"} ·{" "}
-                    {formatRelativeTime(activity.created_at)}
+                    {getActorName(activity)} · {formatRelativeTime(activity.created_at)}
                   </p>
                   {!compact && (
                     <p className="mt-1 text-xs text-zinc-400">
@@ -205,7 +210,8 @@ export function ActivityTimeline({
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <ActivityFormDialog
