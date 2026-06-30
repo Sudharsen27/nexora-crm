@@ -6,7 +6,7 @@ import logging
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from app.core.timezone import resolve_timezone
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -212,8 +212,8 @@ class DashboardService:
 
     def _resolve_date_range(self, params: DashboardQueryParams) -> DashboardDateRange:
         try:
-            tz = ZoneInfo(params.timezone)
-        except (ZoneInfoNotFoundError, KeyError) as exc:
+            tz = resolve_timezone(params.timezone)
+        except ValueError as exc:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid timezone",
@@ -520,7 +520,7 @@ class DashboardService:
         timezone: str,
         permissions: set[str],
     ) -> list[DashboardCalendarDay]:
-        tz = ZoneInfo(timezone)
+        tz = resolve_timezone(timezone)
         today = datetime.now(tz).date()
         end_date = today + timedelta(days=6)
         start_dt = datetime.combine(today, time.min, tzinfo=tz).astimezone(UTC)
