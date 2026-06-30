@@ -32,6 +32,8 @@ interface ActivityTimelineProps {
   lockEntityOnEdit?: boolean;
   refreshKey?: number;
   onChanged?: () => void;
+  /** When set, only show activities matching these types */
+  filterActivityTypes?: string[];
 }
 
 export function ActivityTimeline({
@@ -46,6 +48,7 @@ export function ActivityTimeline({
   lockEntityOnEdit = true,
   refreshKey = 0,
   onChanged,
+  filterActivityTypes,
 }: ActivityTimelineProps) {
   const { canWrite, canDelete, loading: permsLoading } = usePermissions();
   const allowEdit = !permsLoading && (showEditOption ?? showDelete) && canWrite("activity");
@@ -135,7 +138,11 @@ export function ActivityTimeline({
     return <p className="text-sm text-red-600">{error}</p>;
   }
 
-  if (activities.length === 0) {
+  const displayed = filterActivityTypes
+    ? activities.filter((a) => filterActivityTypes.includes(a.activity_type))
+    : activities;
+
+  if (displayed.length === 0) {
     return (
       <p className="py-6 text-center text-sm text-zinc-500">
         No activities yet. Log your first interaction.
@@ -146,9 +153,9 @@ export function ActivityTimeline({
   return (
     <>
       <div className="space-y-0">
-        {activities.map((activity, index) => (
+        {displayed.map((activity, index) => (
           <div key={activity.id} className="relative flex gap-4 pb-6">
-            {index < activities.length - 1 && (
+            {index < displayed.length - 1 && (
               <span className="absolute left-[19px] top-10 h-[calc(100%-2rem)] w-px bg-[var(--border)]" />
             )}
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-lg">

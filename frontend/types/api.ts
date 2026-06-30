@@ -104,6 +104,17 @@ export interface DealAssignee {
   email: string;
 }
 
+export interface DealCompanyRef {
+  id: string;
+  company_name: string;
+}
+
+export interface DealContactRef {
+  id: string;
+  first_name: string;
+  last_name: string;
+}
+
 export interface Deal {
   id: string;
   tenant_id: string;
@@ -113,14 +124,19 @@ export interface Deal {
   position: number;
   value: string | null;
   currency: string;
+  probability: number;
   expected_close_date: string | null;
   lead_id: string | null;
   company_id: string | null;
+  contact_id: string | null;
   assigned_to_id: string | null;
   assigned_to: DealAssignee | null;
+  company: DealCompanyRef | null;
+  contact: DealContactRef | null;
   created_by_id: string | null;
   created_at: string;
   updated_at: string;
+  closed_at?: string | null;
 }
 
 export interface DealStageColumn {
@@ -137,6 +153,38 @@ export interface DealBoard {
 export interface DealStageMeta {
   slug: string;
   label: string;
+}
+
+export interface DealPipelineFilters {
+  q?: string;
+  owner_id?: string;
+  company_id?: string;
+  stage?: string;
+  close_date_from?: string;
+  close_date_to?: string;
+  value_min?: number;
+  value_max?: number;
+}
+
+export interface DealStageBreakdown {
+  stage: string;
+  label: string;
+  count: number;
+  value: number;
+}
+
+export interface DealStatistics {
+  pipeline_value: string;
+  won_revenue: string;
+  lost_revenue: string;
+  forecast_revenue: string;
+  deals_this_month: number;
+  conversion_rate: number;
+  average_deal_size: string;
+  open_deal_count: number;
+  won_deal_count: number;
+  lost_deal_count: number;
+  stage_breakdown: DealStageBreakdown[];
 }
 
 export interface ContactAssignee {

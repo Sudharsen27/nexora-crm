@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeScript } from "@/components/layout/theme-script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -21,8 +22,6 @@ export const metadata: Metadata = {
   },
 };
 
-const themeInitScript = `(function(){try{var t=localStorage.getItem('nexora_theme');var theme=(t==='light'||t==='dark'||t==='system')?t:'system';var d=theme==='dark'||(theme==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);}catch(e){}})();`;
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -34,12 +33,8 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <head>
-        <script
-          dangerouslySetInnerHTML={{ __html: themeInitScript }}
-        />
-      </head>
       <body className="min-h-full flex flex-col">
+        <ThemeScript />
         {children}
       </body>
     </html>

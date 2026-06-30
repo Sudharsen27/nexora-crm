@@ -17,6 +17,12 @@ export const ACTIVITY_TYPES = [
   "task_update",
   "lead_update",
   "deal_update",
+  "deal_created",
+  "deal_moved",
+  "deal_updated",
+  "deal_deleted",
+  "deal_won",
+  "deal_lost",
 ] as const;
 
 export const ENTITY_TYPES = ["lead", "contact", "deal", "company"] as const;
@@ -29,6 +35,12 @@ export const ACTIVITY_TYPE_LABELS: Record<string, string> = {
   task_update: "Task Update",
   lead_update: "Lead Update",
   deal_update: "Deal Update",
+  deal_created: "Deal Created",
+  deal_moved: "Deal Moved",
+  deal_updated: "Deal Updated",
+  deal_deleted: "Deal Deleted",
+  deal_won: "Deal Won",
+  deal_lost: "Deal Lost",
 };
 
 export const ACTIVITY_TYPE_ICONS: Record<string, string> = {
@@ -39,6 +51,12 @@ export const ACTIVITY_TYPE_ICONS: Record<string, string> = {
   task_update: "✅",
   lead_update: "🎯",
   deal_update: "🤝",
+  deal_created: "✨",
+  deal_moved: "↔️",
+  deal_updated: "✏️",
+  deal_deleted: "🗑️",
+  deal_won: "🏆",
+  deal_lost: "❌",
 };
 
 function buildQuery(filters: ActivityFilters): string {

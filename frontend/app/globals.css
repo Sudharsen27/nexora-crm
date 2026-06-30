@@ -80,31 +80,70 @@ body {
   }
 }
 
-/* Kanban boards: contained horizontal scroll with subtle themed scrollbar */
+.pipeline-board-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  /* Hidden scrollbar — scroll still works via trackpad / shift+wheel / touch */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.pipeline-board-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Kanban boards (tasks etc.): contained horizontal scroll with subtle themed scrollbar */
 .kanban-scroll {
   -webkit-overflow-scrolling: touch;
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  scroll-padding-inline: 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--primary) 45%, var(--border)) transparent;
+}
+
+.kanban-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.kanban-scroll::-webkit-scrollbar-track {
+  margin-inline: 0.25rem;
+  background: color-mix(in srgb, var(--border) 40%, transparent);
+  border-radius: 9999px;
+}
+
+.kanban-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--primary) 50%, var(--muted-foreground));
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.kanban-scroll::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--primary) 70%, var(--muted-foreground));
+  background-clip: padding-box;
+}
+
+/* Vertical scroll inside pipeline columns */
+.kanban-column-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--border) 80%, transparent) transparent;
 }
 
-.kanban-scroll::-webkit-scrollbar {
-  height: 6px;
+.kanban-column-scroll::-webkit-scrollbar {
+  width: 6px;
 }
 
-.kanban-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.kanban-scroll::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--muted-foreground) 35%, transparent);
+.kanban-column-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted-foreground) 30%, transparent);
   border-radius: 9999px;
-}
-
-.kanban-scroll::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--muted-foreground) 55%, transparent);
 }
 
 /* Sidebar: scroll without visible scrollbar */

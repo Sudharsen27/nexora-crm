@@ -17,8 +17,10 @@ const schema = z.object({
   stage: z.string().min(1),
   value: z.string().optional(),
   currency: z.string().length(3).optional(),
+  probability: z.string().optional(),
   expected_close_date: z.string().optional(),
   company_id: z.string().optional(),
+  contact_id: z.string().optional(),
   assigned_to_id: z.string().optional(),
 });
 
@@ -65,8 +67,10 @@ export function DealFormDialog({
           stage: initial.stage,
           value: initial.value ?? "",
           currency: initial.currency,
+          probability: String(initial.probability ?? ""),
           expected_close_date: initial.expected_close_date ?? "",
           company_id: initial.company_id ?? "",
+          contact_id: initial.contact_id ?? "",
           assigned_to_id: initial.assigned_to_id ?? "",
         }
       : {
@@ -75,8 +79,10 @@ export function DealFormDialog({
           stage: defaultStage,
           value: "",
           currency: "USD",
+          probability: "",
           expected_close_date: "",
           company_id: defaultCompanyId ?? "",
+          contact_id: "",
           assigned_to_id: "",
         },
   });
@@ -98,9 +104,11 @@ export function DealFormDialog({
                 stage: data.stage,
                 value: data.value ? Number(data.value) : null,
                 currency: data.currency || "USD",
+                probability: data.probability ? Number(data.probability) : null,
                 expected_close_date: data.expected_close_date || null,
                 lead_id: defaultLeadId ?? initial?.lead_id ?? null,
                 company_id: data.company_id?.trim() || null,
+                contact_id: data.contact_id?.trim() || null,
                 assigned_to_id: data.assigned_to_id || null,
               });
               onClose();
@@ -132,6 +140,10 @@ export function DealFormDialog({
             <div className="space-y-2">
               <Label htmlFor="value">Value</Label>
               <Input id="value" type="number" min="0" step="0.01" {...register("value")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="probability">Probability %</Label>
+              <Input id="probability" type="number" min="0" max="100" {...register("probability")} />
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
