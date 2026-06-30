@@ -27,6 +27,18 @@ DEAL_STAGE_LABELS = {
     "lost": "Lost",
 }
 
+# Default win probability per stage (0–100), used when creating deals or moving stages.
+STAGE_DEFAULT_PROBABILITY = {
+    "new": 10,
+    "qualified": 25,
+    "proposal": 50,
+    "negotiation": 75,
+    "won": 100,
+    "lost": 0,
+}
+
+OPEN_DEAL_STAGES = ("new", "qualified", "proposal", "negotiation")
+
 
 class Deal(Base, TimestampMixin):
     __tablename__ = "deals"
@@ -53,6 +65,10 @@ class Deal(Base, TimestampMixin):
     company_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("companies.id", ondelete="SET NULL"), nullable=True
     )
+    contact_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("contacts.id", ondelete="SET NULL"), nullable=True
+    )
+    probability: Mapped[int] = mapped_column(Integer, nullable=False, default=10)
     assigned_to_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
@@ -64,5 +80,6 @@ class Deal(Base, TimestampMixin):
     tenant: Mapped["Tenant"] = relationship(back_populates="deals")
     lead: Mapped["Lead | None"] = relationship()
     company: Mapped["Company | None"] = relationship(back_populates="deals")
+    contact: Mapped["Contact | None"] = relationship()
     assigned_to: Mapped["User | None"] = relationship(foreign_keys=[assigned_to_id])
     created_by: Mapped["User | None"] = relationship(foreign_keys=[created_by_id])

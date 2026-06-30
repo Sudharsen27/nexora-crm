@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.models.deal import DEAL_STAGES
+from app.models.deal import DEAL_STAGES, STAGE_DEFAULT_PROBABILITY
 
 
 class DealCreate(BaseModel):
@@ -13,9 +13,11 @@ class DealCreate(BaseModel):
     stage: str = Field(default="new")
     value: Decimal | None = Field(default=None, ge=0)
     currency: str = Field(default="USD", min_length=3, max_length=3)
+    probability: int | None = Field(default=None, ge=0, le=100)
     expected_close_date: date | None = None
     lead_id: UUID | None = None
     company_id: UUID | None = None
+    contact_id: UUID | None = None
     assigned_to_id: UUID | None = None
 
     @field_validator("title", "description", mode="before")
@@ -44,9 +46,11 @@ class DealUpdate(BaseModel):
     stage: str | None = None
     value: Decimal | None = Field(default=None, ge=0)
     currency: str | None = Field(default=None, min_length=3, max_length=3)
+    probability: int | None = Field(default=None, ge=0, le=100)
     expected_close_date: date | None = None
     lead_id: UUID | None = None
     company_id: UUID | None = None
+    contact_id: UUID | None = None
     assigned_to_id: UUID | None = None
 
     @field_validator("title", "description", mode="before")
@@ -81,12 +85,42 @@ class DealMove(BaseModel):
         return value
 
 
+class DealStageUpdate(BaseModel):
+    stage: str
+
+    @field_validator("stage")
+    @classmethod
+    def validate_stage(cls, value: str) -> str:
+        if value not in DEAL_STAGES:
+            raise ValueError(f"Stage must be one of: {', '.join(DEAL_STAGES)}")
+        return value
+
+
+class DealPositionUpdate(BaseModel):
+    position: int = Field(ge=0)
+
+
 class DealAssignee(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     full_name: str
     email: str
+
+
+class DealCompanyRef(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    company_name: str
+
+
+class DealContactRef(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    first_name: str
+    last_name: str
 
 
 class DealResponse(BaseModel):
@@ -100,11 +134,15 @@ class DealResponse(BaseModel):
     position: int
     value: Decimal | None
     currency: str
+    probability: int
     expected_close_date: date | None
     lead_id: UUID | None
     company_id: UUID | None
+    contact_id: UUID | None
     assigned_to_id: UUID | None
     assigned_to: DealAssignee | None = None
+    company: DealCompanyRef | None = None
+    contact: DealContactRef | None = None
     created_by_id: UUID | None
     created_at: datetime
     updated_at: datetime
@@ -122,5 +160,28 @@ class DealBoardResponse(BaseModel):
     total: int
 
 
+class DealPipelineResponse(BaseModel):
+    stages: list[DealStageColumn]
+    total: int
+
+
 class DealMetaResponse(BaseModel):
     stages: list[dict[str, str]]
+
+
+class DealStatisticsResponse(BaseModel):
+    pipeline_value: Decimal
+    won_revenue: Decimal
+    lost_revenue: Decimal
+    forecast_revenue: Decimal
+    deals_this_month: int
+    conversion_rate: float
+    average_deal_size: Decimal
+    open_deal_count: int
+    won_deal_count: int
+    lost_deal_count: int
+    stage_breakdown: list[dict[str, str | int | float | None]]
+
+
+def default_probability_for_stage(stage: str) -> int:
+    return STAGE_DEFAULT_PROBABILITY.get(stage, 10)

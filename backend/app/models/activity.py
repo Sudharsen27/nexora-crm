@@ -15,6 +15,12 @@ ACTIVITY_TYPES = (
     "task_update",
     "lead_update",
     "deal_update",
+    "deal_created",
+    "deal_moved",
+    "deal_updated",
+    "deal_deleted",
+    "deal_won",
+    "deal_lost",
 )
 
 ENTITY_TYPES = ("lead", "contact", "deal", "company")
