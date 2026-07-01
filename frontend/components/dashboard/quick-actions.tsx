@@ -15,7 +15,7 @@ const actions = [
   { href: "contacts", label: "Contact", icon: User },
   { href: "deals", label: "Deal", icon: Plus },
   { href: "tasks", label: "Task", icon: Plus },
-  { href: "activities", label: "Meeting", icon: Calendar },
+  { href: "calendar", label: "Meeting", icon: Calendar },
   { href: "activities", label: "Email", icon: Mail },
 ] as const;
 

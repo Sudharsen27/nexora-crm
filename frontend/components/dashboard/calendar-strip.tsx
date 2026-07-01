@@ -54,7 +54,7 @@ export function CalendarStrip({ tenantSlug, days }: CalendarStripProps) {
               return (
                 <Link
                   key={day.date}
-                  href={`/${tenantSlug}/tasks?due_on=${day.date}`}
+                  href={`/${tenantSlug}/calendar?date=${day.date}`}
                   role="listitem"
                   className={cn(
                     "flex min-h-[6.5rem] flex-col rounded-xl border border-[var(--border)] p-3 transition-colors",

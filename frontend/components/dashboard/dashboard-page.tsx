@@ -17,6 +17,8 @@ import { LeadAnalyticsCharts } from "@/components/dashboard/lead-analytics-chart
 import { TeamPerformanceTable } from "@/components/dashboard/team-performance-table";
 import { RecentActivityFeed } from "@/components/dashboard/recent-activity-feed";
 import { LatestNotificationsWidget } from "@/components/dashboard/latest-notifications-widget";
+import { TodaysMeetingsWidget } from "@/components/dashboard/todays-meetings-widget";
+import { UpcomingMeetingsWidget } from "@/components/dashboard/upcoming-meetings-widget";
 import { UpcomingTasksList } from "@/components/dashboard/upcoming-tasks-list";
 import { CalendarStrip } from "@/components/dashboard/calendar-strip";
 import { DealsByStageChart } from "@/components/dashboard/deals-by-stage-chart";
@@ -241,6 +243,11 @@ export function DashboardPage({ tenantSlug }: DashboardPageProps) {
               <CalendarStrip tenantSlug={tenantSlug} days={data.calendar} />
             </div>
           ) : null}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <TodaysMeetingsWidget tenantSlug={tenantSlug} />
+          <UpcomingMeetingsWidget tenantSlug={tenantSlug} />
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
