@@ -12,6 +12,13 @@ from fastapi import WebSocket
 
 logger = logging.getLogger(__name__)
 
+_main_loop: asyncio.AbstractEventLoop | None = None
+
+
+def set_main_event_loop(loop: asyncio.AbstractEventLoop) -> None:
+    global _main_loop
+    _main_loop = loop
+
 
 class NotificationConnectionManager:
     def __init__(self) -> None:
@@ -49,11 +56,17 @@ class NotificationConnectionManager:
                     self._connections.get(key, set()).discard(ws)
 
     def schedule_send(self, tenant_id: UUID, user_id: UUID, payload: dict[str, Any]) -> None:
+        loop: asyncio.AbstractEventLoop | None
         try:
             loop = asyncio.get_running_loop()
-            loop.create_task(self.send_to_user(tenant_id, user_id, payload))
         except RuntimeError:
+            loop = _main_loop
+        if loop is None:
             logger.debug("No event loop for websocket push; client will poll")
+            return
+        loop.call_soon_threadsafe(
+            lambda: loop.create_task(self.send_to_user(tenant_id, user_id, payload))
+        )
 
 
 notification_manager = NotificationConnectionManager()

@@ -41,6 +41,7 @@ class Tenant(Base, TimestampMixin):
     companies: Mapped[list["Company"]] = relationship(back_populates="tenant")
     activities: Mapped[list["Activity"]] = relationship(back_populates="tenant")
     tasks: Mapped[list["Task"]] = relationship(back_populates="tenant")
+    meetings: Mapped[list["Meeting"]] = relationship(back_populates="tenant")
 
 
 class Role(Base):
@@ -149,3 +150,14 @@ from app.models.contact import CONTACT_SORT_FIELDS, Contact  # noqa: E402, F401
 from app.models.activity import ACTIVITY_TYPES, ENTITY_TYPES, Activity  # noqa: E402, F401
 from app.models.task import KANBAN_STATUSES, TASK_PRIORITIES, TASK_STATUSES, Task  # noqa: E402, F401
 from app.models.notification import NOTIFICATION_TYPES, Notification  # noqa: E402, F401
+from app.models.meeting import (  # noqa: E402, F401
+    ATTENDANCE_STATUSES,
+    MEETING_PRIORITIES,
+    MEETING_STATUSES,
+    MEETING_TYPES,
+    PARTICIPANT_ROLES,
+    REMINDER_METHODS,
+    Meeting,
+    MeetingParticipant,
+    MeetingReminder,
+)

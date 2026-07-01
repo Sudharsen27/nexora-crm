@@ -24,6 +24,11 @@ TYPE_META: dict[str, dict[str, str]] = {
     "task_due_tomorrow": {"priority": "urgent", "icon": "clock"},
     "meeting_scheduled": {"priority": "normal", "icon": "calendar"},
     "meeting_reminder": {"priority": "high", "icon": "calendar"},
+    "meeting_rescheduled": {"priority": "normal", "icon": "calendar"},
+    "meeting_cancelled": {"priority": "high", "icon": "calendar-x"},
+    "meeting_completed": {"priority": "low", "icon": "calendar-check"},
+    "meeting_started": {"priority": "normal", "icon": "calendar-clock"},
+    "meeting_participant_added": {"priority": "normal", "icon": "user-plus"},
     "company_created": {"priority": "low", "icon": "building"},
     "contact_added": {"priority": "low", "icon": "user"},
     "note_added": {"priority": "low", "icon": "file-text"},
@@ -132,6 +137,7 @@ class NotificationEmitter:
             "deal": f"/{tenant_slug}/deals/{entity_id}",
             "company": f"/{tenant_slug}/companies/{entity_id}",
             "task": f"/{tenant_slug}/tasks/{entity_id}",
+            "meeting": f"/{tenant_slug}/calendar?meeting={entity_id}",
         }
         return paths.get(entity_type)
 
@@ -154,6 +160,29 @@ class NotificationEmitter:
                 tenant_slug=tenant_slug,
             )
         now = __import__("datetime").datetime.now(__import__("datetime").UTC)
+        from app.repositories.meeting_repository import MeetingRepository
+
+        for meeting in MeetingRepository(self.db).get_reminder_candidates(tenant_id, within_minutes=60):
+            for participant in meeting.participants:
+                for reminder in meeting.reminders:
+                    remind_at = meeting.start_datetime - __import__("datetime").timedelta(
+                        minutes=reminder.remind_before_minutes
+                    )
+                    if remind_at > now:
+                        continue
+                    self.notify(
+                        tenant_id=tenant_id,
+                        user_id=participant.user_id,
+                        actor_id=None,
+                        type="meeting_reminder",
+                        title="Meeting reminder",
+                        message=meeting.title,
+                        entity_type="meeting",
+                        entity_id=meeting.id,
+                        action_url=self.build_action_url(tenant_slug, "meeting", meeting.id),
+                        dedup_key=f"meeting_reminder:{meeting.id}:{participant.user_id}:{reminder.id}",
+                        tenant_slug=tenant_slug,
+                    )
         for meeting in self.repo.get_upcoming_meetings(tenant_id, within_hours=1):
             user_id = meeting.created_by_id
             if not user_id:

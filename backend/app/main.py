@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -7,6 +8,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
+from app.core.notification_ws import set_main_event_loop
 from app.db.bootstrap import bootstrap_database
 
 logger = logging.getLogger(__name__)
@@ -15,6 +17,7 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    set_main_event_loop(asyncio.get_running_loop())
     bootstrap_database()
     logger.info("CORS allowed origins: %s", settings.cors_origins)
     yield

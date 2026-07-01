@@ -54,6 +54,13 @@ ACTIVITY_ACTIONS = (
   "task_update",
   "lead_update",
   "deal_update",
+  # Meetings
+  "meeting_scheduled",
+  "meeting_updated",
+  "meeting_rescheduled",
+  "meeting_cancelled",
+  "meeting_completed",
+  "meeting_started",
 )
 
 ACTION_META: dict[str, dict[str, str]] = {
@@ -87,6 +94,12 @@ ACTION_META: dict[str, dict[str, str]] = {
   "password_reset": {"icon": "key", "color": "orange", "label": "Password reset"},
   "call": {"icon": "phone", "color": "blue", "label": "Call"},
   "meeting": {"icon": "calendar", "color": "purple", "label": "Meeting"},
+  "meeting_scheduled": {"icon": "calendar", "color": "purple", "label": "Meeting scheduled"},
+  "meeting_updated": {"icon": "calendar", "color": "purple", "label": "Meeting updated"},
+  "meeting_rescheduled": {"icon": "calendar", "color": "amber", "label": "Meeting rescheduled"},
+  "meeting_cancelled": {"icon": "calendar-x", "color": "red", "label": "Meeting cancelled"},
+  "meeting_completed": {"icon": "calendar-check", "color": "green", "label": "Meeting completed"},
+  "meeting_started": {"icon": "calendar-clock", "color": "blue", "label": "Meeting started"},
   "email": {"icon": "mail", "color": "cyan", "label": "Email"},
   "note": {"icon": "file-text", "color": "slate", "label": "Note"},
 }
