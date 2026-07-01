@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Query, UploadFile
-from fastapi.responses import FileResponse, RedirectResponse, Response
+from fastapi.responses import RedirectResponse, Response
 from sqlalchemy.orm import Session
 
 from app.core.deps import TenantContext, require_permission
@@ -427,7 +427,11 @@ def download_attachment(
         from fastapi import HTTPException, status
 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Attachment not found")
-    return FileResponse(attachment.storage_path, filename=attachment.filename, media_type=attachment.content_type)
+    return Response(
+        content=attachment.content,
+        media_type=attachment.content_type,
+        headers={"Content-Disposition": f'attachment; filename="{attachment.filename}"'},
+    )
 
 
 @router.delete("/{email_id}/attachments/{attachment_id}", status_code=204)

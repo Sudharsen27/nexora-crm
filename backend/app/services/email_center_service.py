@@ -3,7 +3,6 @@ import re
 import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy import select
@@ -420,9 +419,8 @@ class EmailCenterService:
 
         attachment_data: list[tuple[str, str, bytes]] = []
         for att in email.attachments:
-            path = Path(att.storage_path)
-            if path.exists():
-                attachment_data.append((att.filename, att.content_type, path.read_bytes()))
+            if att.content:
+                attachment_data.append((att.filename, att.content_type, att.content))
 
         try:
             send_crm_email(
@@ -681,18 +679,14 @@ class EmailCenterService:
         if len(content) > self.settings.EMAIL_MAX_ATTACHMENT_BYTES:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Attachment too large")
 
-        upload_dir = Path(self.settings.EMAIL_UPLOAD_DIR) / str(tenant_id) / str(email_id)
-        upload_dir.mkdir(parents=True, exist_ok=True)
         safe_name = re.sub(r"[^\w.\-]", "_", file.filename or "attachment")
-        dest = upload_dir / safe_name
-        dest.write_bytes(content)
 
         attachment = EmailAttachment(
             email_id=email.id,
             filename=safe_name,
             content_type=file.content_type or "application/octet-stream",
             size_bytes=len(content),
-            storage_path=str(dest),
+            content=content,
         )
         self.db.add(attachment)
         email.has_attachments = True
@@ -706,9 +700,6 @@ class EmailCenterService:
         attachment = next((a for a in email.attachments if a.id == attachment_id), None)
         if attachment is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Attachment not found")
-        path = Path(attachment.storage_path)
-        if path.exists():
-            path.unlink()
         self.db.delete(attachment)
         email.has_attachments = len(email.attachments) > 1
         self.db.commit()

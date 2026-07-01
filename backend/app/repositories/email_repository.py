@@ -4,19 +4,25 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
-from app.models.email import Email, EmailLog, EmailRecipient, EmailTemplate, EmailThread, EmailUserSettings
+from app.models.email import Email, EmailAttachment, EmailLog, EmailRecipient, EmailTemplate, EmailThread, EmailUserSettings
 
 
 class EmailRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def _email_options(self):
+    def _attachments_load(self, *, include_content: bool = False):
+        loader = joinedload(Email.attachments)
+        if not include_content:
+            loader = loader.defer(EmailAttachment.content)
+        return loader
+
+    def _email_options(self, *, include_attachment_content: bool = False):
         return (
             joinedload(Email.sender),
             joinedload(Email.created_by),
             joinedload(Email.recipients),
-            joinedload(Email.attachments),
+            self._attachments_load(include_content=include_attachment_content),
             joinedload(Email.logs),
         )
 
@@ -54,7 +60,9 @@ class EmailRepository:
         sort_order: str = "desc",
     ) -> tuple[list[Email], int]:
         stmt = select(Email).options(
-            joinedload(Email.sender), joinedload(Email.recipients), joinedload(Email.attachments)
+            joinedload(Email.sender),
+            joinedload(Email.recipients),
+            self._attachments_load(),
         ).where(Email.tenant_id == tenant_id)
 
         if folder == "trash":
@@ -130,7 +138,11 @@ class EmailRepository:
         return list(
             self.db.scalars(
                 select(Email)
-                .options(joinedload(Email.recipients), joinedload(Email.attachments), joinedload(Email.sender))
+                .options(
+                    joinedload(Email.recipients),
+                    self._attachments_load(include_content=True),
+                    joinedload(Email.sender),
+                )
                 .where(
                     Email.status == "scheduled",
                     Email.scheduled_at.isnot(None),

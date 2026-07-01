@@ -36,7 +36,6 @@ class Settings(BaseSettings):
     SMTP_FROM_NAME: str = "Nexora"
     SMTP_USE_TLS: bool = True
 
-    EMAIL_UPLOAD_DIR: str = "uploads/emails"
     EMAIL_MAX_ATTACHMENT_BYTES: int = 10_485_760
     EMAIL_MAX_ATTACHMENTS: int = 10
     # Public backend base URL (no trailing slash). Used for email tracking links.
