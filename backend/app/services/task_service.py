@@ -10,6 +10,7 @@ from app.models import Company, Contact, Deal, Lead, Task, TenantMembership, Use
 from app.models.task import KANBAN_STATUSES, TASK_ENTITY_TYPES, TASK_PRIORITIES, TASK_SORT_FIELDS, TASK_STATUSES
 from app.schemas.task import TaskCreate, TaskDashboardSummary, TaskUpdate
 from app.services.activity_logger import ActivityLogger
+from app.services.notification_hooks import notify_user
 
 
 class TaskService:
@@ -260,6 +261,18 @@ class TaskService:
             title="Task created",
             description=f'Task "{task.title}" was created',
         )
+        if task.assigned_to_id:
+            notify_user(
+                self.db,
+                tenant_id=tenant_id,
+                user_id=task.assigned_to_id,
+                actor_id=created_by_id,
+                type="task_assigned",
+                title="Task assigned to you",
+                message=f'"{task.title}" was assigned to you',
+                entity_type="task",
+                entity_id=task.id,
+            )
         self.db.commit()
         return self.get_task(tenant_id, task.id)
 
@@ -300,6 +313,18 @@ class TaskService:
             description=f'Task "{task.title}" — {title.lower()}',
             metadata={"from_status": old_status, "to_status": task.status},
         )
+        if action == "task_completed" and task.created_by_id:
+            notify_user(
+                self.db,
+                tenant_id=tenant_id,
+                user_id=task.created_by_id,
+                actor_id=updated_by_id,
+                type="task_completed",
+                title="Task completed",
+                message=f'"{task.title}" was marked complete',
+                entity_type="task",
+                entity_id=task.id,
+            )
 
         self.db.commit()
         return self.get_task(tenant_id, task_id)

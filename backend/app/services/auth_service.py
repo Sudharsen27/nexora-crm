@@ -31,6 +31,7 @@ from app.models import (
 
 from app.services.email_service import send_password_reset_email
 from app.services.activity_logger import ActivityLogger
+from app.services.notification_hooks import notify_user
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -95,6 +96,37 @@ class AuthService:
 
         access_token = create_access_token(str(user.id), extra_claims=extra_claims)
         refresh_value = create_refresh_token_value()
+        if user_agent:
+            known = {
+                ua
+                for ua in self.db.scalars(
+                    select(RefreshToken.user_agent).where(
+                        RefreshToken.user_id == user.id,
+                        RefreshToken.revoked_at.is_(None),
+                        RefreshToken.user_agent.isnot(None),
+                    )
+                ).all()
+                if ua
+            }
+            if known and user_agent not in known:
+                memberships = self.db.scalars(
+                    select(TenantMembership).where(
+                        TenantMembership.user_id == user.id,
+                        TenantMembership.status == "active",
+                    )
+                ).all()
+                for membership in memberships:
+                    notify_user(
+                        self.db,
+                        tenant_id=membership.tenant_id,
+                        user_id=user.id,
+                        actor_id=user.id,
+                        type="login_new_device",
+                        title="New device login",
+                        message="Your account was accessed from a new device",
+                        priority="high",
+                        dedup_key=f"login_new_device:{user.id}:{user_agent[:120]}",
+                    )
         refresh_token = RefreshToken(
             user_id=user.id,
             token_hash=hash_token(refresh_value),
@@ -184,6 +216,23 @@ class AuthService:
 
         stored.user.password_hash = hash_password(new_password)
         stored.used_at = utcnow()
+        memberships = self.db.scalars(
+            select(TenantMembership).where(
+                TenantMembership.user_id == stored.user_id,
+                TenantMembership.status == "active",
+            )
+        ).all()
+        for membership in memberships:
+            notify_user(
+                self.db,
+                tenant_id=membership.tenant_id,
+                user_id=stored.user.id,
+                actor_id=stored.user.id,
+                type="password_reset",
+                title="Password reset",
+                message="Your password was reset successfully",
+                priority="high",
+            )
 
         refresh_rows = self.db.scalars(
             select(RefreshToken).where(
@@ -464,6 +513,17 @@ class TenantService:
             title="User invited",
             description=f"{user.full_name} was invited to the organization",
             metadata={"role_slug": role.slug},
+        )
+        notify_user(
+            self.db,
+            tenant_id=tenant_id,
+            user_id=user.id,
+            actor_id=actor_membership.user_id,
+            type="user_invited",
+            title="You've been invited",
+            message="You were added to the organization",
+            entity_type="user",
+            entity_id=user.id,
         )
         self.db.commit()
         self.db.refresh(membership)

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.models import Contact, Deal, Lead, TenantMembership, User
 from app.schemas.lead import LeadCreate, LeadUpdate
 from app.services.activity_logger import ActivityLogger
+from app.services.notification_hooks import notify_user
 
 
 class LeadService:
@@ -170,6 +171,17 @@ class LeadService:
                 title="Lead assigned",
                 description=f'Lead "{name}" was reassigned',
                 metadata={"assigned_to_id": str(data["assigned_to_id"]) if data["assigned_to_id"] else None},
+            )
+            notify_user(
+                self.db,
+                tenant_id=tenant_id,
+                user_id=data["assigned_to_id"],
+                actor_id=updated_by_id,
+                type="lead_assigned",
+                title="Lead assigned to you",
+                message=f'Lead "{name}" was assigned to you',
+                entity_type="lead",
+                entity_id=lead.id,
             )
         else:
             ActivityLogger(self.db).log(

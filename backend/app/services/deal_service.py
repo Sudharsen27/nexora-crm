@@ -16,6 +16,7 @@ from app.models.deal import (
 )
 from app.schemas.deal import DealCreate, DealMove, DealUpdate, default_probability_for_stage
 from app.services.activity_logger import ActivityLogger
+from app.services.notification_hooks import notify_deal_event, notify_user
 
 
 class DealPipelineFilters:
@@ -163,6 +164,25 @@ class DealService:
             title=title,
             description=description,
             metadata=metadata,
+        )
+
+    def _notify_deal(
+        self,
+        tenant_id: uuid.UUID,
+        deal: Deal,
+        action: str,
+        title: str,
+        message: str,
+        actor_id: uuid.UUID | None,
+    ) -> None:
+        notify_deal_event(
+            self.db,
+            tenant_id=tenant_id,
+            deal=deal,
+            action=action,
+            title=title,
+            message=message,
+            actor_id=actor_id,
         )
 
     def _group_deals_by_stage(self, deals: list[Deal]) -> list[dict]:
@@ -358,6 +378,14 @@ class DealService:
             created_by_id,
             {"stage": deal.stage},
         )
+        self._notify_deal(
+            tenant_id,
+            deal,
+            "deal_created",
+            "New deal created",
+            f'Deal "{deal.title}" was created',
+            created_by_id,
+        )
         self.db.commit()
         return self.get_deal(tenant_id, deal.id)
 
@@ -400,6 +428,14 @@ class DealService:
                 f'Deal moved from {DEAL_STAGE_LABELS[old_stage]} to {DEAL_STAGE_LABELS[deal.stage]}',
                 updated_by_id,
                 {"from_stage": old_stage, "to_stage": deal.stage},
+            )
+            self._notify_deal(
+                tenant_id,
+                deal,
+                action,
+                DEAL_STAGE_LABELS.get(deal.stage, "Deal stage changed"),
+                f'"{deal.title}" moved to {DEAL_STAGE_LABELS[deal.stage]}',
+                updated_by_id,
             )
         else:
             self._log_deal(
@@ -516,6 +552,14 @@ class DealService:
                 f'Deal moved from {DEAL_STAGE_LABELS[source_stage]} to {DEAL_STAGE_LABELS[target_stage]}',
                 updated_by_id,
                 {"from_stage": source_stage, "to_stage": target_stage},
+            )
+            self._notify_deal(
+                tenant_id,
+                deal,
+                action,
+                title,
+                f'"{deal.title}" moved to {DEAL_STAGE_LABELS[target_stage]}',
+                updated_by_id,
             )
 
         self.db.commit()

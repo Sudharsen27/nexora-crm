@@ -26,6 +26,9 @@ PERMISSIONS = [
     ("task", "read", "task:read"),
     ("task", "write", "task:write"),
     ("task", "delete", "task:delete"),
+    ("notification", "read", "notification:read"),
+    ("notification", "write", "notification:write"),
+    ("notification", "delete", "notification:delete"),
 ]
 
 ROLE_PERMISSIONS = {
@@ -57,6 +60,9 @@ ROLE_PERMISSIONS = {
         "task:read",
         "task:write",
         "task:delete",
+        "notification:read",
+        "notification:write",
+        "notification:delete",
     ],
     "member": [
         "tenant:read",
@@ -75,6 +81,8 @@ ROLE_PERMISSIONS = {
         "activity:write",
         "task:read",
         "task:write",
+        "notification:read",
+        "notification:write",
     ],
 }
 

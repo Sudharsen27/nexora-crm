@@ -148,3 +148,4 @@ from app.models.company import COMPANY_INDUSTRIES, COMPANY_SORT_FIELDS, Company 
 from app.models.contact import CONTACT_SORT_FIELDS, Contact  # noqa: E402, F401
 from app.models.activity import ACTIVITY_TYPES, ENTITY_TYPES, Activity  # noqa: E402, F401
 from app.models.task import KANBAN_STATUSES, TASK_PRIORITIES, TASK_STATUSES, Task  # noqa: E402, F401
+from app.models.notification import NOTIFICATION_TYPES, Notification  # noqa: E402, F401

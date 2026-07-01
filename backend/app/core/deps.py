@@ -46,6 +46,33 @@ def get_current_user(
     return user
 
 
+def resolve_tenant_context(db: Session, slug: str, user_id: UUID) -> TenantContext:
+    """Resolve tenant context for a user without HTTP auth deps (e.g. WebSocket)."""
+    tenant = db.scalar(select(Tenant).where(Tenant.slug == slug, Tenant.status == "active"))
+    if tenant is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
+
+    membership = db.scalar(
+        select(TenantMembership)
+        .options(joinedload(TenantMembership.role).joinedload(Role.permissions))
+        .where(
+            TenantMembership.tenant_id == tenant.id,
+            TenantMembership.user_id == user_id,
+            TenantMembership.status == "active",
+        )
+    )
+    if membership is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a member of this organization")
+
+    permissions = [permission.slug for permission in membership.role.permissions]
+    return TenantContext(
+        tenant=tenant,
+        membership=membership,
+        role=membership.role,
+        permissions=permissions,
+    )
+
+
 def get_tenant_context(
     slug: str,
     current_user: User = Depends(get_current_user),

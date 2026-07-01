@@ -12,6 +12,7 @@ from app.models.activity import ACTIVITY_TYPES, ENTITY_TYPES
 from app.repositories.activity_repository import ActivityRepository
 from app.schemas.activity import ActivityCreate, ActivityUpdate
 from app.services.activity_logger import ACTION_META, ActivityLogger
+from app.services.notification_hooks import notify_user
 
 
 class ActivityService:
@@ -249,6 +250,18 @@ class ActivityService:
             activity_type=payload.activity_type,
             scheduled_at=payload.scheduled_at,
         )
+        if payload.activity_type == "meeting":
+            notify_user(
+                self.db,
+                tenant_id=tenant_id,
+                user_id=created_by_id,
+                actor_id=created_by_id,
+                type="meeting_scheduled",
+                title="Meeting scheduled",
+                message=payload.description,
+                entity_type=payload.entity_type,
+                entity_id=payload.entity_id,
+            )
         self.db.commit()
         return self.get_activity(tenant_id, activity.id)
 

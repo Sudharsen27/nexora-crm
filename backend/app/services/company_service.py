@@ -9,6 +9,7 @@ from app.models import Activity, Company, Contact, Deal, Task, TenantMembership
 from app.models.company import COMPANY_SORT_FIELDS
 from app.schemas.company import CompanyCreate, CompanyUpdate
 from app.services.activity_logger import ActivityLogger
+from app.services.notification_hooks import notify_all_members_except, notify_user
 
 
 class CompanyService:
@@ -167,6 +168,16 @@ class CompanyService:
             action="company_created",
             title="Company created",
             description=f'Company "{company.company_name}" was created',
+        )
+        notify_all_members_except(
+            self.db,
+            tenant_id=tenant_id,
+            actor_id=created_by_id,
+            type="company_created",
+            title="New company added",
+            message=f'Company "{company.company_name}" was created',
+            entity_type="company",
+            entity_id=company.id,
         )
         self.db.commit()
         return self.get_company(tenant_id, company.id)

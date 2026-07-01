@@ -9,6 +9,7 @@ from app.models import Contact, Company, Lead, TenantMembership
 from app.models.contact import CONTACT_SORT_FIELDS
 from app.schemas.contact import ContactCreate, ContactUpdate
 from app.services.activity_logger import ActivityLogger
+from app.services.notification_hooks import notify_user
 
 
 class ContactService:
@@ -168,6 +169,18 @@ class ContactService:
             title="Contact created",
             description=f'Contact "{name}" was created',
         )
+        if contact.assigned_to_id:
+            notify_user(
+                self.db,
+                tenant_id=tenant_id,
+                user_id=contact.assigned_to_id,
+                actor_id=created_by_id,
+                type="contact_added",
+                title="New contact added",
+                message=f'Contact "{name}" was added',
+                entity_type="contact",
+                entity_id=contact.id,
+            )
         self.db.commit()
         return self.get_contact(tenant_id, contact.id)
 
@@ -211,6 +224,18 @@ class ContactService:
                 title="Note added" if note_action == "note_added" else "Note edited",
                 description=f'Notes updated on contact "{name}"',
             )
+            if contact.assigned_to_id:
+                notify_user(
+                    self.db,
+                    tenant_id=tenant_id,
+                    user_id=contact.assigned_to_id,
+                    actor_id=updated_by_id,
+                    type="note_added" if note_action == "note_added" else "note_added",
+                    title="New note on contact" if note_action == "note_added" else "Note updated",
+                    message=f'Notes updated on "{name}"',
+                    entity_type="contact",
+                    entity_id=contact.id,
+                )
         else:
             ActivityLogger(self.db).log(
                 tenant_id=tenant_id,
@@ -296,6 +321,18 @@ class ContactService:
             description=f'Lead "{lead_name}" was converted to contact "{contact_name}"',
             metadata={"contact_id": str(contact.id)},
         )
+        if lead.assigned_to_id:
+            notify_user(
+                self.db,
+                tenant_id=tenant_id,
+                user_id=lead.assigned_to_id,
+                actor_id=created_by_id,
+                type="lead_converted",
+                title="Lead converted",
+                message=f'Lead "{lead_name}" was converted to a contact',
+                entity_type="contact",
+                entity_id=contact.id,
+            )
         ActivityLogger(self.db).log(
             tenant_id=tenant_id,
             actor_id=created_by_id,
