@@ -8,13 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePermissions } from "@/contexts/permissions-context";
 import { ActivityFormDialog } from "@/components/activities/activity-form-dialog";
 import { ActivityTimeline } from "@/components/activities/activity-timeline";
+import { EntityEmailsPanel } from "@/components/emails/entity-emails-panel";
 import { EntityTasksPanel } from "@/components/tasks/entity-tasks-panel";
 import { createActivity } from "@/lib/api/activities";
 import { formatCurrency, getDeal } from "@/lib/api/deals";
 import type { Deal } from "@/types/api";
 import { cn } from "@/lib/utils";
 
-const TABS = ["Overview", "Activity", "Tasks"] as const;
+const TABS = ["Overview", "Activity", "Tasks", "Emails"] as const;
 type Tab = (typeof TABS)[number];
 
 interface DealDetailPageProps {
@@ -188,6 +189,23 @@ export function DealDetailPage({ tenantSlug, dealId }: DealDetailPageProps) {
           </CardHeader>
           <CardContent>
             <EntityTasksPanel tenantSlug={tenantSlug} entityType="deal" entityId={deal.id} />
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === "Emails" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Emails</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EntityEmailsPanel
+              tenantSlug={tenantSlug}
+              entityType="deal"
+              entityId={deal.id}
+              canWrite={canWrite("email")}
+              embedded
+            />
           </CardContent>
         </Card>
       )}

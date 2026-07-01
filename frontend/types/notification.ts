@@ -5,6 +5,7 @@ export type NotificationCategory =
   | "contacts"
   | "tasks"
   | "meetings"
+  | "emails"
   | "notes"
   | "system";
 

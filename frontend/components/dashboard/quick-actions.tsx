@@ -16,7 +16,7 @@ const actions = [
   { href: "deals", label: "Deal", icon: Plus },
   { href: "tasks", label: "Task", icon: Plus },
   { href: "calendar", label: "Meeting", icon: Calendar },
-  { href: "activities", label: "Email", icon: Mail },
+  { href: "emails", label: "Email", icon: Mail },
 ] as const;
 
 export function QuickActions({ tenantSlug }: QuickActionsProps) {

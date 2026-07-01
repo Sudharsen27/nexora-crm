@@ -100,7 +100,11 @@ export function NotificationProvider({
       };
 
       ws.onclose = () => {
-        reconnectRef.current = setTimeout(connect, 4000);
+        reconnectRef.current = setTimeout(connect, 8000);
+      };
+
+      ws.onerror = () => {
+        ws.close();
       };
     }
 

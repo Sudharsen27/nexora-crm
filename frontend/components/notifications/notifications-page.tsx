@@ -24,6 +24,7 @@ const CATEGORIES: { value: NotificationCategory; label: string }[] = [
   { value: "contacts", label: "Contacts" },
   { value: "tasks", label: "Tasks" },
   { value: "meetings", label: "Meetings" },
+  { value: "emails", label: "Emails" },
   { value: "notes", label: "Notes" },
   { value: "system", label: "System" },
 ];

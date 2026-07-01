@@ -7,6 +7,7 @@ import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
 import { ActivityFormDialog } from "@/components/activities/activity-form-dialog";
 import { ActivityTimeline } from "@/components/activities/activity-timeline";
 import { CompanyFormDialog } from "@/components/companies/company-form-dialog";
+import { EntityEmailsPanel } from "@/components/emails/entity-emails-panel";
 import { EntityTasksPanel } from "@/components/tasks/entity-tasks-panel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +29,7 @@ import { listMembers } from "@/lib/api/tenants";
 import { cn } from "@/lib/utils";
 import type { Company, Contact, Deal, Member } from "@/types/api";
 
-const TABS = ["Overview", "Contacts", "Deals", "Activity", "Tasks"] as const;
+const TABS = ["Overview", "Contacts", "Deals", "Activity", "Tasks", "Emails"] as const;
 type Tab = (typeof TABS)[number];
 
 interface CompanyDetailPageProps {
@@ -383,6 +384,23 @@ export function CompanyDetailPage({ tenantSlug, companyId }: CompanyDetailPagePr
           </CardHeader>
           <CardContent>
             <EntityTasksPanel tenantSlug={tenantSlug} entityType="company" entityId={company.id} />
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === "Emails" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Emails</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EntityEmailsPanel
+              tenantSlug={tenantSlug}
+              entityType="company"
+              entityId={company.id}
+              canWrite={canWrite("email")}
+              embedded
+            />
           </CardContent>
         </Card>
       )}

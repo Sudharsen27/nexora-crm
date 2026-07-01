@@ -17,6 +17,8 @@ import { LeadAnalyticsCharts } from "@/components/dashboard/lead-analytics-chart
 import { TeamPerformanceTable } from "@/components/dashboard/team-performance-table";
 import { RecentActivityFeed } from "@/components/dashboard/recent-activity-feed";
 import { LatestNotificationsWidget } from "@/components/dashboard/latest-notifications-widget";
+import { RecentEmailsWidget, ScheduledEmailsWidget } from "@/components/dashboard/email-widgets";
+import { EmailStatsWidget } from "@/components/dashboard/email-stats-widget";
 import { TodaysMeetingsWidget } from "@/components/dashboard/todays-meetings-widget";
 import { UpcomingMeetingsWidget } from "@/components/dashboard/upcoming-meetings-widget";
 import { UpcomingTasksList } from "@/components/dashboard/upcoming-tasks-list";
@@ -248,6 +250,23 @@ export function DashboardPage({ tenantSlug }: DashboardPageProps) {
         <div className="grid gap-4 md:grid-cols-2">
           <TodaysMeetingsWidget tenantSlug={tenantSlug} />
           <UpcomingMeetingsWidget tenantSlug={tenantSlug} />
+        </div>
+
+        <EmailStatsWidget tenantSlug={tenantSlug} />
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardContent className="p-5">
+              <h3 className="mb-3 text-sm font-semibold">Recent emails</h3>
+              <RecentEmailsWidget tenantSlug={tenantSlug} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-5">
+              <h3 className="mb-3 text-sm font-semibold">Scheduled emails</h3>
+              <ScheduledEmailsWidget tenantSlug={tenantSlug} />
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

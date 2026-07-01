@@ -22,6 +22,7 @@ import {
   EntityNotesPanel,
   EntityNotesPreview,
 } from "@/components/shared/entity-notes-panel";
+import { EntityEmailsPanel } from "@/components/emails/entity-emails-panel";
 import { EntityTasksPanel } from "@/components/tasks/entity-tasks-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,7 +41,7 @@ import { listMembers } from "@/lib/api/tenants";
 import type { Contact, Member } from "@/types/api";
 import { cn } from "@/lib/utils";
 
-const TABS = ["Overview", "Notes", "Activity", "Tasks"] as const;
+const TABS = ["Overview", "Notes", "Activity", "Emails", "Tasks"] as const;
 type Tab = (typeof TABS)[number];
 
 interface ContactDetailPageProps {
@@ -373,6 +374,23 @@ export function ContactDetailPage({ tenantSlug, contactId }: ContactDetailPagePr
                 entityId={contact.id}
                 showDelete
                 refreshKey={refreshKey}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === "Emails" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Emails</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EntityEmailsPanel
+                tenantSlug={tenantSlug}
+                entityType="contact"
+                entityId={contact.id}
+                canWrite={canWrite("email")}
+                embedded
               />
             </CardContent>
           </Card>

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { ActivityFormDialog } from "@/components/activities/activity-form-dialog";
 import { ActivityTimeline } from "@/components/activities/activity-timeline";
+import { EntityEmailsPanel } from "@/components/emails/entity-emails-panel";
 import { EntityNotesPanel, EntityNotesPreview } from "@/components/shared/entity-notes-panel";
 import { DealFormDialog } from "@/components/deals/deal-form-dialog";
 import { LeadFormDialog } from "@/components/leads/lead-form-dialog";
@@ -49,7 +50,7 @@ import { listMembers } from "@/lib/api/tenants";
 import type { Contact, Deal, DealStageMeta, Lead, LeadMeta, Member } from "@/types/api";
 import { cn } from "@/lib/utils";
 
-const TABS = ["Activities", "Tasks", "Deals", "Timeline", "Notes"] as const;
+const TABS = ["Activities", "Tasks", "Deals", "Emails", "Timeline", "Notes"] as const;
 type Tab = (typeof TABS)[number];
 
 interface LeadDetailPageProps {
@@ -462,6 +463,23 @@ export function LeadDetailPage({ tenantSlug, leadId }: LeadDetailPageProps) {
                   </table>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === "Emails" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Emails</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EntityEmailsPanel
+                tenantSlug={tenantSlug}
+                entityType="lead"
+                entityId={lead.id}
+                canWrite={canWrite("email")}
+                embedded
+              />
             </CardContent>
           </Card>
         )}
