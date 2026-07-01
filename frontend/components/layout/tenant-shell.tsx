@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
-  Bell,
   Briefcase,
   Building2,
   ChevronLeft,
@@ -27,6 +26,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { PermissionsProvider, usePermissions } from "@/contexts/permissions-context";
+import { NotificationProvider } from "@/contexts/notification-context";
+import { NotificationBell } from "@/components/notifications/notification-bell";
+import { NotificationToastStack } from "@/components/notifications/notification-toast-stack";
 import { TenantSubtitle } from "@/components/layout/role-badge";
 import { logoutUser } from "@/lib/api/auth";
 import { clearTokens } from "@/lib/auth/tokens";
@@ -211,6 +213,7 @@ export function TenantShell({ tenantSlug, tenantName, children }: TenantShellPro
 
   return (
     <PermissionsProvider tenantSlug={tenantSlug}>
+      <NotificationProvider tenantSlug={tenantSlug}>
       <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
       <aside
         className={cn(
@@ -280,16 +283,16 @@ export function TenantShell({ tenantSlug, tenantName, children }: TenantShellPro
               </div>
             </div>
             <ThemeToggle />
-            <Button variant="ghost" size="sm" className="hidden md:inline-flex">
-              <Bell className="h-4 w-4" />
-            </Button>
+            <NotificationBell tenantSlug={tenantSlug} />
           </div>
         </header>
         <main className="mx-auto w-full max-w-[1400px] flex-1 overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8">
           {children}
         </main>
       </div>
-    </div>
+      </div>
+      <NotificationToastStack />
+      </NotificationProvider>
     </PermissionsProvider>
   );
 }

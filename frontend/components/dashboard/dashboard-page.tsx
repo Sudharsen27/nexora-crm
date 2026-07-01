@@ -16,6 +16,7 @@ import { RevenueTrendChart } from "@/components/dashboard/revenue-trend-chart";
 import { LeadAnalyticsCharts } from "@/components/dashboard/lead-analytics-charts";
 import { TeamPerformanceTable } from "@/components/dashboard/team-performance-table";
 import { RecentActivityFeed } from "@/components/dashboard/recent-activity-feed";
+import { LatestNotificationsWidget } from "@/components/dashboard/latest-notifications-widget";
 import { UpcomingTasksList } from "@/components/dashboard/upcoming-tasks-list";
 import { CalendarStrip } from "@/components/dashboard/calendar-strip";
 import { DealsByStageChart } from "@/components/dashboard/deals-by-stage-chart";
@@ -281,6 +282,8 @@ export function DashboardPage({ tenantSlug }: DashboardPageProps) {
             activities={overview?.recent_activities ?? data?.recent_activities ?? []}
           />
         ) : null}
+
+        <LatestNotificationsWidget tenantSlug={tenantSlug} />
       </div>
     </div>
   );
