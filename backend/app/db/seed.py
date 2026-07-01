@@ -32,6 +32,9 @@ PERMISSIONS = [
     ("meeting", "read", "meeting:read"),
     ("meeting", "write", "meeting:write"),
     ("meeting", "delete", "meeting:delete"),
+    ("email", "read", "email:read"),
+    ("email", "write", "email:write"),
+    ("email", "delete", "email:delete"),
 ]
 
 ROLE_PERMISSIONS = {
@@ -69,6 +72,9 @@ ROLE_PERMISSIONS = {
         "meeting:read",
         "meeting:write",
         "meeting:delete",
+        "email:read",
+        "email:write",
+        "email:delete",
     ],
     "member": [
         "tenant:read",
@@ -91,6 +97,8 @@ ROLE_PERMISSIONS = {
         "notification:write",
         "meeting:read",
         "meeting:write",
+        "email:read",
+        "email:write",
     ],
 }
 

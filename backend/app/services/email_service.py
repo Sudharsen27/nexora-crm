@@ -54,6 +54,66 @@ def _branded_html_email(*, title: str, body_html: str, footer_note: str) -> str:
 """
 
 
+def send_crm_email(
+    *,
+    to_addresses: list[str],
+    cc_addresses: list[str] | None = None,
+    bcc_addresses: list[str] | None = None,
+    subject: str,
+    text_body: str,
+    html_body: str | None = None,
+    from_name: str | None = None,
+    attachment_paths: list[tuple[str, str, bytes]] | None = None,
+) -> None:
+    """Send CRM email to multiple recipients with optional attachments.
+
+    attachment_paths: list of (filename, content_type, content_bytes)
+    """
+    settings = get_settings()
+    if not settings.email_enabled:
+        raise RuntimeError("Email is not configured. Set SMTP_HOST and SMTP_FROM_EMAIL in .env")
+
+    from_header = (
+        f"{from_name} <{settings.SMTP_FROM_EMAIL}>"
+        if from_name and from_name.strip()
+        else (
+            f"{settings.SMTP_FROM_NAME} <{settings.SMTP_FROM_EMAIL}>"
+            if settings.SMTP_FROM_NAME.strip()
+            else settings.SMTP_FROM_EMAIL
+        )
+    )
+
+    from email.mime.application import MIMEApplication
+
+    message = MIMEMultipart("mixed")
+    message["Subject"] = subject
+    message["From"] = from_header
+    message["To"] = ", ".join(to_addresses)
+    if cc_addresses:
+        message["Cc"] = ", ".join(cc_addresses)
+    all_recipients = list(to_addresses) + list(cc_addresses or []) + list(bcc_addresses or [])
+
+    alt = MIMEMultipart("alternative")
+    alt.attach(MIMEText(text_body, "plain", "utf-8"))
+    if html_body:
+        alt.attach(MIMEText(html_body, "html", "utf-8"))
+    message.attach(alt)
+
+    for filename, content_type, content in attachment_paths or []:
+        part = MIMEApplication(content, Name=filename)
+        part["Content-Disposition"] = f'attachment; filename="{filename}"'
+        message.attach(part)
+
+    with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=30) as server:
+        if settings.SMTP_USE_TLS:
+            server.starttls()
+        if settings.SMTP_USER:
+            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+        server.sendmail(settings.SMTP_FROM_EMAIL, all_recipients, message.as_string())
+
+    logger.info("CRM email sent to %s: %s", ", ".join(to_addresses), subject)
+
+
 def send_email(*, to: str, subject: str, text_body: str, html_body: str | None = None) -> None:
     settings = get_settings()
     if not settings.email_enabled:

@@ -36,6 +36,26 @@ class Settings(BaseSettings):
     SMTP_FROM_NAME: str = "Nexora"
     SMTP_USE_TLS: bool = True
 
+    EMAIL_UPLOAD_DIR: str = "uploads/emails"
+    EMAIL_MAX_ATTACHMENT_BYTES: int = 10_485_760
+    EMAIL_MAX_ATTACHMENTS: int = 10
+    # Public backend base URL (no trailing slash). Used for email tracking links.
+    # Local: http://localhost:8000  |  Production: https://your-api.onrender.com
+    BACKEND_PUBLIC_URL: str = ""
+    # Full API prefix URL for tracking pixels. Optional if BACKEND_PUBLIC_URL is set.
+    API_PUBLIC_URL: str = ""
+
+    @property
+    def api_public_url(self) -> str:
+        """Base URL for public API routes (email open/click tracking)."""
+        explicit = self.API_PUBLIC_URL.strip().rstrip("/")
+        if explicit:
+            return explicit
+        backend = self.BACKEND_PUBLIC_URL.strip().rstrip("/")
+        if backend:
+            return f"{backend}{self.API_V1_PREFIX}"
+        return f"http://localhost:8000{self.API_V1_PREFIX}"
+
     @field_validator("COOKIE_SAMESITE", mode="before")
     @classmethod
     def normalize_cookie_samesite(cls, value: str) -> str:

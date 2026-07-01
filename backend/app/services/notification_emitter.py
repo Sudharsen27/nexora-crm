@@ -29,6 +29,11 @@ TYPE_META: dict[str, dict[str, str]] = {
     "meeting_completed": {"priority": "low", "icon": "calendar-check"},
     "meeting_started": {"priority": "normal", "icon": "calendar-clock"},
     "meeting_participant_added": {"priority": "normal", "icon": "user-plus"},
+    "email_received": {"priority": "high", "icon": "mail"},
+    "email_delivered": {"priority": "normal", "icon": "mail-check"},
+    "email_failed": {"priority": "high", "icon": "mail-x"},
+    "email_reply_received": {"priority": "high", "icon": "reply"},
+    "email_scheduled": {"priority": "normal", "icon": "clock"},
     "company_created": {"priority": "low", "icon": "building"},
     "contact_added": {"priority": "low", "icon": "user"},
     "note_added": {"priority": "low", "icon": "file-text"},
@@ -138,6 +143,7 @@ class NotificationEmitter:
             "company": f"/{tenant_slug}/companies/{entity_id}",
             "task": f"/{tenant_slug}/tasks/{entity_id}",
             "meeting": f"/{tenant_slug}/calendar?meeting={entity_id}",
+            "email": f"/{tenant_slug}/emails/{entity_id}",
         }
         return paths.get(entity_type)
 

@@ -61,6 +61,10 @@ ACTIVITY_ACTIONS = (
   "meeting_cancelled",
   "meeting_completed",
   "meeting_started",
+  # Emails
+  "email_sent",
+  "email_opened",
+  "email_replied",
 )
 
 ACTION_META: dict[str, dict[str, str]] = {
@@ -100,6 +104,9 @@ ACTION_META: dict[str, dict[str, str]] = {
   "meeting_cancelled": {"icon": "calendar-x", "color": "red", "label": "Meeting cancelled"},
   "meeting_completed": {"icon": "calendar-check", "color": "green", "label": "Meeting completed"},
   "meeting_started": {"icon": "calendar-clock", "color": "blue", "label": "Meeting started"},
+  "email_sent": {"icon": "mail", "color": "cyan", "label": "Email sent"},
+  "email_opened": {"icon": "mail-open", "color": "cyan", "label": "Email opened"},
+  "email_replied": {"icon": "reply", "color": "cyan", "label": "Email replied"},
   "email": {"icon": "mail", "color": "cyan", "label": "Email"},
   "note": {"icon": "file-text", "color": "slate", "label": "Note"},
 }

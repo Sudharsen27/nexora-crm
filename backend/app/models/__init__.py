@@ -161,3 +161,17 @@ from app.models.meeting import (  # noqa: E402, F401
     MeetingParticipant,
     MeetingReminder,
 )
+from app.models.email import (  # noqa: E402, F401
+    EMAIL_FOLDERS,
+    EMAIL_LOG_EVENTS,
+    EMAIL_PRIORITIES,
+    EMAIL_STATUSES,
+    TEMPLATE_CATEGORIES,
+    Email,
+    EmailAttachment,
+    EmailLog,
+    EmailRecipient,
+    EmailTemplate,
+    EmailThread,
+    EmailUserSettings,
+)
