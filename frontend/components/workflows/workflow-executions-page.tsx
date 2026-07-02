@@ -100,7 +100,15 @@ export function WorkflowExecutionsPage({ tenantSlug }: WorkflowExecutionsPagePro
               </div>
             ))}
             {!loading && items.length === 0 && (
-              <p className="text-sm text-[var(--muted-foreground)]">No executions yet.</p>
+              <div className="space-y-2 text-sm text-[var(--muted-foreground)]">
+                <p>No executions yet.</p>
+                <p>
+                  <strong className="text-[var(--foreground)]">Manual</strong> workflows only run when
+                  you click <strong className="text-[var(--foreground)]">Run now</strong> in the
+                  builder. <strong className="text-[var(--foreground)]">Automatic</strong> workflows
+                  (e.g. lead created) run when you perform that action in the CRM.
+                </p>
+              </div>
             )}
           </CardContent>
         </Card>

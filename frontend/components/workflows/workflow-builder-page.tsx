@@ -7,7 +7,6 @@ import { WidgetError } from "@/components/dashboard/widget-states";
 import { WorkflowBuilder } from "@/components/workflows/workflow-builder";
 import { usePermissions } from "@/contexts/permissions-context";
 import {
-  disableWorkflow,
   duplicateWorkflow,
   pauseWorkflow,
   publishWorkflow,
@@ -16,6 +15,7 @@ import {
   useWorkflow,
   useWorkflowMeta,
 } from "@/hooks/use-workflows";
+import { executeWorkflow } from "@/lib/api/workflows";
 
 interface WorkflowBuilderPageProps {
   tenantSlug: string;
@@ -93,6 +93,20 @@ export function WorkflowBuilderPage({ tenantSlug, workflowId }: WorkflowBuilderP
                 await refresh();
               }
             : undefined
+        }
+        onRun={
+          readOnly || workflow.status !== "published"
+            ? undefined
+            : async () => {
+                const execution = await executeWorkflow(tenantSlug, workflowId);
+                const message =
+                  execution.status === "completed"
+                    ? "Workflow completed successfully."
+                    : execution.status === "failed"
+                      ? `Workflow failed: ${execution.error_message ?? "Unknown error"}`
+                      : `Workflow run queued (${execution.status}).`;
+                window.alert(message);
+              }
         }
       />
     </div>

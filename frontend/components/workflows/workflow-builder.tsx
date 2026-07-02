@@ -58,6 +58,7 @@ interface WorkflowBuilderProps {
   onDuplicate?: () => Promise<void>;
   onPause?: () => Promise<void>;
   onResume?: () => Promise<void>;
+  onRun?: () => Promise<void>;
   status?: string;
 }
 
@@ -106,6 +107,7 @@ function BuilderCanvas({
   onDuplicate,
   onPause,
   onResume,
+  onRun,
   status,
 }: WorkflowBuilderProps) {
   const initial = fromDefinition(initialDefinition);
@@ -116,6 +118,7 @@ function BuilderCanvas({
   const [triggerType, setTriggerType] = useState(initialTrigger);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [running, setRunning] = useState(false);
   const historyRef = useRef<{ nodes: Node[]; edges: Edge[] }[]>([]);
   const futureRef = useRef<{ nodes: Node[]; edges: Edge[] }[]>([]);
   const { zoomIn, zoomOut, fitView } = useReactFlow();
@@ -246,6 +249,25 @@ function BuilderCanvas({
             <Button type="button" variant="outline" size="sm" onClick={() => void onDuplicate()}>
               <Copy className="mr-1 h-4 w-4" />
               Duplicate
+            </Button>
+          )}
+          {onRun && status === "published" && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={running}
+              onClick={async () => {
+                setRunning(true);
+                try {
+                  await onRun();
+                } finally {
+                  setRunning(false);
+                }
+              }}
+            >
+              <Play className="mr-1 h-4 w-4" />
+              {running ? "Running..." : "Run now"}
             </Button>
           )}
           {onPause && status === "published" && (

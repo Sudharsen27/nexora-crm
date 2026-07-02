@@ -164,11 +164,19 @@ export async function disableWorkflow(tenantSlug: string, id: string): Promise<W
 export async function executeWorkflow(
   tenantSlug: string,
   id: string,
-  payload?: Record<string, unknown>,
+  data?: {
+    payload?: Record<string, unknown>;
+    entity_type?: string;
+    entity_id?: string;
+  },
 ): Promise<WorkflowExecution> {
   return apiFetch<WorkflowExecution>(`/tenants/${tenantSlug}/workflows/${id}/execute`, {
     method: "POST",
-    body: JSON.stringify({ payload: payload ?? {} }),
+    body: JSON.stringify({
+      payload: data?.payload ?? {},
+      entity_type: data?.entity_type,
+      entity_id: data?.entity_id,
+    }),
   });
 }
 
