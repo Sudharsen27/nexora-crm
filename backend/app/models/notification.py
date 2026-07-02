@@ -40,6 +40,8 @@ NOTIFICATION_TYPES = (
     "password_reset",
     "login_new_device",
     "system_announcement",
+    "workflow_success",
+    "workflow_failed",
 )
 
 NOTIFICATION_PRIORITIES = ("low", "normal", "high", "urgent")

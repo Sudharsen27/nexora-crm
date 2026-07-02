@@ -10,6 +10,7 @@ from app.models import Contact, Deal, Lead, TenantMembership, User
 from app.schemas.lead import LeadCreate, LeadUpdate
 from app.services.activity_logger import ActivityLogger
 from app.services.notification_hooks import notify_user
+from app.services.workflow_trigger_service import dispatch_workflow_trigger
 
 
 class LeadService:
@@ -132,6 +133,18 @@ class LeadService:
             description=f'Lead "{name}" was created',
         )
         self.db.commit()
+        dispatch_workflow_trigger(
+            tenant_id,
+            "lead_created",
+            {
+                "lead_id": str(lead.id),
+                "assigned_to_id": str(lead.assigned_to_id) if lead.assigned_to_id else None,
+                "status": lead.status,
+            },
+            entity_type="lead",
+            entity_id=lead.id,
+            actor_id=created_by_id,
+        )
         return self.get_lead(tenant_id, lead.id)
 
     def update_lead(
@@ -195,6 +208,18 @@ class LeadService:
             )
 
         self.db.commit()
+        if "assigned_to_id" in data and data["assigned_to_id"] != old_assignee:
+            dispatch_workflow_trigger(
+                tenant_id,
+                "lead_assigned",
+                {
+                    "lead_id": str(lead.id),
+                    "assigned_to_id": str(data["assigned_to_id"]) if data["assigned_to_id"] else None,
+                },
+                entity_type="lead",
+                entity_id=lead.id,
+                actor_id=updated_by_id,
+            )
         return self.get_lead(tenant_id, lead_id)
 
     def delete_lead(

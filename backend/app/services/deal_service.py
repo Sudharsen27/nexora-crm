@@ -17,6 +17,7 @@ from app.models.deal import (
 from app.schemas.deal import DealCreate, DealMove, DealUpdate, default_probability_for_stage
 from app.services.activity_logger import ActivityLogger
 from app.services.notification_hooks import notify_deal_event, notify_user
+from app.services.workflow_trigger_service import dispatch_workflow_trigger
 
 
 class DealPipelineFilters:
@@ -387,6 +388,14 @@ class DealService:
             created_by_id,
         )
         self.db.commit()
+        dispatch_workflow_trigger(
+            tenant_id,
+            "deal_created",
+            {"deal_id": str(deal.id), "stage": deal.stage, "assigned_to_id": str(deal.assigned_to_id) if deal.assigned_to_id else None},
+            entity_type="deal",
+            entity_id=deal.id,
+            actor_id=created_by_id,
+        )
         return self.get_deal(tenant_id, deal.id)
 
     def update_deal(
@@ -563,6 +572,26 @@ class DealService:
             )
 
         self.db.commit()
+        if source_stage != target_stage:
+            trigger = (
+                "deal_won"
+                if target_stage == "won"
+                else "deal_lost"
+                if target_stage == "lost"
+                else "deal_stage_changed"
+            )
+            dispatch_workflow_trigger(
+                tenant_id,
+                trigger,
+                {
+                    "deal_id": str(deal.id),
+                    "from_stage": source_stage,
+                    "to_stage": target_stage,
+                },
+                entity_type="deal",
+                entity_id=deal.id,
+                actor_id=updated_by_id,
+            )
         return self.get_deal(tenant_id, deal_id)
 
     def duplicate_deal(

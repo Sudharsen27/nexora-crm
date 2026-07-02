@@ -65,6 +65,11 @@ ACTIVITY_ACTIONS = (
   "email_sent",
   "email_opened",
   "email_replied",
+  # Workflows
+  "workflow_started",
+  "workflow_completed",
+  "workflow_failed",
+  "workflow_updated",
 )
 
 ACTION_META: dict[str, dict[str, str]] = {
@@ -109,6 +114,10 @@ ACTION_META: dict[str, dict[str, str]] = {
   "email_replied": {"icon": "reply", "color": "cyan", "label": "Email replied"},
   "email": {"icon": "mail", "color": "cyan", "label": "Email"},
   "note": {"icon": "file-text", "color": "slate", "label": "Note"},
+  "workflow_started": {"icon": "workflow", "color": "violet", "label": "Workflow started"},
+  "workflow_completed": {"icon": "workflow", "color": "green", "label": "Workflow completed"},
+  "workflow_failed": {"icon": "workflow", "color": "red", "label": "Workflow failed"},
+  "workflow_updated": {"icon": "workflow", "color": "blue", "label": "Workflow updated"},
 }
 
 

@@ -175,3 +175,17 @@ from app.models.email import (  # noqa: E402, F401
     EmailThread,
     EmailUserSettings,
 )
+from app.models.workflow import (  # noqa: E402, F401
+    CONDITION_OPERATORS,
+    EXECUTION_STATUSES,
+    NODE_TYPES,
+    WORKFLOW_ACTIONS,
+    WORKFLOW_STATUSES,
+    WORKFLOW_TRIGGERS,
+    Workflow,
+    WorkflowConnection,
+    WorkflowExecution,
+    WorkflowLog,
+    WorkflowNode,
+    WorkflowVersion,
+)
