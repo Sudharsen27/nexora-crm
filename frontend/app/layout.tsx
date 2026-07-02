@@ -17,8 +17,12 @@ export const metadata: Metadata = {
   title: "Nexora CRM",
   description: "Multi-tenant SaaS CRM platform",
   icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
-    apple: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/nexora-logo.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/nexora-logo.png", type: "image/png" }],
+    shortcut: ["/favicon.svg"],
   },
 };
 

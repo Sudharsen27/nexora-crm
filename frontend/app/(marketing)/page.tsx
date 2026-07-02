@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { NexoraLogo } from "@/components/brand/nexora-logo";
+import { NexoraHeaderLogo } from "@/components/brand/nexora-header-logo";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { cn } from "@/lib/utils";
 
@@ -9,7 +9,7 @@ export default function MarketingPage() {
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-zinc-200 dark:border-zinc-800">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <NexoraLogo href="/" />
+          <NexoraHeaderLogo href="/" />
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <Link href="/login" className={cn(buttonVariants({ variant: "ghost" }))}>

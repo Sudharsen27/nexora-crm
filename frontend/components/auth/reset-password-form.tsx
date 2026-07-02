@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2 } from "lucide-react";
-import { NexoraLogo } from "@/components/brand/nexora-logo";
+import { NexoraAuthLogo } from "@/components/brand/nexora-auth-logo";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,8 +59,8 @@ export function ResetPasswordForm() {
   if (!token || tokenLooksInvalid) {
     return (
       <div className="w-full max-w-md space-y-6">
-        <div className="flex justify-center">
-          <NexoraLogo href="/" markClassName="h-11 w-11" />
+        <div className="flex justify-center pb-2">
+          <NexoraAuthLogo href="/" />
         </div>
         <Card>
           <CardHeader>
@@ -82,7 +82,9 @@ export function ResetPasswordForm() {
   return (
     <div className="w-full max-w-md space-y-6">
       <div className="flex justify-center">
-        <NexoraLogo href="/" markClassName="h-11 w-11" />
+        <div className="flex justify-center pb-2">
+          <NexoraAuthLogo href="/" />
+        </div>
       </div>
       <Card className="w-full">
         <CardHeader>

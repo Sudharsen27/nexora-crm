@@ -5,7 +5,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { NexoraLogo } from "@/components/brand/nexora-logo";
+import { NexoraAuthLogo } from "@/components/brand/nexora-auth-logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,8 +44,8 @@ export function CreateOrganizationForm() {
 
   return (
     <div className="w-full max-w-lg space-y-6">
-      <div className="flex justify-center">
-        <NexoraLogo href="/" markClassName="h-11 w-11" />
+      <div className="flex justify-center pb-2">
+        <NexoraAuthLogo href="/" />
       </div>
       <Card className="w-full">
       <CardHeader>

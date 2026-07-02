@@ -23,6 +23,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { NexoraLogo } from "@/components/brand/nexora-logo";
 import { NexoraMark } from "@/components/brand/nexora-mark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,8 +113,11 @@ function SidebarNav({ base, pathname, expanded, onNavigate, showClose = false, o
             expanded ? "gap-3" : "justify-center",
           )}
         >
-          <NexoraMark className="h-10 w-10 shrink-0 shadow-lg shadow-[var(--primary)]/30" />
-          <SidebarLabel expanded={expanded}>Nexora</SidebarLabel>
+          {expanded ? (
+            <NexoraLogo imageClassName="h-11 w-auto" />
+          ) : (
+            <NexoraMark className="h-10 w-10 shrink-0" />
+          )}
         </Link>
         {showClose && (
           <Button
