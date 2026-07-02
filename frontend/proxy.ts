@@ -24,7 +24,7 @@ function isTenantRoute(pathname: string): boolean {
   return !reserved.has(segments[0]);
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = getAccessTokenFromCookie(request.headers.get("cookie") ?? undefined);
   const authenticated = token ? isTokenValid(token) : false;
