@@ -19,7 +19,11 @@ settings = get_settings()
 async def lifespan(_: FastAPI):
     set_main_event_loop(asyncio.get_running_loop())
     bootstrap_database()
-    logger.info("CORS allowed origins: %s", settings.cors_origins)
+    logger.info(
+        "CORS allowed origins: %s%s",
+        settings.cors_origins,
+        f" (regex: {settings.cors_origin_regex})" if settings.cors_origin_regex else "",
+    )
     yield
 
 
@@ -28,6 +32,7 @@ app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION, lifespan=li
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
+    allow_origin_regex=settings.cors_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

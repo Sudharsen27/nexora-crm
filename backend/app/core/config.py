@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
 
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+    # Optional regex for preview deployments (e.g. Vercel: https://.*\.vercel\.app)
+    CORS_ORIGIN_REGEX: str = ""
     COOKIE_SECURE: bool = False
     COOKIE_SAMESITE: str = "lax"
     COOKIE_DOMAIN: str | None = None
@@ -108,6 +110,11 @@ class Settings(BaseSettings):
             if normalized and normalized not in origins:
                 origins.append(normalized)
         return origins
+
+    @property
+    def cors_origin_regex(self) -> str | None:
+        pattern = self.CORS_ORIGIN_REGEX.strip()
+        return pattern or None
 
 
 @lru_cache
