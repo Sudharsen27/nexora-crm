@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:3000"
     PASSWORD_RESET_EXPIRE_MINUTES: int = 60
 
+    # Email: use Resend API on Render free tier (SMTP ports blocked). SMTP works locally.
+    RESEND_API_KEY: str = ""
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
@@ -64,8 +66,20 @@ class Settings(BaseSettings):
         return normalized
 
     @property
+    def use_resend(self) -> bool:
+        return bool(self.RESEND_API_KEY.strip())
+
+    @property
     def email_enabled(self) -> bool:
-        return bool(self.SMTP_HOST.strip() and self.SMTP_FROM_EMAIL.strip())
+        if not self.SMTP_FROM_EMAIL.strip():
+            return False
+        return self.use_resend or bool(self.SMTP_HOST.strip())
+
+    @property
+    def email_from_header(self) -> str:
+        if self.SMTP_FROM_NAME.strip():
+            return f"{self.SMTP_FROM_NAME} <{self.SMTP_FROM_EMAIL}>"
+        return self.SMTP_FROM_EMAIL
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod

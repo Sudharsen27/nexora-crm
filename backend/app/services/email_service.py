@@ -1,6 +1,8 @@
+import base64
 import html
 import logging
 import smtplib
+from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -54,6 +56,149 @@ def _branded_html_email(*, title: str, body_html: str, footer_note: str) -> str:
 """
 
 
+def _format_from_header(from_name: str | None = None) -> str:
+    settings = get_settings()
+    if from_name and from_name.strip():
+        return f"{from_name.strip()} <{settings.SMTP_FROM_EMAIL}>"
+    return settings.email_from_header
+
+
+def _send_via_resend(
+    *,
+    to_addresses: list[str],
+    cc_addresses: list[str] | None,
+    bcc_addresses: list[str] | None,
+    subject: str,
+    text_body: str,
+    html_body: str | None,
+    from_header: str,
+    attachment_paths: list[tuple[str, str, bytes]] | None,
+) -> None:
+    import resend
+
+    settings = get_settings()
+    resend.api_key = settings.RESEND_API_KEY
+
+    payload: dict = {
+        "from": from_header,
+        "to": to_addresses,
+        "subject": subject,
+        "text": text_body,
+    }
+    if html_body:
+        payload["html"] = html_body
+    if cc_addresses:
+        payload["cc"] = cc_addresses
+    if bcc_addresses:
+        payload["bcc"] = bcc_addresses
+    if attachment_paths:
+        payload["attachments"] = [
+            {
+                "filename": filename,
+                "content": base64.b64encode(content).decode("ascii"),
+            }
+            for filename, _content_type, content in attachment_paths
+        ]
+
+    resend.Emails.send(payload)
+
+
+def _send_via_smtp(
+    *,
+    to_addresses: list[str],
+    cc_addresses: list[str] | None,
+    bcc_addresses: list[str] | None,
+    subject: str,
+    text_body: str,
+    html_body: str | None,
+    from_header: str,
+    attachment_paths: list[tuple[str, str, bytes]] | None,
+) -> None:
+    settings = get_settings()
+    all_recipients = list(to_addresses) + list(cc_addresses or []) + list(bcc_addresses or [])
+
+    if attachment_paths:
+        message = MIMEMultipart("mixed")
+        alt = MIMEMultipart("alternative")
+        alt.attach(MIMEText(text_body, "plain", "utf-8"))
+        if html_body:
+            alt.attach(MIMEText(html_body, "html", "utf-8"))
+        message.attach(alt)
+        for filename, _content_type, content in attachment_paths:
+            part = MIMEApplication(content, Name=filename)
+            part["Content-Disposition"] = f'attachment; filename="{filename}"'
+            message.attach(part)
+    else:
+        message = MIMEMultipart("alternative")
+        message.attach(MIMEText(text_body, "plain", "utf-8"))
+        if html_body:
+            message.attach(MIMEText(html_body, "html", "utf-8"))
+
+    message["Subject"] = subject
+    message["From"] = from_header
+    message["To"] = ", ".join(to_addresses)
+    if cc_addresses:
+        message["Cc"] = ", ".join(cc_addresses)
+
+    with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=30) as server:
+        if settings.SMTP_USE_TLS:
+            server.starttls()
+        if settings.SMTP_USER:
+            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+        server.sendmail(settings.SMTP_FROM_EMAIL, all_recipients, message.as_string())
+
+
+def _dispatch_email(
+    *,
+    to_addresses: list[str],
+    cc_addresses: list[str] | None = None,
+    bcc_addresses: list[str] | None = None,
+    subject: str,
+    text_body: str,
+    html_body: str | None = None,
+    from_name: str | None = None,
+    attachment_paths: list[tuple[str, str, bytes]] | None = None,
+) -> None:
+    settings = get_settings()
+    if not settings.email_enabled:
+        raise RuntimeError(
+            "Email is not configured. Set RESEND_API_KEY or SMTP_HOST and SMTP_FROM_EMAIL."
+        )
+
+    from_header = _format_from_header(from_name)
+    if settings.use_resend:
+        _send_via_resend(
+            to_addresses=to_addresses,
+            cc_addresses=cc_addresses,
+            bcc_addresses=bcc_addresses,
+            subject=subject,
+            text_body=text_body,
+            html_body=html_body,
+            from_header=from_header,
+            attachment_paths=attachment_paths,
+        )
+        provider = "resend"
+    else:
+        _send_via_smtp(
+            to_addresses=to_addresses,
+            cc_addresses=cc_addresses,
+            bcc_addresses=bcc_addresses,
+            subject=subject,
+            text_body=text_body,
+            html_body=html_body,
+            from_header=from_header,
+            attachment_paths=attachment_paths,
+        )
+        provider = "smtp"
+
+    logger.info(
+        "Email sent via %s to %s: %s",
+        provider,
+        ", ".join(to_addresses),
+        subject,
+    )
+
+
 def send_crm_email(
     *,
     to_addresses: list[str],
@@ -69,78 +214,25 @@ def send_crm_email(
 
     attachment_paths: list of (filename, content_type, content_bytes)
     """
-    settings = get_settings()
-    if not settings.email_enabled:
-        raise RuntimeError("Email is not configured. Set SMTP_HOST and SMTP_FROM_EMAIL in .env")
-
-    from_header = (
-        f"{from_name} <{settings.SMTP_FROM_EMAIL}>"
-        if from_name and from_name.strip()
-        else (
-            f"{settings.SMTP_FROM_NAME} <{settings.SMTP_FROM_EMAIL}>"
-            if settings.SMTP_FROM_NAME.strip()
-            else settings.SMTP_FROM_EMAIL
-        )
+    _dispatch_email(
+        to_addresses=to_addresses,
+        cc_addresses=cc_addresses,
+        bcc_addresses=bcc_addresses,
+        subject=subject,
+        text_body=text_body,
+        html_body=html_body,
+        from_name=from_name,
+        attachment_paths=attachment_paths,
     )
-
-    from email.mime.application import MIMEApplication
-
-    message = MIMEMultipart("mixed")
-    message["Subject"] = subject
-    message["From"] = from_header
-    message["To"] = ", ".join(to_addresses)
-    if cc_addresses:
-        message["Cc"] = ", ".join(cc_addresses)
-    all_recipients = list(to_addresses) + list(cc_addresses or []) + list(bcc_addresses or [])
-
-    alt = MIMEMultipart("alternative")
-    alt.attach(MIMEText(text_body, "plain", "utf-8"))
-    if html_body:
-        alt.attach(MIMEText(html_body, "html", "utf-8"))
-    message.attach(alt)
-
-    for filename, content_type, content in attachment_paths or []:
-        part = MIMEApplication(content, Name=filename)
-        part["Content-Disposition"] = f'attachment; filename="{filename}"'
-        message.attach(part)
-
-    with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=30) as server:
-        if settings.SMTP_USE_TLS:
-            server.starttls()
-        if settings.SMTP_USER:
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-        server.sendmail(settings.SMTP_FROM_EMAIL, all_recipients, message.as_string())
-
-    logger.info("CRM email sent to %s: %s", ", ".join(to_addresses), subject)
 
 
 def send_email(*, to: str, subject: str, text_body: str, html_body: str | None = None) -> None:
-    settings = get_settings()
-    if not settings.email_enabled:
-        raise RuntimeError("Email is not configured. Set SMTP_HOST and SMTP_FROM_EMAIL in .env")
-
-    from_header = (
-        f"{settings.SMTP_FROM_NAME} <{settings.SMTP_FROM_EMAIL}>"
-        if settings.SMTP_FROM_NAME.strip()
-        else settings.SMTP_FROM_EMAIL
+    _dispatch_email(
+        to_addresses=[to],
+        subject=subject,
+        text_body=text_body,
+        html_body=html_body,
     )
-
-    message = MIMEMultipart("alternative")
-    message["Subject"] = subject
-    message["From"] = from_header
-    message["To"] = to
-    message.attach(MIMEText(text_body, "plain", "utf-8"))
-    if html_body:
-        message.attach(MIMEText(html_body, "html", "utf-8"))
-
-    with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=30) as server:
-        if settings.SMTP_USE_TLS:
-            server.starttls()
-        if settings.SMTP_USER:
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-        server.sendmail(settings.SMTP_FROM_EMAIL, [to], message.as_string())
-
-    logger.info("Email sent to %s: %s", to, subject)
 
 
 def send_password_reset_email(*, to: str, full_name: str, reset_url: str) -> None:
