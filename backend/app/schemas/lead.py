@@ -6,6 +6,8 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, mo
 
 from app.models.lead import LEAD_SOURCES, LEAD_STATUSES
 
+MAX_ESTIMATED_VALUE = Decimal("9999999999.99")
+
 
 class LeadCreate(BaseModel):
     first_name: str = Field(min_length=1, max_length=100)
@@ -16,7 +18,7 @@ class LeadCreate(BaseModel):
     job_title: str | None = Field(default=None, max_length=150)
     status: str = Field(default="new")
     source: str | None = None
-    estimated_value: Decimal | None = Field(default=None, ge=0)
+    estimated_value: Decimal | None = Field(default=None, ge=0, le=MAX_ESTIMATED_VALUE)
     notes: str | None = Field(default=None, max_length=5000)
     assigned_to_id: UUID | None = None
 
@@ -67,7 +69,7 @@ class LeadUpdate(BaseModel):
     job_title: str | None = Field(default=None, max_length=150)
     status: str | None = None
     source: str | None = None
-    estimated_value: Decimal | None = Field(default=None, ge=0)
+    estimated_value: Decimal | None = Field(default=None, ge=0, le=MAX_ESTIMATED_VALUE)
     notes: str | None = Field(default=None, max_length=5000)
     assigned_to_id: UUID | None = None
 

@@ -446,6 +446,20 @@ class DealService:
                 f'"{deal.title}" moved to {DEAL_STAGE_LABELS[deal.stage]}',
                 updated_by_id,
             )
+            self.db.commit()
+            dispatch_workflow_trigger(
+                tenant_id,
+                action,
+                {
+                    "deal_id": str(deal.id),
+                    "stage": deal.stage,
+                    "from_stage": old_stage,
+                    "assigned_to_id": str(deal.assigned_to_id) if deal.assigned_to_id else None,
+                },
+                entity_type="deal",
+                entity_id=deal.id,
+                actor_id=updated_by_id,
+            )
         else:
             self._log_deal(
                 tenant_id,
@@ -455,8 +469,20 @@ class DealService:
                 f'Deal "{deal.title}" was updated',
                 updated_by_id,
             )
+            self.db.commit()
+            dispatch_workflow_trigger(
+                tenant_id,
+                "deal_updated",
+                {
+                    "deal_id": str(deal.id),
+                    "stage": deal.stage,
+                    "assigned_to_id": str(deal.assigned_to_id) if deal.assigned_to_id else None,
+                },
+                entity_type="deal",
+                entity_id=deal.id,
+                actor_id=updated_by_id,
+            )
 
-        self.db.commit()
         return self.get_deal(tenant_id, deal_id)
 
     def update_stage(

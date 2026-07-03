@@ -10,6 +10,7 @@ from app.models.company import COMPANY_SORT_FIELDS
 from app.schemas.company import CompanyCreate, CompanyUpdate
 from app.services.activity_logger import ActivityLogger
 from app.services.notification_hooks import notify_all_members_except, notify_user
+from app.services.workflow_trigger_service import dispatch_workflow_trigger
 
 
 class CompanyService:
@@ -180,6 +181,14 @@ class CompanyService:
             entity_id=company.id,
         )
         self.db.commit()
+        dispatch_workflow_trigger(
+            tenant_id,
+            "company_created",
+            {"company_id": str(company.id), "company_name": company.company_name},
+            entity_type="company",
+            entity_id=company.id,
+            actor_id=created_by_id,
+        )
         return self.get_company(tenant_id, company.id)
 
     def update_company(

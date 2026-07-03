@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal
 from app.models.workflow import Workflow
-from app.services.workflow_engine import WorkflowEngine
+from app.services.workflow_runner import run_workflow_execution_background
 from app.services.workflow_service import WorkflowService
 
 logger = logging.getLogger(__name__)
@@ -50,14 +50,7 @@ class WorkflowTriggerService:
                 actor_id=actor_id,
                 run_immediately=False,
             )
-            try:
-                WorkflowEngine(self.db).run_execution(execution.id, actor_id=actor_id)
-            except Exception:
-                logger.exception(
-                    "Workflow execution error workflow=%s execution=%s",
-                    workflow.id,
-                    execution.id,
-                )
+            run_workflow_execution_background(execution.id, actor_id=actor_id)
 
 
 def dispatch_workflow_trigger(

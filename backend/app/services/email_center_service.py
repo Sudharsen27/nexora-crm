@@ -39,6 +39,7 @@ from app.schemas.email import (
 from app.services.activity_logger import ActivityLogger
 from app.services.email_service import send_crm_email
 from app.services.notification_hooks import notify_user
+from app.services.workflow_trigger_service import dispatch_workflow_trigger
 
 
 def paginate(total: int, page: int, page_size: int) -> dict:
@@ -477,6 +478,20 @@ class EmailCenterService:
         thread.last_message_at = utcnow()
         thread.subject = subject
         self.db.commit()
+        dispatch_workflow_trigger(
+            tenant_id,
+            "email_sent",
+            {
+                "email_id": str(email.id),
+                "subject": subject,
+                "lead_id": str(email.lead_id) if email.lead_id else None,
+                "contact_id": str(email.contact_id) if email.contact_id else None,
+                "deal_id": str(email.deal_id) if email.deal_id else None,
+            },
+            entity_type="email",
+            entity_id=email.id,
+            actor_id=user_id,
+        )
         return self.get_email(tenant_id, email.id)
 
     def reply_email(self, tenant_id: uuid.UUID, email_id: uuid.UUID, payload: EmailReplyRequest, user_id: uuid.UUID) -> Email:
@@ -718,6 +733,18 @@ class EmailCenterService:
             email.sender_id,
         )
         self.db.commit()
+        dispatch_workflow_trigger(
+            email.tenant_id,
+            "email_opened",
+            {
+                "email_id": str(email.id),
+                "subject": email.subject,
+                "lead_id": str(email.lead_id) if email.lead_id else None,
+            },
+            entity_type="email",
+            entity_id=email.id,
+            actor_id=email.sender_id,
+        )
 
     def track_click(self, token: str, url: str) -> str:
         email = self.repo.get_by_tracking_token(token)

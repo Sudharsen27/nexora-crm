@@ -246,6 +246,40 @@ def disable_workflow(
     )
 
 
+@router.post("/executions/{execution_id}/cancel", response_model=WorkflowExecutionResponse)
+def cancel_execution(
+    execution_id: UUID,
+    ctx: TenantContext = Depends(require_permission("workflow:write")),
+    db: Session = Depends(get_db),
+) -> WorkflowExecutionResponse:
+    execution = WorkflowService(db).cancel_execution(
+        ctx.tenant.id, execution_id, ctx.membership.user_id
+    )
+    return WorkflowExecutionResponse.model_validate(execution)
+
+
+@router.get("/{workflow_id}/history")
+def workflow_history(
+    workflow_id: UUID,
+    ctx: TenantContext = Depends(require_permission("workflow:read")),
+    db: Session = Depends(get_db),
+) -> list[dict]:
+    return WorkflowService(db).list_history(ctx.tenant.id, workflow_id)
+
+
+@router.post("/{workflow_id}/webhook", response_model=WorkflowExecutionResponse, status_code=201)
+def webhook_trigger(
+    workflow_id: UUID,
+    payload: WorkflowExecuteRequest,
+    ctx: TenantContext = Depends(require_permission("workflow:write")),
+    db: Session = Depends(get_db),
+) -> WorkflowExecutionResponse:
+    execution = WorkflowService(db).execute_webhook(
+        ctx.tenant.id, workflow_id, payload.payload
+    )
+    return WorkflowExecutionResponse.model_validate(execution)
+
+
 @router.get("/{workflow_id}/versions", response_model=list[WorkflowVersionResponse])
 def list_versions(
     workflow_id: UUID,

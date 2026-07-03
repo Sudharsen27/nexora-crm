@@ -10,6 +10,7 @@ from app.models.contact import CONTACT_SORT_FIELDS
 from app.schemas.contact import ContactCreate, ContactUpdate
 from app.services.activity_logger import ActivityLogger
 from app.services.notification_hooks import notify_user
+from app.services.workflow_trigger_service import dispatch_workflow_trigger
 
 
 class ContactService:
@@ -182,6 +183,18 @@ class ContactService:
                 entity_id=contact.id,
             )
         self.db.commit()
+        dispatch_workflow_trigger(
+            tenant_id,
+            "contact_created",
+            {
+                "contact_id": str(contact.id),
+                "email": contact.email,
+                "assigned_to_id": str(contact.assigned_to_id) if contact.assigned_to_id else None,
+            },
+            entity_type="contact",
+            entity_id=contact.id,
+            actor_id=created_by_id,
+        )
         return self.get_contact(tenant_id, contact.id)
 
     def update_contact(
@@ -345,6 +358,22 @@ class ContactService:
         )
 
         self.db.commit()
+        dispatch_workflow_trigger(
+            tenant_id,
+            "lead_converted",
+            {"lead_id": str(lead.id), "contact_id": str(contact.id)},
+            entity_type="lead",
+            entity_id=lead.id,
+            actor_id=created_by_id,
+        )
+        dispatch_workflow_trigger(
+            tenant_id,
+            "contact_created",
+            {"contact_id": str(contact.id), "lead_id": str(lead.id)},
+            entity_type="contact",
+            entity_id=contact.id,
+            actor_id=created_by_id,
+        )
         return self.get_contact(tenant_id, contact.id)
 
 

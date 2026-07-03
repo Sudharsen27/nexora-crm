@@ -46,7 +46,18 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
     """Return JSON 500 so CORS headers are applied (plain uvicorn 500 responses omit them)."""
     logger.exception("Unhandled error on %s %s", request.method, request.url.path)
     detail = str(exc) if settings.DEBUG else "Internal server error"
-    return JSONResponse(status_code=500, content={"detail": detail})
+    response = JSONResponse(status_code=500, content={"detail": detail})
+    origin = request.headers.get("origin")
+    if origin:
+        allowed = origin in settings.cors_origins
+        if not allowed and settings.cors_origin_regex:
+            import re
+
+            allowed = bool(re.fullmatch(settings.cors_origin_regex, origin))
+        if allowed:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 
 @app.get("/")

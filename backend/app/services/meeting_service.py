@@ -13,6 +13,7 @@ from app.repositories.meeting_repository import MeetingRepository
 from app.schemas.meeting import MeetingCreate, MeetingParticipantInput, MeetingReminderInput, MeetingReschedule, MeetingStatusUpdate, MeetingUpdate
 from app.services.activity_logger import ActivityLogger
 from app.services.notification_hooks import notify_user
+from app.services.workflow_trigger_service import dispatch_workflow_trigger
 
 
 def paginate(total: int, page: int, page_size: int) -> dict:
@@ -239,6 +240,18 @@ class MeetingService:
             entity_id=meeting.id,
         )
         self.db.commit()
+        dispatch_workflow_trigger(
+            tenant_id,
+            "meeting_scheduled",
+            {
+                "meeting_id": str(meeting.id),
+                "title": meeting.title,
+                "start_datetime": meeting.start_datetime.isoformat(),
+            },
+            entity_type="meeting",
+            entity_id=meeting.id,
+            actor_id=created_by_id,
+        )
         return self.get_meeting(tenant_id, meeting.id)
 
     def update_meeting(
@@ -375,6 +388,15 @@ class MeetingService:
             )
 
         self.db.commit()
+        if payload.status == "completed" and old_status != "completed":
+            dispatch_workflow_trigger(
+                tenant_id,
+                "meeting_completed",
+                {"meeting_id": str(meeting.id), "title": meeting.title},
+                entity_type="meeting",
+                entity_id=meeting.id,
+                actor_id=updated_by_id,
+            )
         return self.get_meeting(tenant_id, meeting_id)
 
     def duplicate_meeting(

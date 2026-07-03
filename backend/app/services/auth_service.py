@@ -527,6 +527,16 @@ class TenantService:
         )
         self.db.commit()
         self.db.refresh(membership)
+        from app.services.workflow_trigger_service import dispatch_workflow_trigger
+
+        dispatch_workflow_trigger(
+            tenant_id,
+            "user_invited",
+            {"user_id": str(user.id), "email": user.email, "role_slug": role.slug},
+            entity_type="user",
+            entity_id=user.id,
+            actor_id=actor_membership.user_id,
+        )
         return {
             "id": membership.id,
             "user_id": user.id,

@@ -11,6 +11,7 @@ from app.models.task import KANBAN_STATUSES, TASK_ENTITY_TYPES, TASK_PRIORITIES,
 from app.schemas.task import TaskCreate, TaskDashboardSummary, TaskUpdate
 from app.services.activity_logger import ActivityLogger
 from app.services.notification_hooks import notify_user
+from app.services.workflow_trigger_service import dispatch_workflow_trigger
 
 
 class TaskService:
@@ -274,6 +275,20 @@ class TaskService:
                 entity_id=task.id,
             )
         self.db.commit()
+        dispatch_workflow_trigger(
+            tenant_id,
+            "task_created",
+            {
+                "task_id": str(task.id),
+                "title": task.title,
+                "status": task.status,
+                "priority": task.priority,
+                "assigned_to_id": str(task.assigned_to_id) if task.assigned_to_id else None,
+            },
+            entity_type="task",
+            entity_id=task.id,
+            actor_id=created_by_id,
+        )
         return self.get_task(tenant_id, task.id)
 
     def update_task(
@@ -327,6 +342,19 @@ class TaskService:
             )
 
         self.db.commit()
+        if action == "task_completed":
+            dispatch_workflow_trigger(
+                tenant_id,
+                "task_completed",
+                {
+                    "task_id": str(task.id),
+                    "title": task.title,
+                    "assigned_to_id": str(task.assigned_to_id) if task.assigned_to_id else None,
+                },
+                entity_type="task",
+                entity_id=task.id,
+                actor_id=updated_by_id,
+            )
         return self.get_task(tenant_id, task_id)
 
     def delete_task(

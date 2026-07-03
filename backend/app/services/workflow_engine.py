@@ -13,11 +13,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.mixins import utcnow
-from app.models import Deal, Lead, Workflow, WorkflowExecution, WorkflowLog
+from app.models import Deal, Lead, Workflow, WorkflowExecution, WorkflowLog, WorkflowVersion
 from app.schemas.task import TaskCreate
 from app.services.activity_logger import ActivityLogger
+from app.services.email_service import send_crm_email
 from app.services.notification_hooks import notify_user
-from app.services.task_service import TaskService
 
 logger = logging.getLogger(__name__)
 MAX_DELAY_SECONDS = 300
@@ -116,6 +116,27 @@ class WorkflowEngine:
                 return node
         return None
 
+    def _resolve_definition(self, workflow: Workflow, execution: WorkflowExecution) -> dict:
+        version = execution.version or workflow.published_version
+        if version:
+            row = self.db.scalar(
+                select(WorkflowVersion).where(
+                    WorkflowVersion.workflow_id == workflow.id,
+                    WorkflowVersion.version == version,
+                )
+            )
+            if row and row.snapshot:
+                return row.snapshot
+        return workflow.definition or {}
+
+    def _entity_uuid(self, value: Any) -> uuid.UUID | None:
+        if value is None:
+            return None
+        try:
+            return uuid.UUID(str(value))
+        except (TypeError, ValueError):
+            return None
+
     def _execute_action(
         self,
         execution: WorkflowExecution,
@@ -131,6 +152,8 @@ class WorkflowEngine:
         payload = context.get("payload") or {}
 
         if action_type == "create_task":
+            from app.services.task_service import TaskService
+
             due_in_days = int(config.get("due_in_days") or 0)
             due_date = date.today() + timedelta(days=due_in_days) if due_in_days else None
             entity_type = payload.get("entity_type") or execution.entity_type
@@ -245,6 +268,151 @@ class WorkflowEngine:
                     node_key=node["id"],
                     data={"status_code": response.status_code},
                 )
+
+        elif action_type == "move_deal":
+            from app.services.deal_service import DealService
+
+            deal_id = payload.get("deal_id") or execution.entity_id
+            stage = config.get("stage")
+            if deal_id and stage and actor_id:
+                DealService(self.db).update_stage(
+                    tenant_id,
+                    uuid.UUID(str(deal_id)),
+                    stage,
+                    updated_by_id=actor_id,
+                )
+                self._log(execution, f"Deal moved to {stage}", node_key=node["id"])
+
+        elif action_type == "send_email":
+            to_email = config.get("to") or payload.get("email")
+            subject = config.get("subject") or f"Workflow: {workflow.name}"
+            body = config.get("body") or config.get("message") or ""
+            if to_email:
+                send_crm_email(
+                    to_addresses=[str(to_email)],
+                    subject=subject,
+                    text_body=body,
+                    html_body=f"<p>{body}</p>" if body else None,
+                )
+                self._log(execution, f"Email sent to {to_email}", node_key=node["id"])
+
+        elif action_type == "create_note":
+            from app.schemas.activity import ActivityCreate
+            from app.services.activity_service import ActivityService
+
+            entity_type = payload.get("entity_type") or execution.entity_type or "lead"
+            entity_id = payload.get("entity_id") or execution.entity_id
+            creator = actor_id or workflow.created_by_id
+            if entity_id and creator:
+                ActivityService(self.db).create_activity(
+                    tenant_id,
+                    ActivityCreate(
+                        entity_type=entity_type,
+                        entity_id=uuid.UUID(str(entity_id)),
+                        activity_type="note",
+                        action="note_added",
+                        title=config.get("title") or "Workflow note",
+                        description=config.get("description") or config.get("body") or "Automated note.",
+                    ),
+                    creator,
+                )
+                self._log(execution, "Note created", node_key=node["id"])
+
+        elif action_type == "create_meeting":
+            from app.schemas.meeting import MeetingCreate
+            from app.services.meeting_service import MeetingService
+
+            creator = actor_id or workflow.created_by_id
+            if creator is None:
+                self._log(execution, "Skipped create_meeting: no creator", level="warn", node_key=node["id"])
+                return
+            start = utcnow() + timedelta(days=int(config.get("start_in_days") or 1))
+            end = start + timedelta(minutes=int(config.get("duration_minutes") or 30))
+            meeting = MeetingService(self.db).create_meeting(
+                tenant_id,
+                MeetingCreate(
+                    title=config.get("title") or "Workflow meeting",
+                    description=config.get("description"),
+                    start_datetime=start,
+                    end_datetime=end,
+                    status="scheduled",
+                ),
+                creator,
+            )
+            self._log(execution, f"Meeting created {meeting.id}", node_key=node["id"], data={"meeting_id": str(meeting.id)})
+
+        elif action_type == "create_company":
+            from app.schemas.company import CompanyCreate
+            from app.services.company_service import CompanyService
+
+            creator = actor_id or workflow.created_by_id
+            if creator is None:
+                return
+            company = CompanyService(self.db).create_company(
+                tenant_id,
+                CompanyCreate(company_name=config.get("company_name") or "New company"),
+                creator,
+            )
+            self._log(execution, f"Company created {company.id}", node_key=node["id"])
+
+        elif action_type == "create_contact":
+            from app.schemas.contact import ContactCreate
+            from app.services.contact_service import ContactService
+
+            creator = actor_id or workflow.created_by_id
+            if creator is None:
+                return
+            contact = ContactService(self.db).create_contact(
+                tenant_id,
+                ContactCreate(
+                    first_name=config.get("first_name") or "New",
+                    last_name=config.get("last_name") or "Contact",
+                    email=config.get("email"),
+                ),
+                creator,
+            )
+            self._log(execution, f"Contact created {contact.id}", node_key=node["id"])
+
+        elif action_type == "create_deal":
+            from app.schemas.deal import DealCreate
+            from app.services.deal_service import DealService
+
+            creator = actor_id or workflow.created_by_id
+            if creator is None:
+                return
+            deal = DealService(self.db).create_deal(
+                tenant_id,
+                DealCreate(title=config.get("title") or "New deal", stage=config.get("stage") or "new"),
+                creator,
+            )
+            self._log(execution, f"Deal created {deal.id}", node_key=node["id"])
+
+        elif action_type == "archive_deal":
+            from app.services.deal_service import DealService
+
+            deal_id = payload.get("deal_id") or execution.entity_id
+            if deal_id and actor_id:
+                DealService(self.db).update_stage(
+                    tenant_id, uuid.UUID(str(deal_id)), "lost", updated_by_id=actor_id
+                )
+                self._log(execution, "Deal archived (moved to lost)", node_key=node["id"])
+
+        elif action_type == "delete_record":
+            entity_type = execution.entity_type or payload.get("entity_type")
+            entity_id = execution.entity_id or self._entity_uuid(payload.get("entity_id"))
+            if entity_type == "lead" and entity_id and actor_id:
+                from app.services.lead_service import LeadService
+
+                LeadService(self.db).delete_lead(tenant_id, entity_id, actor_id)
+                self._log(execution, "Lead deleted", node_key=node["id"])
+            elif entity_type == "task" and entity_id and actor_id:
+                from app.services.task_service import TaskService
+
+                TaskService(self.db).delete_task(tenant_id, entity_id, actor_id)
+                self._log(execution, "Task deleted", node_key=node["id"])
+            else:
+                self._log(execution, "Skipped delete_record: unsupported entity", level="warn", node_key=node["id"])
+
         else:
             self._log(
                 execution,
@@ -292,6 +460,14 @@ class WorkflowEngine:
         if node_type == "action":
             self._execute_action(execution, workflow, node, context, actor_id)
 
+        if node_type == "delay":
+            data = node.get("data") or {}
+            seconds = min(int((data.get("config") or {}).get("seconds") or data.get("seconds") or 0), MAX_DELAY_SECONDS)
+            if seconds > 0:
+                self._log(execution, f"Delaying {seconds}s", node_key=node_id)
+                self.db.flush()
+                time.sleep(seconds)
+
         if node_type == "branch":
             branch = (node.get("data") or {}).get("branch") or "default"
             for target in self._next_nodes(definition, node_id, branch=branch):
@@ -328,7 +504,7 @@ class WorkflowEngine:
         )
 
         try:
-            definition = workflow.definition or {}
+            definition = self._resolve_definition(workflow, execution)
             trigger = self._find_trigger_node(definition)
             if trigger is None:
                 raise RuntimeError("Workflow has no trigger node")

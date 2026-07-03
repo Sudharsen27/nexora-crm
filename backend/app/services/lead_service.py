@@ -133,6 +133,8 @@ class LeadService:
             description=f'Lead "{name}" was created',
         )
         self.db.commit()
+        from app.services.workflow_trigger_service import dispatch_workflow_trigger
+
         dispatch_workflow_trigger(
             tenant_id,
             "lead_created",
@@ -215,6 +217,20 @@ class LeadService:
                 {
                     "lead_id": str(lead.id),
                     "assigned_to_id": str(data["assigned_to_id"]) if data["assigned_to_id"] else None,
+                    "status": lead.status,
+                },
+                entity_type="lead",
+                entity_id=lead.id,
+                actor_id=updated_by_id,
+            )
+        else:
+            dispatch_workflow_trigger(
+                tenant_id,
+                "lead_updated",
+                {
+                    "lead_id": str(lead.id),
+                    "status": lead.status,
+                    "assigned_to_id": str(lead.assigned_to_id) if lead.assigned_to_id else None,
                 },
                 entity_type="lead",
                 entity_id=lead.id,

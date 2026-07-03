@@ -24,7 +24,7 @@ from app.models.workflow import (
 from app.schemas.workflow import WorkflowCreate, WorkflowDefinitionInput, WorkflowUpdate
 from app.services.activity_logger import ActivityLogger
 from app.services.notification_hooks import notify_user
-from app.services.workflow_engine import WorkflowEngine
+from app.services.workflow_runner import run_workflow_execution_background
 from app.services.workflow_templates import WORKFLOW_TEMPLATES
 
 
@@ -324,8 +324,7 @@ class WorkflowService:
         self.db.refresh(execution)
 
         if run_immediately:
-            WorkflowEngine(self.db).run_execution(execution.id, actor_id=actor_id)
-            self.db.refresh(execution)
+            run_workflow_execution_background(execution.id, actor_id=actor_id)
         return execution
 
     def list_executions(
@@ -410,9 +409,68 @@ class WorkflowService:
         self.db.add(retry)
         self.db.commit()
         self.db.refresh(retry)
-        WorkflowEngine(self.db).run_execution(retry.id, actor_id=actor_id)
-        self.db.refresh(retry)
+        run_workflow_execution_background(retry.id, actor_id=actor_id)
         return retry
+
+    def cancel_execution(
+        self,
+        tenant_id: uuid.UUID,
+        execution_id: uuid.UUID,
+        actor_id: uuid.UUID,
+    ) -> WorkflowExecution:
+        execution = self.get_execution(tenant_id, execution_id)
+        if execution.status not in ("queued", "running"):
+            raise HTTPException(status_code=400, detail="Only queued or running executions can be cancelled")
+        execution.status = "cancelled"
+        execution.completed_at = utcnow()
+        self.db.add(
+            WorkflowLog(
+                execution_id=execution.id,
+                workflow_id=execution.workflow_id,
+                tenant_id=tenant_id,
+                level="warn",
+                message="Execution cancelled by user",
+            )
+        )
+        self.db.commit()
+        self.db.refresh(execution)
+        return execution
+
+    def execute_webhook(
+        self,
+        tenant_id: uuid.UUID,
+        workflow_id: uuid.UUID,
+        payload: dict,
+    ) -> WorkflowExecution:
+        workflow = self.get_workflow(tenant_id, workflow_id)
+        if workflow.status != "published":
+            raise HTTPException(status_code=400, detail="Workflow is not published")
+        if workflow.trigger_type != "webhook":
+            raise HTTPException(status_code=400, detail="Workflow is not a webhook trigger")
+        return self.queue_execution(
+            tenant_id,
+            workflow_id,
+            trigger_type="webhook",
+            payload=payload,
+            actor_id=workflow.created_by_id,
+        )
+
+    def list_history(self, tenant_id: uuid.UUID, workflow_id: uuid.UUID) -> list[dict]:
+        """Publish version snapshots as workflow history (WorkflowVersion serves as WorkflowHistory)."""
+        self.get_workflow(tenant_id, workflow_id)
+        versions = self.list_versions(tenant_id, workflow_id)
+        return [
+            {
+                "id": str(v.id),
+                "workflow_id": str(v.workflow_id),
+                "version": v.version,
+                "event": "published",
+                "note": v.note,
+                "created_by_id": str(v.created_by_id) if v.created_by_id else None,
+                "created_at": v.created_at.isoformat() if v.created_at else None,
+            }
+            for v in versions
+        ]
 
     def list_templates(self) -> list[dict]:
         return WORKFLOW_TEMPLATES
