@@ -23,8 +23,11 @@ import {
   Users,
   Workflow,
   FileStack,
+  Sparkles,
   X,
 } from "lucide-react";
+import { CommandPalette, useCommandPalette } from "@/components/ai/command-palette";
+import { FloatingAiAssistant } from "@/components/ai/floating-ai-assistant";
 import { NexoraLogo } from "@/components/brand/nexora-logo";
 import { NexoraMark } from "@/components/brand/nexora-mark";
 import { Button } from "@/components/ui/button";
@@ -47,6 +50,7 @@ interface TenantShellProps {
 
 const navItems = [
   { href: "", label: "Dashboard", icon: LayoutDashboard, permission: "tenant:read" },
+  { href: "/ai", label: "AI Assistant", icon: Sparkles, permission: "tenant:read", featured: true },
   { href: "/leads", label: "Leads", icon: UserRoundPlus, permission: "lead:read" },
   { href: "/contacts", label: "Contacts", icon: Contact, permission: "contact:read" },
   { href: "/companies", label: "Companies", icon: Building2, permission: "company:read" },
@@ -141,6 +145,7 @@ function SidebarNav({ base, pathname, expanded, onNavigate, showClose = false, o
           const href = `${base}${item.href}`;
           const active = pathname === href || (item.href && pathname.startsWith(href));
           const Icon = item.icon;
+          const featured = "featured" in item && item.featured;
           return (
             <Link
               key={item.label}
@@ -152,7 +157,9 @@ function SidebarNav({ base, pathname, expanded, onNavigate, showClose = false, o
                 expanded ? "px-3" : "justify-center px-0",
                 active
                   ? "bg-[var(--sidebar-active-bg)] text-[var(--sidebar-active)] shadow-lg shadow-[var(--primary)]/30"
-                  : "text-[var(--sidebar-fg)] hover:bg-white/10 hover:text-white",
+                  : featured
+                    ? "bg-gradient-to-r from-violet-600/20 to-indigo-600/20 text-violet-200 hover:from-violet-600/30 hover:to-indigo-600/30"
+                    : "text-[var(--sidebar-fg)] hover:bg-white/10 hover:text-white",
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
@@ -185,6 +192,7 @@ export function TenantShell({ tenantSlug, tenantName, children }: TenantShellPro
   const base = `/${tenantSlug}`;
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const commandPalette = useCommandPalette();
 
   const currentSection = navItems.find((item) => {
     const href = `${base}${item.href}`;
@@ -289,10 +297,18 @@ export function TenantShell({ tenantSlug, tenantName, children }: TenantShellPro
               <TenantSubtitle tenantName={tenantName} />
             </div>
             <div className="ml-auto hidden w-full max-w-sm items-center md:flex">
-              <div className="relative w-full">
+              <button
+                type="button"
+                onClick={commandPalette.toggle}
+                className="relative w-full text-left"
+              >
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
-                <Input className="pl-9" placeholder="Search leads, contacts, deals..." />
-              </div>
+                <Input
+                  className="pointer-events-none pl-9"
+                  placeholder="Search or press Ctrl+K…"
+                  readOnly
+                />
+              </button>
             </div>
             <ThemeToggle />
             <NotificationBell tenantSlug={tenantSlug} />
@@ -304,6 +320,12 @@ export function TenantShell({ tenantSlug, tenantName, children }: TenantShellPro
       </div>
       </div>
       <NotificationToastStack />
+      <CommandPalette
+        tenantSlug={tenantSlug}
+        open={commandPalette.open}
+        onClose={commandPalette.close}
+      />
+      <FloatingAiAssistant tenantSlug={tenantSlug} />
       </NotificationProvider>
     </PermissionsProvider>
   );
