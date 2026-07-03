@@ -38,6 +38,9 @@ PERMISSIONS = [
     ("workflow", "read", "workflow:read"),
     ("workflow", "write", "workflow:write"),
     ("workflow", "delete", "workflow:delete"),
+    ("document", "read", "document:read"),
+    ("document", "write", "document:write"),
+    ("document", "delete", "document:delete"),
 ]
 
 ROLE_PERMISSIONS = {
@@ -81,6 +84,9 @@ ROLE_PERMISSIONS = {
         "workflow:read",
         "workflow:write",
         "workflow:delete",
+        "document:read",
+        "document:write",
+        "document:delete",
     ],
     "member": [
         "tenant:read",
@@ -106,6 +112,8 @@ ROLE_PERMISSIONS = {
         "email:read",
         "email:write",
         "workflow:read",
+        "document:read",
+        "document:write",
     ],
 }
 

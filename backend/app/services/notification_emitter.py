@@ -43,6 +43,11 @@ TYPE_META: dict[str, dict[str, str]] = {
     "password_reset": {"priority": "high", "icon": "key"},
     "login_new_device": {"priority": "high", "icon": "shield"},
     "system_announcement": {"priority": "normal", "icon": "megaphone"},
+    "document_shared": {"priority": "normal", "icon": "share-2"},
+    "signature_requested": {"priority": "high", "icon": "pen-line"},
+    "signature_completed": {"priority": "normal", "icon": "badge-check"},
+    "document_uploaded": {"priority": "low", "icon": "file-up"},
+    "document_version_updated": {"priority": "low", "icon": "file-stack"},
 }
 
 

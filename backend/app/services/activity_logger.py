@@ -70,6 +70,12 @@ ACTIVITY_ACTIONS = (
   "workflow_completed",
   "workflow_failed",
   "workflow_updated",
+  # Documents
+  "document_uploaded",
+  "document_shared",
+  "document_deleted",
+  "signature_requested",
+  "signature_completed",
 )
 
 ACTION_META: dict[str, dict[str, str]] = {
@@ -118,6 +124,11 @@ ACTION_META: dict[str, dict[str, str]] = {
   "workflow_completed": {"icon": "workflow", "color": "green", "label": "Workflow completed"},
   "workflow_failed": {"icon": "workflow", "color": "red", "label": "Workflow failed"},
   "workflow_updated": {"icon": "workflow", "color": "blue", "label": "Workflow updated"},
+  "document_uploaded": {"icon": "file-up", "color": "blue", "label": "Document uploaded"},
+  "document_shared": {"icon": "share-2", "color": "cyan", "label": "Document shared"},
+  "document_deleted": {"icon": "trash-2", "color": "red", "label": "Document deleted"},
+  "signature_requested": {"icon": "pen-line", "color": "amber", "label": "Signature requested"},
+  "signature_completed": {"icon": "badge-check", "color": "green", "label": "Signature completed"},
 }
 
 

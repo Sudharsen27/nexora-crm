@@ -189,3 +189,16 @@ from app.models.workflow import (  # noqa: E402, F401
     WorkflowNode,
     WorkflowVersion,
 )
+from app.models.document import (  # noqa: E402, F401
+    ALLOWED_MIME_TYPES,
+    DOCUMENT_STATUSES,
+    FOLDER_TYPES,
+    Document,
+    DocumentAuditLog,
+    DocumentComment,
+    DocumentFolder,
+    DocumentShare,
+    DocumentVersion,
+    SignatureRequest,
+    SignatureSigner,
+)

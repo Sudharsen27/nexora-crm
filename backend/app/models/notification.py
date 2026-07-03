@@ -42,6 +42,11 @@ NOTIFICATION_TYPES = (
     "system_announcement",
     "workflow_success",
     "workflow_failed",
+    "document_shared",
+    "signature_requested",
+    "signature_completed",
+    "document_uploaded",
+    "document_version_updated",
 )
 
 NOTIFICATION_PRIORITIES = ("low", "normal", "high", "urgent")
@@ -68,6 +73,13 @@ NOTIFICATION_CATEGORIES = {
         "email_scheduled",
     ),
     "notes": ("note_added", "comment_mention"),
+    "documents": (
+        "document_shared",
+        "signature_requested",
+        "signature_completed",
+        "document_uploaded",
+        "document_version_updated",
+    ),
     "system": (
         "lead_assigned",
         "lead_converted",

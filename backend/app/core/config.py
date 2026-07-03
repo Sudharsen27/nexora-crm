@@ -42,6 +42,13 @@ class Settings(BaseSettings):
 
     EMAIL_MAX_ATTACHMENT_BYTES: int = 10_485_760
     EMAIL_MAX_ATTACHMENTS: int = 10
+
+    # Document management
+    DOCUMENT_MAX_FILE_BYTES: int = 52_428_800  # 50 MB
+    DOCUMENT_STORAGE_BACKEND: str = "db"  # db | supabase
+    SUPABASE_URL: str = ""
+    SUPABASE_SERVICE_KEY: str = ""
+    SUPABASE_STORAGE_BUCKET: str = "documents"
     # Public backend base URL (no trailing slash). Used for email tracking links.
     # Local: http://localhost:8000  |  Production: https://your-api.onrender.com
     BACKEND_PUBLIC_URL: str = ""
@@ -66,6 +73,14 @@ class Settings(BaseSettings):
         if normalized not in {"lax", "strict", "none"}:
             return "lax"
         return normalized
+
+    @property
+    def use_supabase_storage(self) -> bool:
+        return (
+            self.DOCUMENT_STORAGE_BACKEND.strip().lower() == "supabase"
+            and bool(self.SUPABASE_URL.strip())
+            and bool(self.SUPABASE_SERVICE_KEY.strip())
+        )
 
     @property
     def use_resend(self) -> bool:
