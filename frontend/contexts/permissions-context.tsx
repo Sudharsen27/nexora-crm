@@ -15,7 +15,8 @@ export type PermissionModule =
   | "tenant"
   | "settings"
   | "role"
-  | "workflow";
+  | "workflow"
+  | "document";
 
 interface PermissionsContextValue {
   role: string | null;

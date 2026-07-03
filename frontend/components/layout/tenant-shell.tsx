@@ -22,6 +22,7 @@ import {
   UserRoundPlus,
   Users,
   Workflow,
+  FileStack,
   X,
 } from "lucide-react";
 import { NexoraLogo } from "@/components/brand/nexora-logo";
@@ -56,6 +57,7 @@ const navItems = [
   { href: "/emails", label: "Email", icon: Mail, permission: "email:read" },
   { href: "/tasks", label: "Tasks", icon: ListTodo, permission: "task:read" },
   { href: "/workflows", label: "Workflows", icon: Workflow, permission: "workflow:read" },
+  { href: "/documents", label: "Documents", icon: FileStack, permission: "document:read" },
   { href: "/settings/team", label: "Team", icon: Users, permission: "user:read" },
   { href: "/settings", label: "Settings", icon: Settings, permission: "settings:read" },
 ];
