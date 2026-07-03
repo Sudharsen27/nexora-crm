@@ -54,12 +54,14 @@ export function WorkflowBuilderPage({ tenantSlug, workflowId }: WorkflowBuilderP
         </Link>
       </div>
       <WorkflowBuilder
+        tenantSlug={tenantSlug}
         initialName={workflow.name}
         initialDescription={workflow.description ?? ""}
         initialTrigger={workflow.trigger_type}
         initialDefinition={workflow.definition}
         triggers={meta?.triggers ?? [workflow.trigger_type]}
         actions={meta?.actions ?? ["create_task", "send_notification", "create_activity"]}
+        conditionOperators={meta?.conditions ?? []}
         readOnly={readOnly}
         status={workflow.status}
         onSave={async (data) => {

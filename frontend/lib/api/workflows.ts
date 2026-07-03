@@ -224,6 +224,38 @@ export async function createWorkflowFromTemplate(
   });
 }
 
+export async function listWorkflowVersions(
+  tenantSlug: string,
+  workflowId: string,
+): Promise<Array<{ id: string; version: number; note: string | null; created_at: string }>> {
+  return apiFetch(`/tenants/${tenantSlug}/workflows/${workflowId}/versions`);
+}
+
+export async function listWorkflowHistory(
+  tenantSlug: string,
+  workflowId: string,
+): Promise<
+  Array<{
+    id: string;
+    version: number;
+    event: string;
+    note: string | null;
+    created_at: string | null;
+  }>
+> {
+  return apiFetch(`/tenants/${tenantSlug}/workflows/${workflowId}/history`);
+}
+
+export async function cancelWorkflowExecution(
+  tenantSlug: string,
+  executionId: string,
+): Promise<WorkflowExecution> {
+  return apiFetch<WorkflowExecution>(
+    `/tenants/${tenantSlug}/workflows/executions/${executionId}/cancel`,
+    { method: "POST" },
+  );
+}
+
 export const WORKFLOW_STATUS_COLORS: Record<string, string> = {
   draft: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
   published: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",

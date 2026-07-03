@@ -37,16 +37,21 @@ import {
   createPaletteNode,
   workflowNodeTypes,
 } from "@/components/workflows/workflow-node";
+import { WorkflowNodeProperties } from "@/components/workflows/workflow-node-properties";
 import type { WorkflowDefinition } from "@/lib/api/workflows";
+import type { Member } from "@/types/api";
+import { listMembers } from "@/lib/api/tenants";
 import { cn } from "@/lib/utils";
 
 interface WorkflowBuilderProps {
+  tenantSlug: string;
   initialName: string;
   initialDescription?: string;
   initialTrigger: string;
   initialDefinition?: WorkflowDefinition;
   triggers: string[];
   actions: string[];
+  conditionOperators?: string[];
   readOnly?: boolean;
   onSave: (data: {
     name: string;
@@ -95,12 +100,14 @@ function fromDefinition(definition?: WorkflowDefinition): { nodes: Node[]; edges
 }
 
 function BuilderCanvas({
+  tenantSlug,
   initialName,
   initialDescription = "",
   initialTrigger,
   initialDefinition,
   triggers,
   actions,
+  conditionOperators = [],
   readOnly,
   onSave,
   onPublish,
@@ -119,6 +126,7 @@ function BuilderCanvas({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [running, setRunning] = useState(false);
+  const [members, setMembers] = useState<Member[]>([]);
   const historyRef = useRef<{ nodes: Node[]; edges: Edge[] }[]>([]);
   const futureRef = useRef<{ nodes: Node[]; edges: Edge[] }[]>([]);
   const { zoomIn, zoomOut, fitView } = useReactFlow();
@@ -190,6 +198,22 @@ function BuilderCanvas({
   };
 
   useEffect(() => {
+    void listMembers(tenantSlug).then(setMembers).catch(() => setMembers([]));
+  }, [tenantSlug]);
+
+  const autoLayout = () => {
+    pushHistory();
+    const sorted = [...nodes].sort((a, b) => a.position.x - b.position.x);
+    setNodes(
+      sorted.map((node, index) => ({
+        ...node,
+        position: { x: 80 + index * 220, y: 140 },
+      })),
+    );
+    setTimeout(() => fitView(), 50);
+  };
+
+  useEffect(() => {
     const triggerNode = nodes.find((n) => n.type === "trigger");
     if (triggerNode?.data?.trigger_type) {
       setTriggerType(String(triggerNode.data.trigger_type));
@@ -219,6 +243,9 @@ function BuilderCanvas({
           </Button>
           <Button type="button" variant="outline" size="sm" onClick={() => fitView()} title="Fit view">
             Fit
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={autoLayout} disabled={readOnly} title="Auto layout">
+            Layout
           </Button>
           <Button type="button" variant="outline" size="sm" onClick={undo} disabled={readOnly}>
             <Undo2 className="h-4 w-4" />
@@ -385,23 +412,13 @@ function BuilderCanvas({
                     </Select>
                   </div>
                 )}
-                {selectedNode.data?.action_type === "create_task" && (
-                  <div className="space-y-2">
-                    <Label>Task title</Label>
-                    <Input
-                      value={String((selectedNode.data?.config as Record<string, unknown>)?.title ?? "")}
-                      onChange={(e) =>
-                        updateSelectedNode({
-                          config: {
-                            ...((selectedNode.data?.config as Record<string, unknown>) ?? {}),
-                            title: e.target.value,
-                          },
-                        })
-                      }
-                      disabled={readOnly}
-                    />
-                  </div>
-                )}
+                <WorkflowNodeProperties
+                  selectedNode={selectedNode}
+                  readOnly={readOnly}
+                  members={members}
+                  conditionOperators={conditionOperators}
+                  onUpdate={updateSelectedNode}
+                />
               </>
             ) : (
               <p className="text-sm text-[var(--muted-foreground)]">

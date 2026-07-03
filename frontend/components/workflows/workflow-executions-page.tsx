@@ -11,6 +11,7 @@ import { usePermissions } from "@/contexts/permissions-context";
 import { useWorkflowExecutions } from "@/hooks/use-workflows";
 import {
   EXECUTION_STATUS_COLORS,
+  cancelWorkflowExecution,
   getWorkflowExecutionLogs,
   retryWorkflowExecution,
   type WorkflowLog,
@@ -84,6 +85,18 @@ export function WorkflowExecutionsPage({ tenantSlug }: WorkflowExecutionsPagePro
                   <Button size="sm" variant="outline" onClick={() => void openLogs(item.id)}>
                     View logs
                   </Button>
+                  {canWrite("workflow") && item.status === "queued" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        await cancelWorkflowExecution(tenantSlug, item.id);
+                        void refresh();
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  )}
                   {canWrite("workflow") && item.status === "failed" && (
                     <Button
                       size="sm"

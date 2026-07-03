@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { History, Layers, Plus, Search, Workflow } from "lucide-react";
+import { History, Layers, Plus, Search, Trash2, Workflow } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { WidgetError } from "@/components/dashboard/widget-states";
 import { usePermissions } from "@/contexts/permissions-context";
-import { createWorkflow, useWorkflows } from "@/hooks/use-workflows";
+import { createWorkflow, deleteWorkflow, useWorkflows } from "@/hooks/use-workflows";
 import { WORKFLOW_STATUS_COLORS } from "@/lib/api/workflows";
 
 interface WorkflowsListPageProps {
@@ -102,8 +102,8 @@ export function WorkflowsListPage({ tenantSlug }: WorkflowsListPageProps) {
       {!loading && !error && (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {items.map((workflow) => (
-            <Link key={workflow.id} href={`/${tenantSlug}/workflows/${workflow.id}`}>
-              <Card className="h-full transition hover:border-[var(--primary)] hover:shadow-md">
+            <Card key={workflow.id} className="h-full transition hover:border-[var(--primary)] hover:shadow-md">
+              <Link href={`/${tenantSlug}/workflows/${workflow.id}`}>
                 <CardHeader>
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-lg">{workflow.name}</CardTitle>
@@ -119,8 +119,27 @@ export function WorkflowsListPage({ tenantSlug }: WorkflowsListPageProps) {
                   <p>Trigger: {workflow.trigger_type.replace(/_/g, " ")}</p>
                   <p>Version {workflow.version}</p>
                 </CardContent>
-              </Card>
-            </Link>
+              </Link>
+              {canWrite("workflow") && (
+                <CardContent className="pt-0">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      if (!window.confirm(`Delete "${workflow.name}"?`)) return;
+                      await deleteWorkflow(tenantSlug, workflow.id);
+                      void refresh();
+                    }}
+                  >
+                    <Trash2 className="mr-1 h-3 w-3" />
+                    Delete
+                  </Button>
+                </CardContent>
+              )}
+            </Card>
           ))}
         </div>
       )}
