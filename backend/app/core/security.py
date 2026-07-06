@@ -26,14 +26,37 @@ def create_access_token(
     *,
     extra_claims: dict[str, Any] | None = None,
     expires_delta: timedelta | None = None,
+    token_type: str = "access",
 ) -> str:
     expire = datetime.now(UTC) + (
         expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-    payload: dict[str, Any] = {"sub": subject, "exp": expire, "type": "access"}
+    payload: dict[str, Any] = {"sub": subject, "exp": expire, "type": token_type}
     if extra_claims:
         payload.update(extra_claims)
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+
+def create_portal_access_token(
+    portal_user_id: str,
+    *,
+    tenant_id: str,
+    tenant_slug: str,
+    contact_id: str,
+    company_id: str | None = None,
+) -> str:
+    extra: dict[str, Any] = {
+        "tenant_id": tenant_id,
+        "tenant_slug": tenant_slug,
+        "contact_id": contact_id,
+    }
+    if company_id:
+        extra["company_id"] = company_id
+    return create_access_token(
+        portal_user_id,
+        extra_claims=extra,
+        token_type="portal_access",
+    )
 
 
 def create_refresh_token_value() -> str:

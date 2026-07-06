@@ -202,3 +202,20 @@ from app.models.document import (  # noqa: E402, F401
     SignatureRequest,
     SignatureSigner,
 )
+from app.models.portal import (  # noqa: E402, F401
+    INVOICE_STATUSES,
+    PORTAL_AUDIT_ACTIONS,
+    PORTAL_USER_STATUSES,
+    TICKET_CATEGORIES,
+    TICKET_PRIORITIES,
+    TICKET_STATUSES,
+    Announcement,
+    CustomerPortalUser,
+    KnowledgeArticle,
+    PortalAuditLog,
+    PortalInvoice,
+    PortalNotification,
+    PortalSession,
+    SupportTicket,
+    TicketReply,
+)
