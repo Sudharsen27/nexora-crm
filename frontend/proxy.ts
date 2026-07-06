@@ -3,9 +3,13 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getAccessTokenFromCookie } from "@/lib/auth/tokens";
 
-const publicPaths = ["/", "/login", "/register", "/forgot-password", "/reset-password"];
+const publicPaths = ["/", "/login", "/register", "/forgot-password", "/reset-password", "/portal/login"];
 const authPaths = ["/login", "/register", "/forgot-password", "/reset-password"];
 const protectedPrefixes = ["/create-organization"];
+
+function isPortalRoute(pathname: string): boolean {
+  return pathname === "/portal/login" || pathname.startsWith("/portal/");
+}
 
 function isTokenValid(token: string): boolean {
   try {
@@ -26,6 +30,12 @@ function isTenantRoute(pathname: string): boolean {
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Customer portal uses its own auth (portal_access JWT) — never staff CRM gate
+  if (isPortalRoute(pathname)) {
+    return NextResponse.next();
+  }
+
   const token = getAccessTokenFromCookie(request.headers.get("cookie") ?? undefined);
   const authenticated = token ? isTokenValid(token) : false;
 

@@ -12,6 +12,9 @@ export default function MarketingPage() {
           <NexoraHeaderLogo href="/" />
           <div className="flex items-center gap-2">
             <ThemeToggle />
+            <Link href="/portal/login" className={cn(buttonVariants({ variant: "ghost" }))}>
+              Customer portal
+            </Link>
             <Link href="/login" className={cn(buttonVariants({ variant: "ghost" }))}>
               Sign in
             </Link>
