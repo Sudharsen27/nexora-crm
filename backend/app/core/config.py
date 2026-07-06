@@ -49,6 +49,14 @@ class Settings(BaseSettings):
     SUPABASE_URL: str = ""
     SUPABASE_SERVICE_KEY: str = ""
     SUPABASE_STORAGE_BUCKET: str = "documents"
+
+    # AI / LLM (OpenAI-compatible API)
+    OPENAI_API_KEY: str = ""
+    AI_PROVIDER: str = "openai"
+    AI_MODEL: str = "gpt-4o-mini"
+    AI_BASE_URL: str = "https://api.openai.com/v1"
+    AI_TEMPERATURE: float = 0.4
+    AI_MAX_TOKENS: int = 2048
     # Public backend base URL (no trailing slash). Used for email tracking links.
     # Local: http://localhost:8000  |  Production: https://your-api.onrender.com
     BACKEND_PUBLIC_URL: str = ""
@@ -81,6 +89,10 @@ class Settings(BaseSettings):
             and bool(self.SUPABASE_URL.strip())
             and bool(self.SUPABASE_SERVICE_KEY.strip())
         )
+
+    @property
+    def ai_enabled(self) -> bool:
+        return bool(self.OPENAI_API_KEY.strip())
 
     @property
     def use_resend(self) -> bool:
