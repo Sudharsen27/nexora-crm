@@ -60,13 +60,19 @@ export function AiMessageBubble({
         {isUser ? <User className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
       </div>
 
-      <div className={cn("min-w-0 max-w-[min(100%,48rem)]", isUser && "text-right")}>
+      <div
+        className={cn(
+          "min-w-0 flex-1",
+          isUser ? "max-w-[min(100%,28rem)] text-right" : "max-w-full",
+        )}
+      >
         <div
           className={cn(
             "rounded-2xl border px-4 py-3 shadow-sm backdrop-blur-sm transition hover:shadow-md",
             isUser
               ? "border-violet-500/20 bg-gradient-to-br from-violet-600 to-indigo-600 text-white"
               : "border-[var(--border)]/80 bg-[var(--surface)]/90",
+            isUser && "inline-block text-left",
           )}
         >
           {isUser ? (
@@ -77,15 +83,16 @@ export function AiMessageBubble({
               {message.streaming && (
                 <span className="ml-1 inline-block h-4 w-0.5 animate-pulse bg-violet-500 align-middle" />
               )}
-              {message.widgets && !message.streaming && (
-                <AiWidgetRenderer widgets={message.widgets} />
-              )}
             </>
           )}
         </div>
 
+        {!isUser && message.widgets && !message.streaming && (
+          <AiWidgetRenderer widgets={message.widgets} layout="chat" />
+        )}
+
         {!isUser && !message.streaming && (
-          <div className="mt-2 flex flex-wrap items-center gap-1 opacity-0 transition group-hover:opacity-100">
+          <div className="mt-2 flex flex-wrap items-center gap-1 opacity-60 transition group-hover:opacity-100 sm:opacity-0">
             <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => void copy()}>
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
             </Button>

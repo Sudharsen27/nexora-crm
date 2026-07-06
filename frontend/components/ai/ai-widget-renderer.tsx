@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import {
   Area,
   AreaChart,
@@ -16,7 +17,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { AiWidget } from "@/types/ai";
 import { cn } from "@/lib/utils";
 
-const CHART_COLOR = "var(--primary)";
+function formatChartValue(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}k`;
+  return String(value);
+}
 
 function KpiCard({ widget }: { widget: Extract<AiWidget, { type: "kpi" }> }) {
   return (
@@ -47,7 +52,7 @@ function TableCard({ widget }: { widget: Extract<AiWidget, { type: "table" }> })
   return (
     <Card className="overflow-hidden border-[var(--border)]/80 shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">{widget.title}</CardTitle>
+        <CardTitle className="text-sm font-semibold">{widget.title}</CardTitle>
       </CardHeader>
       <CardContent className="overflow-x-auto p-0">
         <table className="w-full text-left text-xs">
@@ -78,38 +83,102 @@ function TableCard({ widget }: { widget: Extract<AiWidget, { type: "table" }> })
 }
 
 function ChartCard({ widget }: { widget: Extract<AiWidget, { type: "chart" }> }) {
-  const Chart = widget.chartType === "bar" ? BarChart : AreaChart;
+  const gradientId = useId().replace(/:/g, "");
+  const isBar = widget.chartType === "bar";
+
   return (
-    <Card className="border-[var(--border)]/80 shadow-sm">
-      <CardHeader className="pb-0">
-        <CardTitle className="text-sm">{widget.title}</CardTitle>
+    <Card className="overflow-hidden border-[var(--border)]/80 shadow-sm">
+      <CardHeader className="pb-1">
+        <CardTitle className="text-sm font-semibold">{widget.title}</CardTitle>
       </CardHeader>
-      <CardContent className="h-48 pt-2">
-        <ResponsiveContainer width="100%" height="100%">
-          <Chart data={widget.data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-            <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
-            <YAxis tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
-            <Tooltip
-              contentStyle={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                borderRadius: 12,
-              }}
-            />
-            {widget.chartType === "bar" ? (
-              <Bar dataKey="value" fill={CHART_COLOR} radius={[6, 6, 0, 0]} />
+      <CardContent className="pb-4 pt-0">
+        <div className="h-56 w-full" role="img" aria-label={widget.title}>
+          <ResponsiveContainer width="100%" height="100%">
+            {isBar ? (
+              <BarChart
+                data={widget.data}
+                margin={{ top: 12, right: 12, left: -4, bottom: 0 }}
+                barCategoryGap="18%"
+              >
+                <defs>
+                  <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#7c3aed" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#6366f1" stopOpacity={0.75} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={formatChartValue}
+                  width={40}
+                />
+                <Tooltip
+                  cursor={{ fill: "var(--surface-muted)", opacity: 0.5 }}
+                  contentStyle={{
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 12,
+                    fontSize: 12,
+                  }}
+                  formatter={(value) => [formatChartValue(Number(value)), "Value"]}
+                />
+                <Bar
+                  dataKey="value"
+                  fill={`url(#${gradientId})`}
+                  radius={[8, 8, 0, 0]}
+                  maxBarSize={56}
+                />
+              </BarChart>
             ) : (
-              <Area
-                type="monotone"
-                dataKey="value"
-                stroke={CHART_COLOR}
-                fill={CHART_COLOR}
-                fillOpacity={0.15}
-              />
+              <AreaChart data={widget.data} margin={{ top: 12, right: 12, left: -4, bottom: 0 }}>
+                <defs>
+                  <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#7c3aed" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="#6366f1" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={formatChartValue}
+                  width={40}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 12,
+                    fontSize: 12,
+                  }}
+                  formatter={(value) => [formatChartValue(Number(value)), "Value"]}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#7c3aed"
+                  strokeWidth={2}
+                  fill={`url(#${gradientId})`}
+                />
+              </AreaChart>
             )}
-          </Chart>
-        </ResponsiveContainer>
+          </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );
@@ -119,7 +188,7 @@ function TimelineCard({ widget }: { widget: Extract<AiWidget, { type: "timeline"
   return (
     <Card className="border-[var(--border)]/80 shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">{widget.title}</CardTitle>
+        <CardTitle className="text-sm font-semibold">{widget.title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {widget.items.map((item, i) => (
@@ -147,12 +216,7 @@ function InsightCard({ widget }: { widget: Extract<AiWidget, { type: "insight" }
     success: "border-emerald-500/30 bg-emerald-500/5",
   };
   return (
-    <div
-      className={cn(
-        "rounded-2xl border p-4",
-        colors[widget.severity ?? "info"],
-      )}
-    >
+    <div className={cn("rounded-2xl border p-4", colors[widget.severity ?? "info"])}>
       <p className="text-sm font-semibold">{widget.title}</p>
       <p className="mt-1 text-sm text-[var(--muted-foreground)]">{widget.body}</p>
     </div>
@@ -168,7 +232,7 @@ function RiskCard({ widget }: { widget: Extract<AiWidget, { type: "risk" }> }) {
   return (
     <Card className="border-rose-500/20 bg-gradient-to-br from-rose-500/5 to-orange-500/5 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm">{widget.title}</CardTitle>
+        <CardTitle className="text-sm font-semibold">{widget.title}</CardTitle>
         <Badge variant={levelColor[widget.level]}>{widget.level} risk</Badge>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -190,10 +254,11 @@ function RiskCard({ widget }: { widget: Extract<AiWidget, { type: "risk" }> }) {
 }
 
 function ForecastCard({ widget }: { widget: Extract<AiWidget, { type: "forecast" }> }) {
+  const gradientId = useId().replace(/:/g, "");
   return (
     <Card className="border-violet-500/20 bg-gradient-to-br from-violet-500/10 to-indigo-500/5 shadow-sm">
       <CardHeader className="pb-0">
-        <CardTitle className="text-sm">{widget.title}</CardTitle>
+        <CardTitle className="text-sm font-semibold">{widget.title}</CardTitle>
         <p className="text-xs text-[var(--muted-foreground)]">{widget.period}</p>
       </CardHeader>
       <CardContent>
@@ -201,22 +266,29 @@ function ForecastCard({ widget }: { widget: Extract<AiWidget, { type: "forecast"
         <p className="mt-1 text-xs text-[var(--muted-foreground)]">
           {widget.confidence}% confidence
         </p>
-        <div className="mt-4 h-32">
+        <div className="mt-4 h-36 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={widget.data}>
+            <AreaChart data={widget.data} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
               <defs>
-                <linearGradient id="forecastGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
+                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#7c3aed" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+              <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="month"
+                tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+              />
               <YAxis hide />
               <Area
                 type="monotone"
                 dataKey="value"
-                stroke="var(--primary)"
-                fill="url(#forecastGrad)"
+                stroke="#7c3aed"
+                strokeWidth={2}
+                fill={`url(#${gradientId})`}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -226,26 +298,111 @@ function ForecastCard({ widget }: { widget: Extract<AiWidget, { type: "forecast"
   );
 }
 
-export function AiWidgetRenderer({ widgets }: { widgets: AiWidget[] }) {
+function widgetSpan(widget: AiWidget, layout: "chat" | "grid"): string {
+  if (layout === "grid") {
+    if (widget.type === "table" || widget.type === "timeline" || widget.type === "insight" || widget.type === "risk") {
+      return "sm:col-span-2";
+    }
+    return "";
+  }
+  // In chat: charts and wide widgets always full width; KPIs tile in a row
+  if (widget.type === "kpi" || widget.type === "forecast") return "";
+  return "col-span-full";
+}
+
+interface AiWidgetRendererProps {
+  widgets: AiWidget[];
+  layout?: "chat" | "grid";
+}
+
+export function AiWidgetRenderer({ widgets, layout = "grid" }: AiWidgetRendererProps) {
   if (!widgets.length) return null;
+
+  const kpiWidgets = layout === "chat" ? widgets.filter((w) => w.type === "kpi") : [];
+  const otherWidgets = layout === "chat" ? widgets.filter((w) => w.type !== "kpi") : widgets;
+
+  if (layout === "chat") {
+    return (
+      <div className="mt-3 space-y-3">
+        {kpiWidgets.length > 0 && (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {kpiWidgets.map((widget, i) => (
+              <KpiCard key={`kpi-${i}`} widget={widget} />
+            ))}
+          </div>
+        )}
+        {otherWidgets.map((widget, i) => {
+          const content = (() => {
+            switch (widget.type) {
+              case "table":
+                return <TableCard widget={widget} />;
+              case "chart":
+                return <ChartCard widget={widget} />;
+              case "timeline":
+                return <TimelineCard widget={widget} />;
+              case "insight":
+                return <InsightCard widget={widget} />;
+              case "risk":
+                return <RiskCard widget={widget} />;
+              case "forecast":
+                return <ForecastCard widget={widget} />;
+              default:
+                return null;
+            }
+          })();
+          return content ? <div key={i}>{content}</div> : null;
+        })}
+      </div>
+    );
+  }
+
   return (
     <div className="mt-4 grid gap-3 sm:grid-cols-2">
       {widgets.map((widget, i) => {
+        const span = widgetSpan(widget, layout);
         switch (widget.type) {
           case "kpi":
-            return <KpiCard key={i} widget={widget} />;
+            return (
+              <div key={i} className={span}>
+                <KpiCard widget={widget} />
+              </div>
+            );
           case "table":
-            return <div key={i} className="sm:col-span-2"><TableCard widget={widget} /></div>;
+            return (
+              <div key={i} className={span}>
+                <TableCard widget={widget} />
+              </div>
+            );
           case "chart":
-            return <ChartCard key={i} widget={widget} />;
+            return (
+              <div key={i} className={span}>
+                <ChartCard widget={widget} />
+              </div>
+            );
           case "timeline":
-            return <div key={i} className="sm:col-span-2"><TimelineCard widget={widget} /></div>;
+            return (
+              <div key={i} className={span}>
+                <TimelineCard widget={widget} />
+              </div>
+            );
           case "insight":
-            return <div key={i} className="sm:col-span-2"><InsightCard widget={widget} /></div>;
+            return (
+              <div key={i} className={span}>
+                <InsightCard widget={widget} />
+              </div>
+            );
           case "risk":
-            return <div key={i} className="sm:col-span-2"><RiskCard widget={widget} /></div>;
+            return (
+              <div key={i} className={span}>
+                <RiskCard widget={widget} />
+              </div>
+            );
           case "forecast":
-            return <ForecastCard key={i} widget={widget} />;
+            return (
+              <div key={i} className={span}>
+                <ForecastCard widget={widget} />
+              </div>
+            );
           default:
             return null;
         }
