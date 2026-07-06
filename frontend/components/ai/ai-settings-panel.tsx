@@ -1,16 +1,15 @@
 "use client";
 
-import { useState } from "react";
 import { Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 
-export function AiSettingsPanel() {
-  const [model, setModel] = useState("nexora-enterprise");
-  const [memory, setMemory] = useState(true);
-  const [streaming, setStreaming] = useState(true);
+interface AiSettingsPanelProps {
+  llmEnabled?: boolean;
+  aiModel?: string | null;
+}
 
+export function AiSettingsPanel({ llmEnabled = false, aiModel }: AiSettingsPanelProps) {
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-12">
       <div className="text-center">
@@ -19,63 +18,47 @@ export function AiSettingsPanel() {
         </div>
         <h2 className="text-2xl font-bold">AI Settings</h2>
         <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-          Configure how Nexora AI behaves in your workspace
+          Nexora AI is configured on the backend for security
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm">Model</CardTitle>
+          <CardTitle className="text-sm">Connection status</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Label htmlFor="ai-model" className="sr-only">
-            AI model
-          </Label>
-          <select
-            id="ai-model"
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            className="h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm"
-          >
-            <option value="nexora-enterprise">Nexora Enterprise (recommended)</option>
-            <option value="nexora-fast">Nexora Fast</option>
-            <option value="nexora-analytics">Nexora Analytics</option>
-          </select>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between text-sm">
+            <span>Mode</span>
+            <Badge variant={llmEnabled ? "default" : "secondary"}>
+              {llmEnabled ? "Live LLM" : "Mock preview"}
+            </Badge>
+          </div>
+          {llmEnabled && aiModel && (
+            <div className="flex items-center justify-between text-sm">
+              <span>Model</span>
+              <span className="font-mono text-xs text-[var(--muted-foreground)]">{aiModel}</span>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm">Preferences</CardTitle>
+          <CardTitle className="text-sm">Enable live AI</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <label className="flex cursor-pointer items-center justify-between gap-4 text-sm">
-            <span>Conversation memory</span>
-            <input
-              type="checkbox"
-              checked={memory}
-              onChange={(e) => setMemory(e.target.checked)}
-              className="h-4 w-4 rounded accent-violet-600"
-            />
-          </label>
-          <label className="flex cursor-pointer items-center justify-between gap-4 text-sm">
-            <span>Streaming responses</span>
-            <input
-              type="checkbox"
-              checked={streaming}
-              onChange={(e) => setStreaming(e.target.checked)}
-              className="h-4 w-4 rounded accent-violet-600"
-            />
-          </label>
+        <CardContent className="space-y-3 text-sm text-[var(--muted-foreground)]">
+          <p>Add these to your backend <code className="rounded bg-[var(--surface-muted)] px-1">.env</code> (local) or Render environment (production):</p>
+          <pre className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--background)] p-4 text-xs">
+{`OPENAI_API_KEY=sk-...
+AI_MODEL=gpt-4o-mini
+AI_BASE_URL=https://api.openai.com/v1`}
+          </pre>
+          <p>
+            Restart the backend after saving. The assistant will stream answers using your real CRM
+            data (deals, leads, tasks, meetings) as context.
+          </p>
         </CardContent>
       </Card>
-
-      <Button className="w-full bg-gradient-to-r from-violet-600 to-indigo-600">
-        Save settings
-      </Button>
-      <p className="text-center text-xs text-[var(--muted-foreground)]">
-        Settings are stored locally in this preview build.
-      </p>
     </div>
   );
 }

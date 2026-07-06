@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { getAiMeta, streamAiChat } from "@/lib/api/ai";
 import { streamMockResponse, buildAssistantMessage } from "@/lib/ai/mock-engine";
 import type { AiConversation, AiMessage } from "@/types/ai";
 
@@ -38,6 +39,15 @@ export function useAiChat(tenantSlug: string, initialChatId?: string | null) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [search, setSearch] = useState("");
   const [hydrated, setHydrated] = useState(false);
+  const [llmEnabled, setLlmEnabled] = useState(false);
+  const [aiModel, setAiModel] = useState<string | null>(null);
+
+  useEffect(() => {
+    void getAiMeta(tenantSlug).then((meta) => {
+      setLlmEnabled(meta.enabled);
+      setAiModel(meta.enabled ? meta.model : null);
+    });
+  }, [tenantSlug]);
 
   useEffect(() => {
     const stored = loadConversations(tenantSlug);
@@ -136,18 +146,64 @@ export function useAiChat(tenantSlug: string, initialChatId?: string | null) {
 
       setIsStreaming(true);
       try {
-        const stream = streamMockResponse(text);
         let accumulated = "";
-        for await (const chunk of stream) {
-          accumulated = chunk;
-          updateConversation(chatId!, (c) => ({
-            ...c,
-            messages: c.messages.map((m) =>
-              m.id === assistantId ? { ...m, content: chunk, streaming: true } : m,
-            ),
-          }));
+        let usedLlm = false;
+
+        const conv = conversations.find((c) => c.id === chatId);
+        const priorMessages = [...(conv?.messages ?? []), userMessage].map((m) => ({
+          role: m.role,
+          content: m.content,
+        }));
+
+        if (llmEnabled) {
+          try {
+            for await (const chunk of streamAiChat(tenantSlug, priorMessages)) {
+              accumulated += chunk;
+              updateConversation(chatId!, (c) => ({
+                ...c,
+                messages: c.messages.map((m) =>
+                  m.id === assistantId ? { ...m, content: accumulated, streaming: true } : m,
+                ),
+              }));
+            }
+            usedLlm = true;
+          } catch {
+            const stream = streamMockResponse(text);
+            for await (const chunk of stream) {
+              accumulated = chunk;
+              updateConversation(chatId!, (c) => ({
+                ...c,
+                messages: c.messages.map((m) =>
+                  m.id === assistantId ? { ...m, content: chunk, streaming: true } : m,
+                ),
+              }));
+            }
+          }
+        } else {
+          const stream = streamMockResponse(text);
+          for await (const chunk of stream) {
+            accumulated = chunk;
+            updateConversation(chatId!, (c) => ({
+              ...c,
+              messages: c.messages.map((m) =>
+                m.id === assistantId ? { ...m, content: chunk, streaming: true } : m,
+              ),
+            }));
+          }
         }
-        const finalMessage = buildAssistantMessage(text, accumulated, assistantId);
+
+        const finalMessage: AiMessage = usedLlm
+          ? {
+              id: assistantId,
+              role: "assistant",
+              content: accumulated,
+              createdAt: new Date().toISOString(),
+              liked: null,
+              pinned: false,
+              streaming: false,
+            }
+          : buildAssistantMessage(text, accumulated, assistantId);
+
         updateConversation(chatId!, (c) => ({
           ...c,
           updatedAt: new Date().toISOString(),
@@ -157,7 +213,7 @@ export function useAiChat(tenantSlug: string, initialChatId?: string | null) {
         setIsStreaming(false);
       }
     },
-    [activeId, createChat, isStreaming, updateConversation],
+    [activeId, conversations, createChat, isStreaming, llmEnabled, tenantSlug, updateConversation],
   );
 
   const regenerateLast = useCallback(async () => {
@@ -216,5 +272,7 @@ export function useAiChat(tenantSlug: string, initialChatId?: string | null) {
     setMessageFeedback,
     togglePinMessage,
     hydrated,
+    llmEnabled,
+    aiModel,
   };
 }

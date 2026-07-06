@@ -9,12 +9,16 @@ interface AiChatComposerProps {
   onSend: (text: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  llmEnabled?: boolean;
+  aiModel?: string | null;
 }
 
 export function AiChatComposer({
   onSend,
   disabled,
   placeholder = "Ask Nexora AI anything about your CRM…",
+  llmEnabled = false,
+  aiModel,
 }: AiChatComposerProps) {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -70,7 +74,9 @@ export function AiChatComposer({
         </div>
         <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-[10px] text-[var(--muted-foreground)]">
           <Sparkles className="h-3 w-3" />
-          Nexora AI can analyze deals, forecast revenue, and draft communications. Preview mode.
+          {llmEnabled
+            ? `Live AI · ${aiModel ?? "connected"} · answers use your CRM data`
+            : "Preview mode · set OPENAI_API_KEY on the backend for live AI"}
         </p>
       </div>
     </div>

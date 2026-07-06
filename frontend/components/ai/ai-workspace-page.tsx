@@ -50,6 +50,8 @@ export function AiWorkspacePage({ tenantSlug }: AiWorkspacePageProps) {
     setMessageFeedback,
     togglePinMessage,
     hydrated,
+    llmEnabled,
+    aiModel,
   } = useAiChat(tenantSlug, chatId);
 
   const selectChat = useCallback(
@@ -135,7 +137,7 @@ export function AiWorkspacePage({ tenantSlug }: AiWorkspacePageProps) {
           <Sparkles className="h-5 w-5 text-violet-600" />
           <h1 className="text-lg font-bold tracking-tight">Nexora AI</h1>
           <Badge variant="secondary" className="text-[10px]">
-            Enterprise
+            {llmEnabled ? (aiModel ?? "Live") : "Preview"}
           </Badge>
         </div>
         <div className="mx-auto hidden max-w-md flex-1 md:block">
@@ -196,7 +198,9 @@ export function AiWorkspacePage({ tenantSlug }: AiWorkspacePageProps) {
         <main className="flex min-w-0 flex-1 flex-col bg-gradient-to-b from-[var(--background)] to-[var(--surface-muted)]/20">
           <div ref={scrollRef} className="flex-1 overflow-y-auto sidebar-scroll">
             {activeSection === "usage" && <AiUsagePanel />}
-            {activeSection === "settings" && <AiSettingsPanel />}
+            {activeSection === "settings" && (
+              <AiSettingsPanel llmEnabled={llmEnabled} aiModel={aiModel} />
+            )}
             {activeSection === "knowledge" && (
               <AiKnowledgeSearch onSearch={handleKnowledgeSearch} />
             )}
@@ -241,7 +245,12 @@ export function AiWorkspacePage({ tenantSlug }: AiWorkspacePageProps) {
             )}
           </div>
           {showComposer && (
-            <AiChatComposer onSend={(t) => void sendMessage(t)} disabled={isStreaming} />
+            <AiChatComposer
+              onSend={(t) => void sendMessage(t)}
+              disabled={isStreaming}
+              llmEnabled={llmEnabled}
+              aiModel={aiModel}
+            />
           )}
         </main>
 
