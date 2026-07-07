@@ -1,12 +1,15 @@
 import type { LucideIcon } from "lucide-react";
 import {
   AtSign,
+  AlertTriangle,
+  BarChart2,
   Bell,
   Briefcase,
   Building2,
   Calendar,
   CheckCircle,
   Clock,
+  DollarSign,
   FileText,
   GitBranch,
   Key,
@@ -17,6 +20,8 @@ import {
   Megaphone,
   Reply,
   Shield,
+  Target,
+  TrendingUp,
   Trophy,
   User,
   UserPlus,
@@ -57,6 +62,11 @@ const TYPE_ICONS: Record<string, LucideIcon> = {
   password_reset: Key,
   login_new_device: Shield,
   system_announcement: Megaphone,
+  report_ready: BarChart2,
+  forecast_updated: TrendingUp,
+  revenue_alert: DollarSign,
+  target_achieved: Target,
+  goal_missed: AlertTriangle,
 };
 
 const PRIORITY_CLASSES: Record<string, string> = {
