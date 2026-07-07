@@ -47,6 +47,11 @@ NOTIFICATION_TYPES = (
     "signature_completed",
     "document_uploaded",
     "document_version_updated",
+    "report_ready",
+    "forecast_updated",
+    "revenue_alert",
+    "target_achieved",
+    "goal_missed",
 )
 
 NOTIFICATION_PRIORITIES = ("low", "normal", "high", "urgent")

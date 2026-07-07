@@ -76,6 +76,14 @@ ACTIVITY_ACTIONS = (
   "document_deleted",
   "signature_requested",
   "signature_completed",
+  # Business Intelligence
+  "dashboard_created",
+  "dashboard_updated",
+  "report_created",
+  "report_generated",
+  "report_exported",
+  "report_scheduled",
+  "forecast_generated",
 )
 
 ACTION_META: dict[str, dict[str, str]] = {
@@ -129,6 +137,13 @@ ACTION_META: dict[str, dict[str, str]] = {
   "document_deleted": {"icon": "trash-2", "color": "red", "label": "Document deleted"},
   "signature_requested": {"icon": "pen-line", "color": "amber", "label": "Signature requested"},
   "signature_completed": {"icon": "badge-check", "color": "green", "label": "Signature completed"},
+  "dashboard_created": {"icon": "layout-dashboard", "color": "indigo", "label": "Dashboard created"},
+  "dashboard_updated": {"icon": "layout-dashboard", "color": "indigo", "label": "Dashboard updated"},
+  "report_created": {"icon": "bar-chart-2", "color": "violet", "label": "Report created"},
+  "report_generated": {"icon": "bar-chart-2", "color": "violet", "label": "Report generated"},
+  "report_exported": {"icon": "download", "color": "blue", "label": "Report exported"},
+  "report_scheduled": {"icon": "calendar-clock", "color": "amber", "label": "Report scheduled"},
+  "forecast_generated": {"icon": "trending-up", "color": "emerald", "label": "Forecast generated"},
 }
 
 

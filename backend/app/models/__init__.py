@@ -219,3 +219,19 @@ from app.models.portal import (  # noqa: E402, F401
     SupportTicket,
     TicketReply,
 )
+from app.models.bi import (  # noqa: E402, F401
+    BI_CHART_TYPES,
+    BI_FORECAST_TYPES,
+    BI_METRIC_SOURCES,
+    BI_REPORT_FORMATS,
+    BI_SCHEDULE_FREQUENCIES,
+    BI_WIDGET_TYPES,
+    BiDashboard,
+    BiDashboardWidget,
+    BiForecast,
+    BiKpi,
+    BiMetric,
+    BiReport,
+    BiReportTemplate,
+    BiScheduledReport,
+)

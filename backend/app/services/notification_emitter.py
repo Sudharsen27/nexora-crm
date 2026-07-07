@@ -48,6 +48,11 @@ TYPE_META: dict[str, dict[str, str]] = {
     "signature_completed": {"priority": "normal", "icon": "badge-check"},
     "document_uploaded": {"priority": "low", "icon": "file-up"},
     "document_version_updated": {"priority": "low", "icon": "file-stack"},
+    "report_ready": {"priority": "normal", "icon": "bar-chart-2"},
+    "forecast_updated": {"priority": "normal", "icon": "trending-up"},
+    "revenue_alert": {"priority": "high", "icon": "dollar-sign"},
+    "target_achieved": {"priority": "high", "icon": "target"},
+    "goal_missed": {"priority": "high", "icon": "alert-triangle"},
 }
 
 
@@ -149,6 +154,8 @@ class NotificationEmitter:
             "task": f"/{tenant_slug}/tasks/{entity_id}",
             "meeting": f"/{tenant_slug}/calendar?meeting={entity_id}",
             "email": f"/{tenant_slug}/emails/{entity_id}",
+            "report": f"/{tenant_slug}/bi/reports/{entity_id}",
+            "forecast": f"/{tenant_slug}/bi/forecast",
         }
         return paths.get(entity_type)
 
