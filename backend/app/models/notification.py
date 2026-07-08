@@ -52,6 +52,12 @@ NOTIFICATION_TYPES = (
     "revenue_alert",
     "target_achieved",
     "goal_missed",
+    "integration_connected",
+    "integration_failed",
+    "sync_failed",
+    "sync_completed",
+    "webhook_failed",
+    "api_limit_reached",
 )
 
 NOTIFICATION_PRIORITIES = ("low", "normal", "high", "urgent")

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import activities, analytics, ai, auth, bi, calendar, companies, contacts, dashboard, deals, documents, emails, leads, meetings, notifications, portal, portal_admin, portal_auth, tasks, tenants, users, workflows
+from app.api.v1 import activities, analytics, ai, auth, bi, calendar, companies, contacts, dashboard, deals, documents, emails, integrations, leads, meetings, notifications, portal, portal_admin, portal_auth, tasks, tenants, users, workflows
 
 api_router = APIRouter()
 api_router.include_router(auth.router)
@@ -15,6 +15,7 @@ api_router.include_router(tasks.router)
 api_router.include_router(dashboard.router)
 api_router.include_router(analytics.router)
 api_router.include_router(bi.router)
+api_router.include_router(integrations.router)
 api_router.include_router(notifications.router)
 api_router.include_router(meetings.router)
 api_router.include_router(calendar.router)

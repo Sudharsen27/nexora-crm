@@ -269,6 +269,32 @@ class WorkflowEngine:
                     data={"status_code": response.status_code},
                 )
 
+        elif action_type in ("send_slack_message", "send_gmail", "create_zoom_meeting", "run_integration"):
+            from app.services.integration_service import IntegrationService
+
+            app_slug = config.get("app_slug") or {
+                "send_slack_message": "slack",
+                "send_gmail": "gmail",
+                "create_zoom_meeting": "zoom",
+            }.get(action_type, config.get("integration", "webhook"))
+            action = config.get("action") or {
+                "send_slack_message": "send_message",
+                "send_gmail": "send_email",
+                "create_zoom_meeting": "create_meeting",
+            }.get(action_type, "run")
+            result = IntegrationService(self.db).run_integration_action(
+                tenant_id,
+                app_slug,
+                action,
+                {**payload, **config},
+            )
+            self._log(
+                execution,
+                f"Integration {app_slug}.{action}",
+                node_key=node["id"],
+                data=result,
+            )
+
         elif action_type == "move_deal":
             from app.services.deal_service import DealService
 

@@ -84,6 +84,15 @@ ACTIVITY_ACTIONS = (
   "report_exported",
   "report_scheduled",
   "forecast_generated",
+  # Integrations
+  "integration_installed",
+  "integration_connected",
+  "integration_disconnected",
+  "integration_reconnected",
+  "integration_synced",
+  "webhook_created",
+  "api_key_created",
+  "api_key_revoked",
 )
 
 ACTION_META: dict[str, dict[str, str]] = {
@@ -144,6 +153,14 @@ ACTION_META: dict[str, dict[str, str]] = {
   "report_exported": {"icon": "download", "color": "blue", "label": "Report exported"},
   "report_scheduled": {"icon": "calendar-clock", "color": "amber", "label": "Report scheduled"},
   "forecast_generated": {"icon": "trending-up", "color": "emerald", "label": "Forecast generated"},
+  "integration_installed": {"icon": "plug", "color": "violet", "label": "Integration installed"},
+  "integration_connected": {"icon": "plug", "color": "green", "label": "Integration connected"},
+  "integration_disconnected": {"icon": "unplug", "color": "amber", "label": "Integration disconnected"},
+  "integration_reconnected": {"icon": "refresh-cw", "color": "blue", "label": "Integration reconnected"},
+  "integration_synced": {"icon": "refresh-cw", "color": "cyan", "label": "Integration synced"},
+  "webhook_created": {"icon": "webhook", "color": "indigo", "label": "Webhook created"},
+  "api_key_created": {"icon": "key", "color": "violet", "label": "API key created"},
+  "api_key_revoked": {"icon": "key", "color": "red", "label": "API key revoked"},
 }
 
 

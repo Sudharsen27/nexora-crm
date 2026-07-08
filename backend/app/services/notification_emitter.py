@@ -53,6 +53,12 @@ TYPE_META: dict[str, dict[str, str]] = {
     "revenue_alert": {"priority": "high", "icon": "dollar-sign"},
     "target_achieved": {"priority": "high", "icon": "target"},
     "goal_missed": {"priority": "high", "icon": "alert-triangle"},
+    "integration_connected": {"priority": "normal", "icon": "plug"},
+    "integration_failed": {"priority": "high", "icon": "plug-zap"},
+    "sync_failed": {"priority": "high", "icon": "refresh-cw"},
+    "sync_completed": {"priority": "low", "icon": "check-circle"},
+    "webhook_failed": {"priority": "high", "icon": "webhook"},
+    "api_limit_reached": {"priority": "urgent", "icon": "gauge"},
 }
 
 
@@ -156,6 +162,7 @@ class NotificationEmitter:
             "email": f"/{tenant_slug}/emails/{entity_id}",
             "report": f"/{tenant_slug}/bi/reports/{entity_id}",
             "forecast": f"/{tenant_slug}/bi/forecast",
+            "integration": f"/{tenant_slug}/integrations",
         }
         return paths.get(entity_type)
 

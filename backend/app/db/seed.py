@@ -46,6 +46,9 @@ PERMISSIONS = [
     ("report", "delete", "report:delete"),
     ("bi", "read", "bi:read"),
     ("bi", "write", "bi:write"),
+    ("integration", "read", "integration:read"),
+    ("integration", "write", "integration:write"),
+    ("integration", "delete", "integration:delete"),
 ]
 
 ROLE_PERMISSIONS = {
@@ -97,6 +100,9 @@ ROLE_PERMISSIONS = {
         "report:delete",
         "bi:read",
         "bi:write",
+        "integration:read",
+        "integration:write",
+        "integration:delete",
     ],
     "member": [
         "tenant:read",
@@ -126,6 +132,7 @@ ROLE_PERMISSIONS = {
         "document:write",
         "report:read",
         "bi:read",
+        "integration:read",
     ],
 }
 

@@ -235,3 +235,22 @@ from app.models.bi import (  # noqa: E402, F401
     BiReportTemplate,
     BiScheduledReport,
 )
+from app.models.integration import (  # noqa: E402, F401
+    API_KEY_STATUSES,
+    INTEGRATION_AUTH_TYPES,
+    INTEGRATION_HEALTH,
+    INTEGRATION_STATUSES,
+    MARKETPLACE_CATEGORIES,
+    SYNC_MODES,
+    SYNC_STATUSES,
+    WEBHOOK_LOG_STATUSES,
+    WEBHOOK_STATUSES,
+    ApiKey,
+    Integration,
+    IntegrationAccount,
+    MarketplaceApp,
+    OAuthToken,
+    SyncHistory,
+    Webhook,
+    WebhookLog,
+)
