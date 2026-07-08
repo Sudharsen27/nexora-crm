@@ -320,6 +320,103 @@ export function WorkflowNodeProperties({
           </div>
         )}
 
+        {actionType === "send_slack_message" && (
+          <>
+            <div className="space-y-2">
+              <Label>Channel</Label>
+              <Input
+                value={String(config.channel ?? "#general")}
+                onChange={(e) => updateConfig({ channel: e.target.value })}
+                disabled={readOnly}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Message</Label>
+              <Input
+                value={String(config.message ?? "")}
+                onChange={(e) => updateConfig({ message: e.target.value })}
+                placeholder="Deal won: {{deal.title}}"
+                disabled={readOnly}
+              />
+            </div>
+          </>
+        )}
+
+        {actionType === "send_gmail" && (
+          <>
+            <div className="space-y-2">
+              <Label>To email</Label>
+              <Input
+                value={String(config.to ?? "")}
+                onChange={(e) => updateConfig({ to: e.target.value })}
+                disabled={readOnly}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Subject</Label>
+              <Input
+                value={String(config.subject ?? "")}
+                onChange={(e) => updateConfig({ subject: e.target.value })}
+                disabled={readOnly}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Body</Label>
+              <Input
+                value={String(config.body ?? "")}
+                onChange={(e) => updateConfig({ body: e.target.value })}
+                disabled={readOnly}
+              />
+            </div>
+          </>
+        )}
+
+        {actionType === "create_zoom_meeting" && (
+          <>
+            <div className="space-y-2">
+              <Label>Meeting title</Label>
+              <Input
+                value={String(config.title ?? "")}
+                onChange={(e) => updateConfig({ title: e.target.value })}
+                disabled={readOnly}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Duration (minutes)</Label>
+              <Input
+                type="number"
+                min={15}
+                value={String(config.duration ?? 30)}
+                onChange={(e) => updateConfig({ duration: Number(e.target.value) })}
+                disabled={readOnly}
+              />
+            </div>
+          </>
+        )}
+
+        {actionType === "run_integration" && (
+          <>
+            <div className="space-y-2">
+              <Label>App slug</Label>
+              <Input
+                value={String(config.app_slug ?? "")}
+                onChange={(e) => updateConfig({ app_slug: e.target.value })}
+                placeholder="e.g. google_drive, stripe"
+                disabled={readOnly}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Action</Label>
+              <Input
+                value={String(config.action ?? "")}
+                onChange={(e) => updateConfig({ action: e.target.value })}
+                placeholder="e.g. create_folder, send_invoice"
+                disabled={readOnly}
+              />
+            </div>
+          </>
+        )}
+
         {(actionType === "delay" || selectedNode.type === "delay") && (
           <div className="space-y-2">
             <Label>Delay (seconds)</Label>

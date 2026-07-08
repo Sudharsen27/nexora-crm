@@ -11,6 +11,7 @@ import {
   Clock,
   DollarSign,
   FileText,
+  Gauge,
   GitBranch,
   Key,
   LogIn,
@@ -18,6 +19,8 @@ import {
   MailCheck,
   MailX,
   Megaphone,
+  Plug,
+  RefreshCw,
   Reply,
   Shield,
   Target,
@@ -25,6 +28,7 @@ import {
   Trophy,
   User,
   UserPlus,
+  Webhook,
   XCircle,
 } from "lucide-react";
 import type { Notification } from "@/types/notification";
@@ -67,6 +71,12 @@ const TYPE_ICONS: Record<string, LucideIcon> = {
   revenue_alert: DollarSign,
   target_achieved: Target,
   goal_missed: AlertTriangle,
+  integration_connected: Plug,
+  integration_failed: Plug,
+  sync_failed: RefreshCw,
+  sync_completed: CheckCircle,
+  webhook_failed: Webhook,
+  api_limit_reached: Gauge,
 };
 
 const PRIORITY_CLASSES: Record<string, string> = {
