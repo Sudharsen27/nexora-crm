@@ -61,6 +61,9 @@ NOTIFICATION_TYPES = (
     "push_enabled",
     "offline_mode",
     "app_update_available",
+    "security_alert",
+    "feature_flag_updated",
+    "storage_limit_reached",
 )
 
 NOTIFICATION_PRIORITIES = ("low", "normal", "high", "urgent")

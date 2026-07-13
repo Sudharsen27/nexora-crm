@@ -62,6 +62,9 @@ TYPE_META: dict[str, dict[str, str]] = {
     "push_enabled": {"priority": "low", "icon": "bell"},
     "offline_mode": {"priority": "normal", "icon": "wifi-off"},
     "app_update_available": {"priority": "normal", "icon": "download"},
+    "security_alert": {"priority": "urgent", "icon": "shield-alert"},
+    "feature_flag_updated": {"priority": "low", "icon": "flag"},
+    "storage_limit_reached": {"priority": "high", "icon": "hard-drive"},
 }
 
 
@@ -167,6 +170,7 @@ class NotificationEmitter:
             "forecast": f"/{tenant_slug}/bi/forecast",
             "integration": f"/{tenant_slug}/integrations",
             "mobile": f"/{tenant_slug}/mobile",
+            "admin": f"/{tenant_slug}/admin",
         }
         return paths.get(entity_type)
 

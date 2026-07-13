@@ -268,3 +268,19 @@ from app.models.mobile import (  # noqa: E402, F401
     SyncConflict,
     SyncSession,
 )
+from app.models.admin import (  # noqa: E402, F401
+    AUDIT_ACTIONS,
+    CUSTOM_FIELD_ENTITIES,
+    CUSTOM_FIELD_TYPES,
+    FEATURE_FLAG_SCOPES,
+    AdminApiKey,
+    AuditLog,
+    CustomField,
+    FeatureFlag,
+    LoginHistory,
+    MfaEnrollment,
+    OrganizationPolicy,
+    SecurityEvent,
+    TrustedDevice,
+    UserSession,
+)

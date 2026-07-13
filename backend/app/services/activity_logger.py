@@ -98,6 +98,11 @@ ACTIVITY_ACTIONS = (
   "offline_sync_failed",
   "mobile_cache_cleared",
   "push_subscribed",
+  # Admin
+  "role_created",
+  "audit_logged",
+  "mfa_enabled",
+  "feature_flag_changed",
 )
 
 ACTION_META: dict[str, dict[str, str]] = {
@@ -170,6 +175,10 @@ ACTION_META: dict[str, dict[str, str]] = {
   "offline_sync_failed": {"icon": "wifi-off", "color": "red", "label": "Offline sync failed"},
   "mobile_cache_cleared": {"icon": "trash-2", "color": "amber", "label": "Mobile cache cleared"},
   "push_subscribed": {"icon": "bell", "color": "blue", "label": "Push notifications enabled"},
+  "role_created": {"icon": "shield", "color": "violet", "label": "Role created"},
+  "audit_logged": {"icon": "file-search", "color": "slate", "label": "Audit event"},
+  "mfa_enabled": {"icon": "shield-check", "color": "green", "label": "MFA enabled"},
+  "feature_flag_changed": {"icon": "flag", "color": "amber", "label": "Feature flag changed"},
 }
 
 

@@ -51,6 +51,14 @@ PERMISSIONS = [
     ("integration", "delete", "integration:delete"),
     ("mobile", "read", "mobile:read"),
     ("mobile", "write", "mobile:write"),
+    ("admin", "read", "admin:read"),
+    ("admin", "write", "admin:write"),
+    ("audit", "read", "audit:read"),
+    ("security", "read", "security:read"),
+    ("security", "write", "security:write"),
+    ("session", "read", "session:read"),
+    ("session", "write", "session:write"),
+    ("role", "write", "role:write"),
 ]
 
 ROLE_PERMISSIONS = {
@@ -107,6 +115,14 @@ ROLE_PERMISSIONS = {
         "integration:delete",
         "mobile:read",
         "mobile:write",
+        "admin:read",
+        "admin:write",
+        "audit:read",
+        "security:read",
+        "security:write",
+        "session:read",
+        "session:write",
+        "role:write",
     ],
     "member": [
         "tenant:read",
