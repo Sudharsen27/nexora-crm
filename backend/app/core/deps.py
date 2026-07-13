@@ -20,6 +20,15 @@ class TenantContext:
     role: Role
     permissions: list[str]
 
+    @property
+    def user_id(self) -> UUID:
+        return self.membership.user_id
+
+    @property
+    def user(self):
+        """Compatibility shim — use membership.user_id in new code."""
+        return type("_UserRef", (), {"id": self.membership.user_id})()
+
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),

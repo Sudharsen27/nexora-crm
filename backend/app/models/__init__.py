@@ -254,3 +254,17 @@ from app.models.integration import (  # noqa: E402, F401
     Webhook,
     WebhookLog,
 )
+from app.models.mobile import (  # noqa: E402, F401
+    CACHEABLE_RESOURCES,
+    CONFLICT_RESOLUTIONS,
+    CONFLICT_STATUSES,
+    OFFLINE_QUEUE_STATUSES,
+    PUSH_SUBSCRIPTION_STATUSES,
+    SYNC_DIRECTIONS,
+    SYNC_SESSION_STATUSES,
+    MobileSettings,
+    OfflineQueueItem,
+    PushSubscription,
+    SyncConflict,
+    SyncSession,
+)

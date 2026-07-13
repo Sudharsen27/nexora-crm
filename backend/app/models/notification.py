@@ -58,6 +58,9 @@ NOTIFICATION_TYPES = (
     "sync_completed",
     "webhook_failed",
     "api_limit_reached",
+    "push_enabled",
+    "offline_mode",
+    "app_update_available",
 )
 
 NOTIFICATION_PRIORITIES = ("low", "normal", "high", "urgent")

@@ -93,6 +93,11 @@ ACTIVITY_ACTIONS = (
   "webhook_created",
   "api_key_created",
   "api_key_revoked",
+  # Mobile PWA
+  "offline_sync_completed",
+  "offline_sync_failed",
+  "mobile_cache_cleared",
+  "push_subscribed",
 )
 
 ACTION_META: dict[str, dict[str, str]] = {
@@ -161,6 +166,10 @@ ACTION_META: dict[str, dict[str, str]] = {
   "webhook_created": {"icon": "webhook", "color": "indigo", "label": "Webhook created"},
   "api_key_created": {"icon": "key", "color": "violet", "label": "API key created"},
   "api_key_revoked": {"icon": "key", "color": "red", "label": "API key revoked"},
+  "offline_sync_completed": {"icon": "refresh-cw", "color": "green", "label": "Offline sync completed"},
+  "offline_sync_failed": {"icon": "wifi-off", "color": "red", "label": "Offline sync failed"},
+  "mobile_cache_cleared": {"icon": "trash-2", "color": "amber", "label": "Mobile cache cleared"},
+  "push_subscribed": {"icon": "bell", "color": "blue", "label": "Push notifications enabled"},
 }
 
 
