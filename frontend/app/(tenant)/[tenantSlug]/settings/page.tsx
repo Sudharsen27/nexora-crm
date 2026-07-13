@@ -1,7 +1,14 @@
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeSelector } from "@/components/layout/theme-toggle";
 
-export default function TenantSettingsPage() {
+interface PageProps {
+  params: Promise<{ tenantSlug: string }>;
+}
+
+export default async function TenantSettingsPage({ params }: PageProps) {
+  const { tenantSlug } = await params;
+
   return (
     <div className="space-y-6">
       <div>
@@ -16,6 +23,21 @@ export default function TenantSettingsPage() {
         </CardHeader>
         <CardContent>
           <ThemeSelector />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Mobile & Offline</CardTitle>
+          <CardDescription>Install the PWA, manage offline cache, and push notifications.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link
+            href={`/${tenantSlug}/mobile`}
+            className="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          >
+            Open Mobile Hub
+          </Link>
         </CardContent>
       </Card>
 

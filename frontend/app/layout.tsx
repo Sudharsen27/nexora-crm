@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeScript } from "@/components/layout/theme-script";
+import { PwaProvider } from "@/components/mobile/pwa-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,7 +16,13 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Nexora CRM",
-  description: "Multi-tenant SaaS CRM platform",
+  description: "Multi-tenant SaaS CRM platform — installable, offline-ready",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Nexora CRM",
+  },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
@@ -24,6 +31,18 @@ export const metadata: Metadata = {
     apple: [{ url: "/nexora-logo.png", type: "image/png" }],
     shortcut: ["/favicon.svg"],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#6366f1" },
+    { media: "(prefers-color-scheme: dark)", color: "#312e81" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -39,7 +58,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeScript />
-        {children}
+        <PwaProvider>{children}</PwaProvider>
       </body>
     </html>
   );

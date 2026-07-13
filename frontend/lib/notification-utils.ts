@@ -30,6 +30,8 @@ import {
   UserPlus,
   Webhook,
   XCircle,
+  CloudOff,
+  Download,
 } from "lucide-react";
 import type { Notification } from "@/types/notification";
 
@@ -77,6 +79,9 @@ const TYPE_ICONS: Record<string, LucideIcon> = {
   sync_completed: CheckCircle,
   webhook_failed: Webhook,
   api_limit_reached: Gauge,
+  push_enabled: Bell,
+  offline_mode: CloudOff,
+  app_update_available: Download,
 };
 
 const PRIORITY_CLASSES: Record<string, string> = {

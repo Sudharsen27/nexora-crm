@@ -26,10 +26,16 @@ import {
   Sparkles,
   BarChart3,
   Plug,
+  Smartphone,
   X,
 } from "lucide-react";
 import { CommandPalette, useCommandPalette } from "@/components/ai/command-palette";
 import { FloatingAiAssistant } from "@/components/ai/floating-ai-assistant";
+import { MobileBottomNav } from "@/components/mobile/mobile-bottom-nav";
+import { MobileFab } from "@/components/mobile/mobile-fab";
+import { OfflineBanner } from "@/components/mobile/offline-banner";
+import { OfflineSyncListener } from "@/components/mobile/offline-sync-listener";
+import { PullToRefresh } from "@/components/mobile/pull-to-refresh";
 import { NexoraLogo } from "@/components/brand/nexora-logo";
 import { NexoraMark } from "@/components/brand/nexora-mark";
 import { Button } from "@/components/ui/button";
@@ -66,6 +72,7 @@ const navItems = [
   { href: "/documents", label: "Documents", icon: FileStack, permission: "document:read" },
   { href: "/bi", label: "Intelligence", icon: BarChart3, permission: "bi:read" },
   { href: "/integrations", label: "Integrations", icon: Plug, permission: "integration:read" },
+  { href: "/mobile", label: "Mobile", icon: Smartphone, permission: "mobile:read" },
   { href: "/settings/team", label: "Team", icon: Users, permission: "user:read" },
   { href: "/settings", label: "Settings", icon: Settings, permission: "settings:read" },
 ];
@@ -196,6 +203,7 @@ export function TenantShell({ tenantSlug, tenantName, children }: TenantShellPro
   const base = `/${tenantSlug}`;
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const commandPalette = useCommandPalette();
 
   const currentSection = navItems.find((item) => {
@@ -318,10 +326,35 @@ export function TenantShell({ tenantSlug, tenantName, children }: TenantShellPro
             <NotificationBell tenantSlug={tenantSlug} />
           </div>
         </header>
-        <main className="mx-auto w-full max-w-[1400px] flex-1 overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8">
-          {children}
+        <main className="mx-auto w-full max-w-[1400px] flex-1 overflow-x-hidden px-4 py-6 pb-24 sm:px-6 sm:py-8 lg:pb-8">
+          <OfflineSyncListener tenantSlug={tenantSlug} />
+          <div className="mb-4 lg:hidden">
+            <OfflineBanner
+              tenantSlug={tenantSlug}
+              syncing={refreshing}
+              onSync={async () => {
+                setRefreshing(true);
+                try {
+                  const { runFullSync } = await import("@/lib/offline/sync-engine");
+                  await runFullSync(tenantSlug);
+                } finally {
+                  setRefreshing(false);
+                }
+              }}
+            />
+          </div>
+          <PullToRefresh
+            disabled={typeof window !== "undefined" && window.innerWidth >= 1024}
+            onRefresh={async () => {
+              window.location.reload();
+            }}
+          >
+            {children}
+          </PullToRefresh>
         </main>
       </div>
+      <MobileBottomNav tenantSlug={tenantSlug} />
+      <MobileFab tenantSlug={tenantSlug} />
       </div>
       <NotificationToastStack />
       <CommandPalette
