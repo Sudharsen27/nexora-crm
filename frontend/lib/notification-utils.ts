@@ -32,6 +32,8 @@ import {
   XCircle,
   CloudOff,
   Download,
+  Flag,
+  HardDrive,
 } from "lucide-react";
 import type { Notification } from "@/types/notification";
 
@@ -82,6 +84,9 @@ const TYPE_ICONS: Record<string, LucideIcon> = {
   push_enabled: Bell,
   offline_mode: CloudOff,
   app_update_available: Download,
+  security_alert: Shield,
+  feature_flag_updated: Flag,
+  storage_limit_reached: HardDrive,
 };
 
 const PRIORITY_CLASSES: Record<string, string> = {

@@ -28,6 +28,21 @@ export default async function TenantSettingsPage({ params }: PageProps) {
 
       <Card>
         <CardHeader>
+          <CardTitle>Administration</CardTitle>
+          <CardDescription>Security, audit logs, identity, API keys, and organization policies.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link
+            href={`/${tenantSlug}/admin`}
+            className="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          >
+            Open Admin Console
+          </Link>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Mobile & Offline</CardTitle>
           <CardDescription>Install the PWA, manage offline cache, and push notifications.</CardDescription>
         </CardHeader>
