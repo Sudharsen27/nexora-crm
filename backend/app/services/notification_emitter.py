@@ -65,6 +65,10 @@ TYPE_META: dict[str, dict[str, str]] = {
     "security_alert": {"priority": "urgent", "icon": "shield-alert"},
     "feature_flag_updated": {"priority": "low", "icon": "flag"},
     "storage_limit_reached": {"priority": "high", "icon": "hard-drive"},
+    "agent_completed": {"priority": "normal", "icon": "bot"},
+    "agent_failed": {"priority": "high", "icon": "bot"},
+    "recommendation_ready": {"priority": "normal", "icon": "sparkles"},
+    "ai_insight_generated": {"priority": "low", "icon": "lightbulb"},
 }
 
 
@@ -171,6 +175,7 @@ class NotificationEmitter:
             "integration": f"/{tenant_slug}/integrations",
             "mobile": f"/{tenant_slug}/mobile",
             "admin": f"/{tenant_slug}/admin",
+            "ai_agent": f"/{tenant_slug}/agents",
         }
         return paths.get(entity_type)
 

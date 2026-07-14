@@ -284,3 +284,20 @@ from app.models.admin import (  # noqa: E402, F401
     TrustedDevice,
     UserSession,
 )
+from app.models.ai_agent import (  # noqa: E402, F401
+    AGENT_CATALOG,
+    AGENT_SLUGS,
+    AGENT_STATUSES,
+    EXECUTION_STATUSES,
+    INSIGHT_SEVERITIES,
+    RECOMMENDATION_STATUSES,
+    TASK_STATUSES,
+    AiAgent,
+    AiAgentExecution,
+    AiAgentMemory,
+    AiAgentTask,
+    AiConversation,
+    AiInsight,
+    AiRecommendation,
+    AiUsage,
+)

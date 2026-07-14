@@ -64,6 +64,10 @@ NOTIFICATION_TYPES = (
     "security_alert",
     "feature_flag_updated",
     "storage_limit_reached",
+    "agent_completed",
+    "agent_failed",
+    "recommendation_ready",
+    "ai_insight_generated",
 )
 
 NOTIFICATION_PRIORITIES = ("low", "normal", "high", "urgent")

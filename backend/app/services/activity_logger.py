@@ -103,6 +103,11 @@ ACTIVITY_ACTIONS = (
   "audit_logged",
   "mfa_enabled",
   "feature_flag_changed",
+  # AI Agents
+  "agent_started",
+  "agent_completed",
+  "agent_recommendation",
+  "agent_error",
 )
 
 ACTION_META: dict[str, dict[str, str]] = {
@@ -179,6 +184,10 @@ ACTION_META: dict[str, dict[str, str]] = {
   "audit_logged": {"icon": "file-search", "color": "slate", "label": "Audit event"},
   "mfa_enabled": {"icon": "shield-check", "color": "green", "label": "MFA enabled"},
   "feature_flag_changed": {"icon": "flag", "color": "amber", "label": "Feature flag changed"},
+  "agent_started": {"icon": "bot", "color": "violet", "label": "AI agent started"},
+  "agent_completed": {"icon": "bot", "color": "green", "label": "AI agent completed"},
+  "agent_recommendation": {"icon": "sparkles", "color": "indigo", "label": "AI recommendation"},
+  "agent_error": {"icon": "bot", "color": "red", "label": "AI agent error"},
 }
 
 
