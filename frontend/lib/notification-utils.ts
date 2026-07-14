@@ -34,6 +34,9 @@ import {
   Download,
   Flag,
   HardDrive,
+  Bot,
+  Sparkles,
+  Lightbulb,
 } from "lucide-react";
 import type { Notification } from "@/types/notification";
 
@@ -87,6 +90,10 @@ const TYPE_ICONS: Record<string, LucideIcon> = {
   security_alert: Shield,
   feature_flag_updated: Flag,
   storage_limit_reached: HardDrive,
+  agent_completed: Bot,
+  agent_failed: Bot,
+  recommendation_ready: Sparkles,
+  ai_insight_generated: Lightbulb,
 };
 
 const PRIORITY_CLASSES: Record<string, string> = {

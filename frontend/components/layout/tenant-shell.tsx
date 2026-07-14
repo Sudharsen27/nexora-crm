@@ -24,6 +24,7 @@ import {
   Workflow,
   FileStack,
   Sparkles,
+  Bot,
   BarChart3,
   Plug,
   Smartphone,
@@ -60,6 +61,7 @@ interface TenantShellProps {
 const navItems = [
   { href: "", label: "Dashboard", icon: LayoutDashboard, permission: "tenant:read" },
   { href: "/ai", label: "AI Assistant", icon: Sparkles, permission: "tenant:read", featured: true },
+  { href: "/agents", label: "AI Agents", icon: Bot, permission: "agent:read", featured: true },
   { href: "/leads", label: "Leads", icon: UserRoundPlus, permission: "lead:read" },
   { href: "/contacts", label: "Contacts", icon: Contact, permission: "contact:read" },
   { href: "/companies", label: "Companies", icon: Building2, permission: "company:read" },
