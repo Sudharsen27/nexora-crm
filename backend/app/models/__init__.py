@@ -301,3 +301,18 @@ from app.models.ai_agent import (  # noqa: E402, F401
     AiRecommendation,
     AiUsage,
 )
+from app.models.developer import (  # noqa: E402, F401
+    PLUGIN_CATALOG,
+    PLUGIN_CATEGORIES,
+    PLUGIN_TYPES,
+    ApiUsageEvent,
+    Developer,
+    MarketplaceReview,
+    PlatformWebhook,
+    PlatformWebhookLog,
+    Plugin,
+    PluginInstallation,
+    PluginLog,
+    PluginVersion,
+    SdkProject,
+)

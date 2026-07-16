@@ -68,6 +68,11 @@ NOTIFICATION_TYPES = (
     "agent_failed",
     "recommendation_ready",
     "ai_insight_generated",
+    "plugin_installed",
+    "plugin_updated",
+    "webhook_delivery_failed",
+    "api_key_rotated",
+    "marketplace_review",
 )
 
 NOTIFICATION_PRIORITIES = ("low", "normal", "high", "urgent")

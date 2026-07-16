@@ -62,6 +62,8 @@ PERMISSIONS = [
     ("agent", "read", "agent:read"),
     ("agent", "write", "agent:write"),
     ("agent", "execute", "agent:execute"),
+    ("developer", "read", "developer:read"),
+    ("developer", "write", "developer:write"),
 ]
 
 ROLE_PERMISSIONS = {
@@ -129,6 +131,8 @@ ROLE_PERMISSIONS = {
         "agent:read",
         "agent:write",
         "agent:execute",
+        "developer:read",
+        "developer:write",
     ],
     "member": [
         "tenant:read",
@@ -162,6 +166,7 @@ ROLE_PERMISSIONS = {
         "mobile:read",
         "agent:read",
         "agent:execute",
+        "developer:read",
     ],
 }
 

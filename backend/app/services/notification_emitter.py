@@ -69,6 +69,11 @@ TYPE_META: dict[str, dict[str, str]] = {
     "agent_failed": {"priority": "high", "icon": "bot"},
     "recommendation_ready": {"priority": "normal", "icon": "sparkles"},
     "ai_insight_generated": {"priority": "low", "icon": "lightbulb"},
+    "plugin_installed": {"priority": "normal", "icon": "puzzle"},
+    "plugin_updated": {"priority": "normal", "icon": "puzzle"},
+    "webhook_delivery_failed": {"priority": "high", "icon": "webhook"},
+    "api_key_rotated": {"priority": "high", "icon": "key"},
+    "marketplace_review": {"priority": "low", "icon": "star"},
 }
 
 
@@ -176,6 +181,9 @@ class NotificationEmitter:
             "mobile": f"/{tenant_slug}/mobile",
             "admin": f"/{tenant_slug}/admin",
             "ai_agent": f"/{tenant_slug}/agents",
+            "plugin": f"/{tenant_slug}/developers/installed",
+            "platform_webhook": f"/{tenant_slug}/developers/webhooks",
+            "developer": f"/{tenant_slug}/developers",
         }
         return paths.get(entity_type)
 

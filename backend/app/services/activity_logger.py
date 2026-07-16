@@ -108,6 +108,12 @@ ACTIVITY_ACTIONS = (
   "agent_completed",
   "agent_recommendation",
   "agent_error",
+  # Developer Platform
+  "plugin_installed",
+  "plugin_uninstalled",
+  "plugin_updated",
+  "webhook_created",
+  "webhook_failed",
 )
 
 ACTION_META: dict[str, dict[str, str]] = {
@@ -188,6 +194,11 @@ ACTION_META: dict[str, dict[str, str]] = {
   "agent_completed": {"icon": "bot", "color": "green", "label": "AI agent completed"},
   "agent_recommendation": {"icon": "sparkles", "color": "indigo", "label": "AI recommendation"},
   "agent_error": {"icon": "bot", "color": "red", "label": "AI agent error"},
+  "plugin_installed": {"icon": "puzzle", "color": "teal", "label": "Plugin installed"},
+  "plugin_uninstalled": {"icon": "puzzle", "color": "amber", "label": "Plugin uninstalled"},
+  "plugin_updated": {"icon": "puzzle", "color": "blue", "label": "Plugin updated"},
+  "webhook_created": {"icon": "webhook", "color": "violet", "label": "Platform webhook created"},
+  "webhook_failed": {"icon": "webhook", "color": "red", "label": "Platform webhook failed"},
 }
 
 
