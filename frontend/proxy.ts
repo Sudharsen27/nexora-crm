@@ -31,6 +31,17 @@ function isTenantRoute(pathname: string): boolean {
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Static PWA assets must never hit the auth redirect (HTML breaks manifest JSON)
+  if (
+    pathname === "/manifest.json" ||
+    pathname === "/sw.js" ||
+    pathname === "/favicon.ico" ||
+    pathname === "/icon.svg" ||
+    pathname === "/nexora-logo.png"
+  ) {
+    return NextResponse.next();
+  }
+
   // Customer portal uses its own auth (portal_access JWT) — never staff CRM gate
   if (isPortalRoute(pathname)) {
     return NextResponse.next();
@@ -62,5 +73,7 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|webp|ico|gif)$).*)"],
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|manifest.json|sw.js|.*\\.(?:svg|png|jpg|jpeg|webp|ico|gif|json)$).*)",
+  ],
 };

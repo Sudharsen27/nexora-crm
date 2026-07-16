@@ -37,6 +37,8 @@ import {
   Bot,
   Sparkles,
   Lightbulb,
+  Puzzle,
+  Star,
 } from "lucide-react";
 import type { Notification } from "@/types/notification";
 
@@ -94,6 +96,11 @@ const TYPE_ICONS: Record<string, LucideIcon> = {
   agent_failed: Bot,
   recommendation_ready: Sparkles,
   ai_insight_generated: Lightbulb,
+  plugin_installed: Puzzle,
+  plugin_updated: Puzzle,
+  webhook_delivery_failed: Webhook,
+  api_key_rotated: Key,
+  marketplace_review: Star,
 };
 
 const PRIORITY_CLASSES: Record<string, string> = {

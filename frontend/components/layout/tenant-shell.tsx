@@ -29,6 +29,7 @@ import {
   Plug,
   Smartphone,
   ShieldCheck,
+  Code2,
   X,
 } from "lucide-react";
 import { CommandPalette, useCommandPalette } from "@/components/ai/command-palette";
@@ -75,6 +76,7 @@ const navItems = [
   { href: "/documents", label: "Documents", icon: FileStack, permission: "document:read" },
   { href: "/bi", label: "Intelligence", icon: BarChart3, permission: "bi:read" },
   { href: "/integrations", label: "Integrations", icon: Plug, permission: "integration:read" },
+  { href: "/developers", label: "Developers", icon: Code2, permission: "developer:read", featured: true },
   { href: "/mobile", label: "Mobile", icon: Smartphone, permission: "mobile:read" },
   { href: "/admin", label: "Admin", icon: ShieldCheck, permission: "admin:read" },
   { href: "/settings/team", label: "Team", icon: Users, permission: "user:read" },
