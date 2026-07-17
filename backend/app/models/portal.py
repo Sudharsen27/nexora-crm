@@ -24,9 +24,19 @@ from app.db.mixins import TimestampMixin
 
 PORTAL_USER_STATUSES = ("active", "suspended", "invited")
 
-TICKET_STATUSES = ("open", "in_progress", "waiting_customer", "resolved", "closed")
-TICKET_PRIORITIES = ("low", "medium", "high", "urgent")
-TICKET_CATEGORIES = ("general", "billing", "technical", "account", "documents", "deals")
+# Enterprise statuses/priorities — keep portal-compatible values.
+TICKET_STATUSES = (
+    "new",
+    "open",
+    "assigned",
+    "waiting_customer",
+    "in_progress",
+    "escalated",
+    "resolved",
+    "closed",
+)
+TICKET_PRIORITIES = ("critical", "high", "medium", "low", "urgent")
+TICKET_CATEGORIES = ("general", "billing", "technical", "account", "documents", "deals", "product", "other")
 
 INVOICE_STATUSES = ("draft", "sent", "paid", "overdue", "cancelled")
 
@@ -109,14 +119,20 @@ class SupportTicket(Base, TimestampMixin):
         Index("ix_support_tickets_tenant", "tenant_id"),
         Index("ix_support_tickets_portal_user", "tenant_id", "portal_user_id"),
         Index("ix_support_tickets_status", "tenant_id", "status"),
+        Index("ix_support_tickets_assignee", "tenant_id", "assigned_to_id"),
+        Index("ix_support_tickets_priority", "tenant_id", "priority"),
+        Index("ix_support_tickets_channel", "tenant_id", "channel"),
+        Index("ix_support_tickets_number", "tenant_id", "ticket_number"),
+        Index("ix_support_tickets_sla", "tenant_id", "sla_breached"),
+        Index("ix_support_tickets_archived", "tenant_id", "is_archived"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     tenant_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False
     )
-    portal_user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("customer_portal_users.id", ondelete="CASCADE"), nullable=False
+    portal_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("customer_portal_users.id", ondelete="SET NULL"), nullable=True
     )
     contact_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("contacts.id", ondelete="SET NULL"), nullable=True
@@ -124,15 +140,47 @@ class SupportTicket(Base, TimestampMixin):
     company_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("companies.id", ondelete="SET NULL"), nullable=True
     )
+    ticket_number: Mapped[str | None] = mapped_column(String(30), nullable=True)
     subject: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    status: Mapped[str] = mapped_column(String(30), nullable=False, default="open")
+    status: Mapped[str] = mapped_column(String(30), nullable=False, default="new")
     priority: Mapped[str] = mapped_column(String(20), nullable=False, default="medium")
     category: Mapped[str] = mapped_column(String(30), nullable=False, default="general")
+    channel: Mapped[str] = mapped_column(String(30), nullable=False, default="portal")
+    source: Mapped[str] = mapped_column(String(30), nullable=False, default="portal")
+    escalation_level: Mapped[str] = mapped_column(String(30), nullable=False, default="level_1")
     assigned_to_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
+    created_by_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    sla_policy_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("sla_policies.id", ondelete="SET NULL"), nullable=True
+    )
+    category_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("ticket_categories.id", ondelete="SET NULL"), nullable=True
+    )
+    first_response_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    response_due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    resolution_due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    escalation_due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    sla_breached: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    sentiment: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    tags: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+    merged_into_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("support_tickets.id", ondelete="SET NULL"), nullable=True
+    )
+    parent_ticket_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("support_tickets.id", ondelete="SET NULL"), nullable=True
+    )
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_customer_reply_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_agent_reply_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    csat_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    extra_data: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
 
     replies: Mapped[list["TicketReply"]] = relationship(back_populates="ticket", cascade="all, delete-orphan")
 
@@ -148,7 +196,7 @@ class TicketReply(Base, TimestampMixin):
     tenant_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False
     )
-    author_type: Mapped[str] = mapped_column(String(20), nullable=False)  # portal | staff
+    author_type: Mapped[str] = mapped_column(String(20), nullable=False)  # portal | staff | system
     portal_user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("customer_portal_users.id", ondelete="SET NULL"), nullable=True
     )
@@ -157,6 +205,8 @@ class TicketReply(Base, TimestampMixin):
     )
     body: Mapped[str] = mapped_column(Text, nullable=False)
     attachments: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+    is_internal: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_ai_generated: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     ticket: Mapped["SupportTicket"] = relationship(back_populates="replies")
 
@@ -187,6 +237,7 @@ class KnowledgeArticle(Base, TimestampMixin):
         UniqueConstraint("tenant_id", "slug", name="uq_knowledge_articles_tenant_slug"),
         Index("ix_knowledge_articles_tenant", "tenant_id"),
         Index("ix_knowledge_articles_category", "tenant_id", "category"),
+        Index("ix_knowledge_articles_status", "tenant_id", "status"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -198,11 +249,25 @@ class KnowledgeArticle(Base, TimestampMixin):
     summary: Mapped[str | None] = mapped_column(String(500), nullable=True)
     body: Mapped[str] = mapped_column(Text, nullable=False)
     category: Mapped[str] = mapped_column(String(50), nullable=False, default="general")
+    category_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("knowledge_categories.id", ondelete="SET NULL"), nullable=True
+    )
+    content_type: Mapped[str] = mapped_column(String(20), nullable=False, default="article")
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="published")
+    tags: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+    video_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     is_published: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     view_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    helpful_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    not_helpful_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_by_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
+    updated_by_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class PortalInvoice(Base, TimestampMixin):

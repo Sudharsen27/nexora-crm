@@ -114,6 +114,21 @@ ACTIVITY_ACTIONS = (
   "plugin_updated",
   "webhook_created",
   "webhook_failed",
+  # Support
+  "ticket_created",
+  "ticket_updated",
+  "ticket_assigned",
+  "ticket_escalated",
+  "ticket_resolved",
+  "ticket_closed",
+  "ticket_reopened",
+  "ticket_archived",
+  "ticket_deleted",
+  "ticket_replied",
+  "ticket_merged",
+  "ticket_split",
+  "chat_started",
+  "chat_resolved",
 )
 
 ACTION_META: dict[str, dict[str, str]] = {
@@ -199,6 +214,20 @@ ACTION_META: dict[str, dict[str, str]] = {
   "plugin_updated": {"icon": "puzzle", "color": "blue", "label": "Plugin updated"},
   "webhook_created": {"icon": "webhook", "color": "violet", "label": "Platform webhook created"},
   "webhook_failed": {"icon": "webhook", "color": "red", "label": "Platform webhook failed"},
+  "ticket_created": {"icon": "life-buoy", "color": "blue", "label": "Ticket created"},
+  "ticket_updated": {"icon": "life-buoy", "color": "blue", "label": "Ticket updated"},
+  "ticket_assigned": {"icon": "user-check", "color": "violet", "label": "Ticket assigned"},
+  "ticket_escalated": {"icon": "arrow-up", "color": "orange", "label": "Ticket escalated"},
+  "ticket_resolved": {"icon": "check-circle", "color": "green", "label": "Ticket resolved"},
+  "ticket_closed": {"icon": "x-circle", "color": "slate", "label": "Ticket closed"},
+  "ticket_reopened": {"icon": "rotate-ccw", "color": "amber", "label": "Ticket reopened"},
+  "ticket_archived": {"icon": "archive", "color": "slate", "label": "Ticket archived"},
+  "ticket_deleted": {"icon": "trash-2", "color": "red", "label": "Ticket deleted"},
+  "ticket_replied": {"icon": "message-square", "color": "cyan", "label": "Ticket reply"},
+  "ticket_merged": {"icon": "git-merge", "color": "indigo", "label": "Tickets merged"},
+  "ticket_split": {"icon": "git-branch", "color": "indigo", "label": "Ticket split"},
+  "chat_started": {"icon": "message-circle", "color": "blue", "label": "Chat started"},
+  "chat_resolved": {"icon": "message-circle", "color": "green", "label": "Chat resolved"},
 }
 
 

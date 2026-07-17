@@ -37,6 +37,12 @@ WORKFLOW_TRIGGERS = (
     "manual",
     "webhook",
     "scheduled",
+    "ticket_created",
+    "ticket_assigned",
+    "ticket_escalated",
+    "ticket_resolved",
+    "ticket_closed",
+    "ticket_replied",
 )
 
 WORKFLOW_ACTIONS = (

@@ -42,9 +42,23 @@ ACTIVITY_TYPES = (
     "user_login",
     "user_invited",
     "password_reset",
+    "ticket_created",
+    "ticket_updated",
+    "ticket_assigned",
+    "ticket_escalated",
+    "ticket_resolved",
+    "ticket_closed",
+    "ticket_reopened",
+    "ticket_archived",
+    "ticket_deleted",
+    "ticket_replied",
+    "ticket_merged",
+    "ticket_split",
+    "chat_started",
+    "chat_resolved",
 )
 
-ENTITY_TYPES = ("lead", "contact", "deal", "company", "task", "user", "tenant")
+ENTITY_TYPES = ("lead", "contact", "deal", "company", "task", "user", "tenant", "ticket", "chat")
 
 
 class Activity(Base):

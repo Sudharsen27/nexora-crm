@@ -50,6 +50,7 @@ from app.schemas.portal import (
     PortalTimelineItem,
 )
 from app.services.document_storage import DocumentStorage
+from app.services.notification_hooks import notify_all_members_except, notify_user
 from app.services.portal_scope import (
     can_access_deal,
     can_access_document,
@@ -58,6 +59,8 @@ from app.services.portal_scope import (
     scope_invoices,
     scope_meetings,
 )
+from app.services.support_service import SupportService, generate_ticket_number
+from app.services.workflow_trigger_service import dispatch_workflow_trigger
 
 
 class PortalService:
@@ -461,16 +464,46 @@ class PortalService:
             portal_user_id=ctx.portal_user.id,
             contact_id=ctx.portal_user.contact_id,
             company_id=ctx.portal_user.company_id,
+            ticket_number=generate_ticket_number(self.db, ctx.tenant.id),
             subject=payload.subject,
             description=payload.description,
+            status="new",
             priority=payload.priority,
             category=payload.category,
+            channel="portal",
+            source="portal",
         )
+        SupportService(self.db).ensure_default_policies(ctx.tenant.id)
+        SupportService(self.db)._apply_sla(ticket)
         self.db.add(ticket)
         self.db.flush()
         self._audit(ctx, "ticket_created", resource_type="ticket", resource_id=ticket.id)
         self._notify(ctx, "ticket_created", "Support ticket created", payload.subject)
+        notify_all_members_except(
+            self.db,
+            tenant_id=ctx.tenant.id,
+            actor_id=None,
+            type="ticket_created",
+            title="New portal support ticket",
+            message=f'"{payload.subject}" ({ticket.ticket_number})',
+            entity_type="ticket",
+            entity_id=ticket.id,
+        )
         self.db.commit()
+        dispatch_workflow_trigger(
+            ctx.tenant.id,
+            "ticket_created",
+            {
+                "ticket_id": str(ticket.id),
+                "ticket_number": ticket.ticket_number,
+                "status": ticket.status,
+                "priority": ticket.priority,
+                "channel": ticket.channel,
+                "source": ticket.source,
+            },
+            entity_type="ticket",
+            entity_id=ticket.id,
+        )
         return self.get_ticket(ctx, ticket.id)
 
     def get_ticket(self, ctx: PortalContext, ticket_id: uuid.UUID) -> PortalTicketDetail:
@@ -530,9 +563,22 @@ class PortalService:
             body=payload.body,
         )
         ticket.status = "open" if ticket.status == "waiting_customer" else ticket.status
+        ticket.last_customer_reply_at = utcnow()
         ticket.updated_at = utcnow()
         self.db.add(reply)
         self._audit(ctx, "ticket_reply", resource_type="ticket", resource_id=ticket.id)
+        if ticket.assigned_to_id:
+            notify_user(
+                self.db,
+                tenant_id=ctx.tenant.id,
+                user_id=ticket.assigned_to_id,
+                actor_id=None,
+                type="customer_replied",
+                title="Customer replied to ticket",
+                message=f'"{ticket.subject}" ({ticket.ticket_number})',
+                entity_type="ticket",
+                entity_id=ticket.id,
+            )
         self.db.commit()
         self.db.refresh(reply)
         return PortalTicketReplyResponse(

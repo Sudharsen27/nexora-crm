@@ -73,6 +73,17 @@ NOTIFICATION_TYPES = (
     "webhook_delivery_failed",
     "api_key_rotated",
     "marketplace_review",
+    "ticket_created",
+    "ticket_assigned",
+    "ticket_escalated",
+    "ticket_resolved",
+    "ticket_closed",
+    "ticket_replied",
+    "customer_replied",
+    "sla_breached",
+    "sla_warning",
+    "feedback_received",
+    "chat_transferred",
 )
 
 NOTIFICATION_PRIORITIES = ("low", "normal", "high", "urgent")
@@ -114,6 +125,19 @@ NOTIFICATION_CATEGORIES = {
         "password_reset",
         "login_new_device",
         "system_announcement",
+    ),
+    "support": (
+        "ticket_created",
+        "ticket_assigned",
+        "ticket_escalated",
+        "ticket_resolved",
+        "ticket_closed",
+        "ticket_replied",
+        "customer_replied",
+        "sla_breached",
+        "sla_warning",
+        "feedback_received",
+        "chat_transferred",
     ),
 }
 

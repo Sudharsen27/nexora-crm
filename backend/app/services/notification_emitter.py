@@ -184,6 +184,8 @@ class NotificationEmitter:
             "plugin": f"/{tenant_slug}/developers/installed",
             "platform_webhook": f"/{tenant_slug}/developers/webhooks",
             "developer": f"/{tenant_slug}/developers",
+            "ticket": f"/{tenant_slug}/support/tickets/{entity_id}",
+            "chat": f"/{tenant_slug}/support/chats/{entity_id}",
         }
         return paths.get(entity_type)
 
