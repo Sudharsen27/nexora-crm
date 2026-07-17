@@ -6,6 +6,14 @@ import logging
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
+
+from redis import Redis
+
+from app.cache.dashboard_cache import (
+    dashboard_cache_key,
+    get_dashboard_cache,
+    set_dashboard_cache,
+)
 from app.core.timezone import resolve_timezone
 
 from fastapi import HTTPException, status
@@ -66,11 +74,22 @@ class DashboardDateRange:
 
 
 class DashboardService:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, cache_client: Redis | None = None):
         self.db = db
         self.repo = DashboardRepository(db)
+        self.cache_client = cache_client
 
     def get_dashboard(self, ctx: TenantContext, params: DashboardQueryParams) -> DashboardResponse:
+        cache_key = dashboard_cache_key(
+            ctx.tenant.id,
+            ctx.membership.user_id,
+            params,
+            ctx.permissions,
+        )
+        cached = get_dashboard_cache(cache_key, client=self.cache_client)
+        if cached is not None:
+            return cached
+
         date_range = self._resolve_date_range(params)
         permissions = set(ctx.permissions)
         visible = self._visible_widgets(permissions, params.scope)
@@ -185,6 +204,7 @@ class DashboardService:
                 ),
             )
 
+        set_dashboard_cache(cache_key, response, client=self.cache_client)
         return response
 
     def _visible_widgets(self, permissions: set[str], scope: DashboardScope) -> list[str]:

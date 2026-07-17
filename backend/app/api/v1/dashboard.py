@@ -2,9 +2,11 @@ from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import ValidationError
+from redis import Redis
 from sqlalchemy.orm import Session
 
 from app.core.deps import TenantContext, require_permission
+from app.core.redis import get_redis
 from app.db.session import get_db
 from app.schemas.dashboard import (
     DashboardQueryParams,
@@ -44,5 +46,6 @@ def get_dashboard(
     params: DashboardQueryParams = Depends(parse_dashboard_params),
     ctx: TenantContext = Depends(require_permission("tenant:read")),
     db: Session = Depends(get_db),
+    cache_client: Redis = Depends(get_redis),
 ) -> DashboardResponse:
-    return DashboardService(db).get_dashboard(ctx, params)
+    return DashboardService(db, cache_client).get_dashboard(ctx, params)

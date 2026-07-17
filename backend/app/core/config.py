@@ -15,6 +15,9 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str = "postgresql://nexora:nexora@localhost:5432/nexora"
     RUN_MIGRATIONS_ON_STARTUP: bool = True
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
     SECRET_KEY: str = "change-me-in-production-use-openssl-rand-hex-32"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
@@ -73,6 +76,11 @@ class Settings(BaseSettings):
         if backend:
             return f"{backend}{self.API_V1_PREFIX}"
         return f"http://localhost:8000{self.API_V1_PREFIX}"
+
+    @property
+    def redis_url(self) -> str:
+        """Redis URL assembled from environment-backed connection settings."""
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
     @field_validator("COOKIE_SAMESITE", mode="before")
     @classmethod

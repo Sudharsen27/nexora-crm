@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.notification_ws import set_main_event_loop
+from app.core.redis import check_redis_connection, close_redis
 from app.db.bootstrap import bootstrap_database
 
 logger = logging.getLogger(__name__)
@@ -19,12 +20,16 @@ settings = get_settings()
 async def lifespan(_: FastAPI):
     set_main_event_loop(asyncio.get_running_loop())
     bootstrap_database()
+    check_redis_connection()
     logger.info(
         "CORS allowed origins: %s%s",
         settings.cors_origins,
         f" (regex: {settings.cors_origin_regex})" if settings.cors_origin_regex else "",
     )
-    yield
+    try:
+        yield
+    finally:
+        close_redis()
 
 
 app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION, lifespan=lifespan)
