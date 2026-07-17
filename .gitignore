@@ -26,3 +26,10 @@ Thumbs.db
 
 # Docker
 postgres_data/
+
+# Local upload artifacts (legacy; attachments are stored in DB)
+backend/uploads/
+
+# CLI scaffold output
+backend/nexora-plugins/
+

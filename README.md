@@ -1,85 +1,129 @@
 # Nexora CRM
 
-Production-grade multi-tenant SaaS CRM.
+Production-grade multi-tenant SaaS CRM with sales, service, AI, portal, and developer platform capabilities.
 
 ## Stack
 
-- **Frontend:** Next.js 15+, TypeScript, Tailwind CSS
-- **Backend:** FastAPI, PostgreSQL, SQLAlchemy, JWT
-- **Infra:** Docker Compose (dev)
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | Next.js 16, React 19, TypeScript, Tailwind CSS v4, Shadcn-style UI, Recharts, React Hook Form + Zod |
+| **Backend** | FastAPI, SQLAlchemy, Alembic, PostgreSQL (Supabase / Neon / local) |
+| **Auth** | JWT access + refresh tokens, RBAC (owner / admin / member) |
+| **AI** | OpenAI API — Assistant + Multi-Agent platform |
+| **Infra** | Docker Compose (optional), local PowerShell / npm workflows |
+
+## Modules
+
+| Module | Status |
+|--------|--------|
+| Authentication & RBAC | ✅ |
+| Organizations & Team | ✅ |
+| Companies, Contacts, Leads, Deals, Pipeline | ✅ |
+| Activities, Tasks, Notes | ✅ |
+| Dashboard & Business Intelligence | ✅ |
+| Calendar & Meetings | ✅ |
+| Workflow Engine | ✅ |
+| Notifications | ✅ |
+| Email Center | ✅ |
+| Document Management | ✅ |
+| Customer Portal | ✅ |
+| AI Assistant | ✅ |
+| AI Multi-Agent Platform | ✅ |
+| Administration | ✅ |
+| Integration Marketplace | ✅ |
+| Developer Platform | ✅ |
+| Mobile CRM (PWA) | ✅ |
+| Reports & Analytics | ✅ |
+| **Enterprise Support & Service Desk (Phase 19)** | ✅ |
+
+### Support & Service Desk (Phase 19)
+
+Staff CRM module at `/{tenantSlug}/support`:
+
+- Support dashboard (KPIs, CSAT, SLA health, agent performance)
+- Ticket management (create, assign, escalate, merge, split, close, reopen, archive, bulk actions)
+- Omnichannel inbox (email, chat, portal, WhatsApp, social, SMS, phone)
+- Live chat
+- Knowledge base (articles, FAQs, drafts / published)
+- SLA policies & automatic escalation checks
+- Customer feedback (CSAT / NPS)
+- Support analytics & AI assist (classify, sentiment, reply suggestions)
+- Integrated with portal tickets, notifications, workflows, and activities
+
+---
 
 ## Quick start
 
-### Option A — With Docker
+### Prerequisites
+
+- **Python 3.12+**
+- **Node.js 20+**
+- **PostgreSQL** (local, Docker, Neon, or Supabase)
+
+### Option A — Docker (database)
 
 ```bash
 docker compose up -d
 ```
 
-API: http://localhost:8000  
-Docs: http://localhost:8000/docs
-
-### Option B — Without Docker (Windows / local)
-
-You need **PostgreSQL** and **Python 3.12+**. Pick one database option:
-
-#### Database option 1: Install PostgreSQL locally
-
-1. Download and install from [postgresql.org/download/windows](https://www.postgresql.org/download/windows/)
-2. During setup, note your password for the `postgres` user
-3. Create the database (in **pgAdmin** or **psql**):
+### Option B — Local PostgreSQL
 
 ```sql
 CREATE USER nexora WITH PASSWORD 'nexora';
 CREATE DATABASE nexora OWNER nexora;
 ```
 
-#### Database option 2: Free cloud database (no install)
+Or paste a Neon / Supabase connection string into `DATABASE_URL`.
 
-Use [Neon](https://neon.tech) or [Supabase](https://supabase.com) — create a project and copy the PostgreSQL connection string.
+---
 
-#### Run the backend
-
-Open PowerShell:
+### 1. Backend
 
 ```powershell
-cd "c:\Learning\Nexora CRM\backend"
+cd backend
 
-# 1. Install dependencies (once)
+# Virtual env (recommended)
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
 pip install -r requirements.txt
-
-# 2. Create env file (once)
 copy .env.example .env
 ```
 
-Edit `backend\.env` and set `DATABASE_URL`:
+Edit `backend\.env`:
 
-```
-# Local PostgreSQL example:
+```env
 DATABASE_URL=postgresql://nexora:nexora@localhost:5432/nexora
-
-# Or paste your Neon/Supabase connection string:
-# DATABASE_URL=postgresql://user:pass@host/dbname?sslmode=require
+SECRET_KEY=dev-secret-change-in-production
+CORS_ORIGINS=["http://localhost:3000"]
+FRONTEND_URL=http://localhost:3000
+RUN_MIGRATIONS_ON_STARTUP=true
 ```
 
-Then run:
+Start the API:
 
 ```powershell
-# 3. Create tables (once, or after schema changes)
-python -m alembic upgrade head
-
-# 4. Start API server
-python -m uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-**URLs:**
-- API: http://localhost:8000
-- Docs: http://localhost:8000/docs
-- Health: http://localhost:8000/health
+Migrations run automatically on startup when `RUN_MIGRATIONS_ON_STARTUP=true`.  
+Manual migrate:
 
-To stop the server: press `Ctrl + C` in the terminal.
+```powershell
+python -m alembic upgrade head
+```
 
-### 2. Start frontend
+**URLs**
+
+| Service | URL |
+|---------|-----|
+| API | http://127.0.0.1:8000 |
+| Swagger docs | http://127.0.0.1:8000/docs |
+| OpenAPI | http://127.0.0.1:8000/openapi.json |
+
+---
+
+### 2. Frontend
 
 ```powershell
 cd frontend
@@ -88,31 +132,107 @@ npm install
 npm run dev
 ```
 
-App: http://localhost:3000
+Ensure `.env.local` includes:
+
+```env
+NEXT_PUBLIC_APP_NAME=Nexora CRM
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+```
+
+**App:** http://localhost:3000
+
+---
 
 ### 3. First-time flow
 
 1. Register at `/register`
 2. Create an organization at `/create-organization`
-3. Manage team at `/{org-slug}/settings/team`
+3. Open the workspace at `/{org-slug}`
+4. Manage team at `/{org-slug}/settings/team`
 
-## Phase 1 features
+### Demo accounts (local)
 
-- User registration & login
-- JWT access tokens + refresh token rotation
-- Protected routes (Next.js middleware)
-- Organization (tenant) creation
-- Team member management (add, change role, remove)
-- RBAC (owner, admin, member)
+Seed helper users (tenant slug `demo`):
+
+```powershell
+cd backend
+.\.venv\Scripts\Activate.ps1
+python -m scripts.seed_demo_users
+python -m scripts.seed_portal_demo
+```
+
+| Role | Email | Password |
+|------|-------|----------|
+| Owner | `owner@example.com` | `Password123!` |
+| Admin | `admin@example.com` | `Password123!` |
+| Member | `member@example.com` | `Password123!` |
+| Portal customer | `customer@example.com` | (printed by seed script) |
+
+---
+
+## Test Support (Phase 19)
+
+With backend + frontend running:
+
+1. Log in as `owner@example.com`
+2. Open **http://localhost:3000/demo/support**
+3. Confirm **Support** appears in the sidebar
+4. Create a ticket → assign → reply → escalate → close
+5. Check **Knowledge**, **SLA**, **Live Chat**, and **Analytics** tabs
+6. Optional: create a ticket from the **Customer Portal** (`/portal/demo`) and confirm it appears in the staff desk
+
+API smoke (Swagger): http://127.0.0.1:8000/docs → authorize →  
+`GET /api/v1/tenants/demo/support/dashboard`
+
+---
 
 ## Project structure
 
 ```
 nexora-crm/
-├── backend/          # FastAPI application
-├── frontend/         # Next.js application
-├── docs/             # Architecture & planning
+├── backend/
+│   ├── alembic/              # Migrations (head: 028 support)
+│   ├── app/
+│   │   ├── api/v1/           # FastAPI routers
+│   │   ├── core/             # Config, auth, deps
+│   │   ├── db/               # Session, seed, bootstrap
+│   │   ├── models/           # SQLAlchemy models
+│   │   ├── schemas/          # Pydantic DTOs
+│   │   ├── services/         # Business logic
+│   │   └── repositories/     # Data access (select domains)
+│   └── scripts/              # Seed & CLI utilities
+├── frontend/
+│   ├── app/                  # Next.js App Router
+│   ├── components/           # Feature UI
+│   ├── hooks/                # Data hooks
+│   ├── lib/api/              # API clients
+│   └── types/                # TypeScript types
+├── docs/                     # Architecture & planning
 └── docker-compose.yml
 ```
 
 See [docs/README.md](./docs/README.md) for architecture details.
+
+---
+
+## Common commands
+
+```powershell
+# Backend
+cd backend
+.\.venv\Scripts\Activate.ps1
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+python -m alembic upgrade head
+python -m scripts.seed_demo_users
+
+# Frontend
+cd frontend
+npm run dev
+npm run build
+```
+
+---
+
+## License
+
+Private / learning project — Nexora CRM.
