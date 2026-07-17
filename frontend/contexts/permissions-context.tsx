@@ -10,6 +10,7 @@ export type PermissionModule =
   | "notification"
   | "meeting"
   | "email"
+  | "support"
   | "task"
   | "user"
   | "tenant"
